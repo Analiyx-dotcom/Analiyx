@@ -77,6 +77,11 @@ app.include_router(api_router)
 app.include_router(auth_router)
 app.include_router(admin_router)
 
+# Set database for route modules
+from routes import auth_routes, admin_routes
+auth_routes.set_database(db)
+admin_routes.set_database(db)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
