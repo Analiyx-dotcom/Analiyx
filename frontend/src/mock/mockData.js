@@ -1,4 +1,4 @@
-// Mock data for Papermap clone
+// Mock data for Analiyx clone
 
 export const testimonials = [
   {
