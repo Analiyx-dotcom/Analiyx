@@ -46,7 +46,7 @@ async def get_admin_stats(admin_user: dict = Depends(require_admin)):
 async def get_users(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
-    user_id: str = Depends(get_current_user_id)
+    admin_user: dict = Depends(require_admin)
 ):
     """Get all users (paginated)"""
     skip = (page - 1) * limit
