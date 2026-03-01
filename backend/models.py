@@ -51,6 +51,7 @@ class UserResponse(BaseModel):
     plan: str
     status: str
     credits: int
+    role: str
     created_at: datetime
 
 # Auth Response
