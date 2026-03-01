@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { adminStats, recentUsers, chartData } from '../mock/mockData';
+import { adminAPI } from '../services/api';
 import { Users, DollarSign, Database, TrendingUp, ArrowUp, ArrowDown, LogOut, Sparkles, Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
