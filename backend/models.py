@@ -35,6 +35,7 @@ class User(UserBase):
     plan: str = "Hobby"
     status: str = "active"
     credits: int = 100
+    role: str = "user"  # "user" or "admin"
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
