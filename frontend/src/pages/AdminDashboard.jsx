@@ -141,7 +141,7 @@ const AdminDashboard = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {adminStats.map((stat, index) => {
+              {adminStatsDisplay.map((stat, index) => {
                 const Icon = iconMap[stat.label];
                 const isPositive = stat.trend === 'up';
                 return (
