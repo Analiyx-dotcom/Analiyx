@@ -92,7 +92,7 @@ export const pricingPlans = [
     period: '',
     features: [
       'Everything in Business Pro for internal use',
-      'White-label Papermap on your platform with full multi-tenant support',
+      'White-label Analiyx on your platform with full multi-tenant support',
       'Unlimited usage with postpaid, usage-based invoicing',
       'Dedicated development support'
     ],
