@@ -38,16 +38,33 @@ const Signup = () => {
 
     setIsLoading(true);
 
-    // Mock signup - will be replaced with actual API call
-    setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({ name: formData.name, email: formData.email }));
+    try {
+      const { authAPI } = await import('../services/api');
+      const data = await authAPI.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
+      
+      // Store token and user
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
       toast({
         title: 'Account created!',
         description: 'Welcome to Papermap.',
       });
-      setIsLoading(false);
+      
       navigate('/admin');
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: 'Signup failed',
+        description: error.response?.data?.detail || 'Failed to create account',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
