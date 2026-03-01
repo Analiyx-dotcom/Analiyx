@@ -39,7 +39,7 @@ const Login = () => {
       
       toast({
         title: 'Login successful!',
-        description: 'Welcome back to Papermap.',
+        description: 'Welcome back to Analiyx.',
       });
       
       navigate('/admin');
