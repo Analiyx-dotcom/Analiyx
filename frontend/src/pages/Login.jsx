@@ -42,7 +42,12 @@ const Login = () => {
         description: 'Welcome back to Analiyx.',
       });
       
-      navigate('/admin');
+      // Redirect based on role
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard'); // Regular user dashboard (to be created)
+      }
     } catch (error) {
       toast({
         title: 'Login failed',
