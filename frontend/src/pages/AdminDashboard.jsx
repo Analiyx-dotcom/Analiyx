@@ -227,38 +227,42 @@ const AdminDashboard = () => {
                 <CardTitle className="text-white">Recent Users</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-800">
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Email</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Plan</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
-                        <th className="text-left py-3 px-4 text-gray-400 font-medium">Joined</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentUsers.map((user) => (
-                        <tr key={user.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
-                          <td className="py-3 px-4 text-white">{user.name}</td>
-                          <td className="py-3 px-4 text-gray-400">{user.email}</td>
-                          <td className="py-3 px-4">
-                            <Badge variant="secondary" className="bg-purple-900/30 text-purple-400 border-purple-700">
-                              {user.plan}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4">
-                            <Badge className={user.status === 'active' ? 'bg-green-900/30 text-green-400 border-green-700' : 'bg-gray-700/30 text-gray-400 border-gray-600'}>
-                              {user.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 text-gray-400">{user.joined}</td>
+                {isLoading ? (
+                  <div className="text-center py-8 text-gray-400">Loading users...</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Email</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Plan</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Joined</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {users.map((user) => (
+                          <tr key={user.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
+                            <td className="py-3 px-4 text-white">{user.name}</td>
+                            <td className="py-3 px-4 text-gray-400">{user.email}</td>
+                            <td className="py-3 px-4">
+                              <Badge variant="secondary" className="bg-purple-900/30 text-purple-400 border-purple-700">
+                                {user.plan}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge className={user.status === 'active' ? 'bg-green-900/30 text-green-400 border-green-700' : 'bg-gray-700/30 text-gray-400 border-gray-600'}>
+                                {user.status}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-gray-400">{user.joined}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
