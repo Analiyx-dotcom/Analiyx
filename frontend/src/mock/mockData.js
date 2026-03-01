@@ -12,7 +12,7 @@ export const testimonials = [
   {
     id: 2,
     quote: "It transformed our day-to-day decision-making from 'reactive guessing' to 'proactive knowing.'",
-    description: "In logistics, data gets messy fast. We have shipping logs, carrier invoices, and tracking updates all living in different raw formats. Before Papermap, my operations team waited days for analysts to clean that data and build a dashboard just to answer a simple question. Papermap let us skip the 'cleaning' phase entirely. We connected our raw data sources, and now my team asks questions in plain English and gets diagnostic answers instantly.",
+    description: "In logistics, data gets messy fast. We have shipping logs, carrier invoices, and tracking updates all living in different raw formats. Before Analiyx, my operations team waited days for analysts to clean that data and build a dashboard just to answer a simple question. Analiyx let us skip the 'cleaning' phase entirely. We connected our raw data sources, and now my team asks questions in plain English and gets diagnostic answers instantly.",
     name: "Amadou D.",
     role: "CEO/CTO at B-HiTech",
     avatar: "AD"
