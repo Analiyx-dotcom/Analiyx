@@ -24,7 +24,7 @@ const Hero = () => {
         {/* YouTube Badge */}
         <div className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-full mb-8 hover:border-purple-500 transition-all duration-300 cursor-pointer group">
           <Play className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
-          <span className="text-sm text-gray-300">Watch Papermap in action on YouTube!</span>
+          <span className="text-sm text-gray-300">Watch Analiyx in action on YouTube!</span>
         </div>
 
         {/* Sparkles decoration */}
