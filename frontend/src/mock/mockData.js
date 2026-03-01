@@ -80,7 +80,7 @@ export const pricingPlans = [
       'Add teammates to workspaces',
       'Extra usage based spending',
       'Includes up to 5 seats/users',
-      'Embed Papermap in your app'
+      'Embed Analiyx in your app'
     ],
     highlighted: false
   },
