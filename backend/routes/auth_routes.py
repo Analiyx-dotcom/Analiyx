@@ -32,6 +32,7 @@ async def register(user_data: UserCreate):
         "plan": "Hobby",
         "status": "active",
         "credits": 100,
+        "role": "user",  # Regular users always get "user" role
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
