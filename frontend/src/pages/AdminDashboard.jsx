@@ -16,11 +16,62 @@ const iconMap = {
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [stats, setStats] = useState({
+    total_users: 0,
+    active_subscriptions: 0,
+    monthly_revenue: 0,
+    data_sources: 0
+  });
+  const [users, setUsers] = useState([]);
+  const [userGrowthData, setUserGrowthData] = useState([]);
+  const [revenueData, setRevenueData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Fetch all data in parallel
+      const [statsData, usersData, userGrowth, revenue] = await Promise.all([
+        adminAPI.getStats(),
+        adminAPI.getUsers(1, 5),
+        adminAPI.getUserGrowth(),
+        adminAPI.getRevenue()
+      ]);
+      
+      setStats(statsData);
+      setUsers(usersData.users);
+      setUserGrowthData(userGrowth.data);
+      setRevenueData(revenue.data);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      // If unauthorized, redirect to login
+      if (error.response?.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleLogout = () => {
+    localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/login');
   };
+
+  const adminStatsDisplay = [
+    { label: 'Total Users', value: stats.total_users.toLocaleString(), change: '+12.5%', trend: 'up' },
+    { label: 'Active Subscriptions', value: stats.active_subscriptions.toLocaleString(), change: '+8.2%', trend: 'up' },
+    { label: 'Monthly Revenue', value: `$${stats.monthly_revenue.toLocaleString()}`, change: '+15.3%', trend: 'up' },
+    { label: 'Data Sources', value: stats.data_sources.toLocaleString(), change: '+22.1%', trend: 'up' }
+  ];
 
   return (
     <div className="min-h-screen bg-gray-950">
