@@ -142,7 +142,7 @@ async def get_user_growth(admin_user: dict = Depends(require_admin)):
     return {"data": data[-7:]}
 
 @router.get("/charts/revenue")
-async def get_revenue_trend(user_id: str = Depends(get_current_user_id)):
+async def get_revenue_trend(admin_user: dict = Depends(require_admin)):
     """Get revenue trend data for the last 7 months"""
     # Calculate date range
     end_date = datetime.utcnow()
