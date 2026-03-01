@@ -3,8 +3,8 @@
 export const testimonials = [
   {
     id: 1,
-    quote: "Papermap AI has significantly reduced the time it takes to go from a question to an insight.",
-    description: "What truly differentiates the platform is its natural language interface, which allows users to simply ask questions in plain English and have Papermap AI automatically interpret the intent, generate the correct queries, and present the results in meaningful ways. We can not only explore data but also create, refine, and edit interactive dashboard widgets effortlessly—without writing SQL, scripts, or manual configurations.",
+    quote: "Analiyx AI has significantly reduced the time it takes to go from a question to an insight.",
+    description: "What truly differentiates the platform is its natural language interface, which allows users to simply ask questions in plain English and have Analiyx AI automatically interpret the intent, generate the correct queries, and present the results in meaningful ways. We can not only explore data but also create, refine, and edit interactive dashboard widgets effortlessly—without writing SQL, scripts, or manual configurations.",
     name: "Stephen O.",
     role: "CTO at VDL Fulfilment",
     avatar: "SO"
