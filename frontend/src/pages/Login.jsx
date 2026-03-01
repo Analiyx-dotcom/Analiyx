@@ -26,16 +26,32 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Mock login - will be replaced with actual API call
-    setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({ email: formData.email }));
+    try {
+      const { authAPI } = await import('../services/api');
+      const data = await authAPI.login({
+        email: formData.email,
+        password: formData.password
+      });
+      
+      // Store token and user
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
       toast({
         title: 'Login successful!',
         description: 'Welcome back to Papermap.',
       });
-      setIsLoading(false);
+      
       navigate('/admin');
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: 'Login failed',
+        description: error.response?.data?.detail || 'Invalid email or password',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
