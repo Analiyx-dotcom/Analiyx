@@ -176,18 +176,22 @@ const AdminDashboard = () => {
                   <CardTitle className="text-white">User Growth</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-end justify-between space-x-2">
-                    {chartData.userGrowth.map((data, index) => {
-                      const maxValue = Math.max(...chartData.userGrowth.map(d => d.users));
-                      const height = (data.users / maxValue) * 100;
-                      return (
-                        <div key={index} className="flex-1 flex flex-col items-center">
-                          <div className="w-full bg-gradient-to-t from-purple-600 to-pink-600 rounded-t-lg transition-all duration-300 hover:from-purple-500 hover:to-pink-500" style={{ height: `${height}%` }}></div>
-                          <span className="text-xs text-gray-500 mt-2">{data.month}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {isLoading ? (
+                    <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>
+                  ) : (
+                    <div className="h-64 flex items-end justify-between space-x-2">
+                      {userGrowthData.map((data, index) => {
+                        const maxValue = Math.max(...userGrowthData.map(d => d.users));
+                        const height = (data.users / maxValue) * 100;
+                        return (
+                          <div key={index} className="flex-1 flex flex-col items-center">
+                            <div className="w-full bg-gradient-to-t from-purple-600 to-pink-600 rounded-t-lg transition-all duration-300 hover:from-purple-500 hover:to-pink-500" style={{ height: `${height}%` }}></div>
+                            <span className="text-xs text-gray-500 mt-2">{data.month}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -197,18 +201,22 @@ const AdminDashboard = () => {
                   <CardTitle className="text-white">Revenue Trend</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-end justify-between space-x-2">
-                    {chartData.revenue.map((data, index) => {
-                      const maxValue = Math.max(...chartData.revenue.map(d => d.amount));
-                      const height = (data.amount / maxValue) * 100;
-                      return (
-                        <div key={index} className="flex-1 flex flex-col items-center">
-                          <div className="w-full bg-gradient-to-t from-green-600 to-emerald-600 rounded-t-lg transition-all duration-300 hover:from-green-500 hover:to-emerald-500" style={{ height: `${height}%` }}></div>
-                          <span className="text-xs text-gray-500 mt-2">{data.month}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {isLoading ? (
+                    <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div>
+                  ) : (
+                    <div className="h-64 flex items-end justify-between space-x-2">
+                      {revenueData.map((data, index) => {
+                        const maxValue = Math.max(...revenueData.map(d => d.amount));
+                        const height = (data.amount / maxValue) * 100;
+                        return (
+                          <div key={index} className="flex-1 flex flex-col items-center">
+                            <div className="w-full bg-gradient-to-t from-green-600 to-emerald-600 rounded-t-lg transition-all duration-300 hover:from-green-500 hover:to-emerald-500" style={{ height: `${height}%` }}></div>
+                            <span className="text-xs text-gray-500 mt-2">{data.month}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
