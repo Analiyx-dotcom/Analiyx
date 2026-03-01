@@ -1,19 +1,19 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from models import AdminStats, ChartDataPoint, RevenueDataPoint, UserResponse
 from auth import get_current_user_id
-from motor.motor_asyncio import AsyncIOMotorClient
 from datetime import datetime, timedelta
 from typing import List
-import os
 from bson import ObjectId
 import calendar
 
 router = APIRouter(prefix="/api/admin", tags=["Admin"])
 
-# MongoDB connection
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+# Database will be injected
+db = None
+
+def set_database(database):
+    global db
+    db = database
 
 @router.get("/stats", response_model=AdminStats)
 async def get_admin_stats(user_id: str = Depends(get_current_user_id)):
