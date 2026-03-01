@@ -78,7 +78,7 @@ async def get_users(
     }
 
 @router.get("/charts/user-growth")
-async def get_user_growth(user_id: str = Depends(get_current_user_id)):
+async def get_user_growth(admin_user: dict = Depends(require_admin)):
     """Get user growth data for the last 7 months"""
     # Calculate date range (last 7 months)
     end_date = datetime.utcnow()
