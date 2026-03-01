@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from models import AdminStats, ChartDataPoint, RevenueDataPoint, UserResponse
-from auth import get_current_user_id
+from auth import get_current_user_id, require_admin
 from datetime import datetime, timedelta
 from typing import List
 from bson import ObjectId
@@ -16,7 +16,7 @@ def set_database(database):
     db = database
 
 @router.get("/stats", response_model=AdminStats)
-async def get_admin_stats(user_id: str = Depends(get_current_user_id)):
+async def get_admin_stats(admin_user: dict = Depends(require_admin)):
     """Get dashboard statistics"""
     # Total users
     total_users = await db.users.count_documents({})
