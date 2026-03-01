@@ -28,6 +28,20 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is admin
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      navigate('/login');
+      return;
+    }
+
+    const parsedUser = JSON.parse(userData);
+    if (parsedUser.role !== 'admin') {
+      // Not an admin, redirect to user dashboard
+      navigate('/dashboard');
+      return;
+    }
+
     fetchDashboardData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
