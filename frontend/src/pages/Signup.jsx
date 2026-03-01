@@ -55,7 +55,12 @@ const Signup = () => {
         description: 'Welcome to Analiyx.',
       });
       
-      navigate('/admin');
+      // Regular users go to dashboard, admins go to admin panel
+      if (data.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       toast({
         title: 'Signup failed',
