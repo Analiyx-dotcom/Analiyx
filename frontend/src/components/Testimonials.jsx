@@ -12,7 +12,7 @@ const Testimonials = () => {
           <p className="text-purple-400 text-sm font-semibold uppercase tracking-wider mb-2">Reviews</p>
           <h2 className="text-4xl font-bold text-white mb-4">Loved by data teams</h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            See why companies trust Papermap AI to turn messy data into actionable insights—without the wait.
+            See why companies trust Analiyx AI to turn messy data into actionable insights—without the wait.
           </p>
         </div>
 
