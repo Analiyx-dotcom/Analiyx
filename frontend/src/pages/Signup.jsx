@@ -80,7 +80,7 @@ const Signup = () => {
             <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <span className="text-2xl font-bold text-white">Papermap</span>
+            <span className="text-2xl font-bold text-white">Analiyx</span>
           </Link>
           <CardTitle className="text-2xl text-white">Create an account</CardTitle>
           <CardDescription className="text-gray-400">
