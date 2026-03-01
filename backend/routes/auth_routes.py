@@ -81,6 +81,7 @@ async def login(credentials: UserLogin):
         plan=user["plan"],
         status=user["status"],
         credits=user["credits"],
+        role=user.get("role", "user"),
         created_at=user["created_at"]
     )
     
