@@ -101,5 +101,6 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         plan=user["plan"],
         status=user["status"],
         credits=user["credits"],
+        role=user.get("role", "user"),
         created_at=user["created_at"]
     )
