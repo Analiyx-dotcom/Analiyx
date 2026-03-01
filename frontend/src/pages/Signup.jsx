@@ -52,7 +52,7 @@ const Signup = () => {
       
       toast({
         title: 'Account created!',
-        description: 'Welcome to Papermap.',
+        description: 'Welcome to Analiyx.',
       });
       
       navigate('/admin');
