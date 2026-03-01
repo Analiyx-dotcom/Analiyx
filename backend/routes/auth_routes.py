@@ -52,6 +52,7 @@ async def register(user_data: UserCreate):
         plan=user_doc["plan"],
         status=user_doc["status"],
         credits=user_doc["credits"],
+        role=user_doc["role"],
         created_at=user_doc["created_at"]
     )
     
