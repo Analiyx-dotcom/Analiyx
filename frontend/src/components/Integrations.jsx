@@ -29,7 +29,7 @@ const Integrations = () => {
           <p className="text-purple-400 text-sm font-semibold uppercase tracking-wider mb-2">Integrations</p>
           <h2 className="text-4xl font-bold text-white mb-4">Connect any data stack</h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto mb-8">
-            Connect Papermap directly to your data stack or warehouse to build dashboards and query your data in minutes.
+            Connect Analiyx directly to your data stack or warehouse to build dashboards and query your data in minutes.
           </p>
           <Button 
             size="lg"
