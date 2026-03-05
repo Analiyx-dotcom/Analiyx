@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { integrations } from '../mock/mockData';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [isDataSourceModalOpen, setIsDataSourceModalOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -131,7 +134,9 @@ const UserDashboard = () => {
               <p className="text-gray-400 mb-6 max-w-md mx-auto">
                 Connect your data sources to start getting insights. Our AI-powered platform makes it easy to analyze your data without any coding.
               </p>
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+                onClick={() => setIsDataSourceModalOpen(true)}
+              >
                 Connect Data Source
               </Button>
             </div>
@@ -163,6 +168,50 @@ const UserDashboard = () => {
           </Card>
         </div>
       </main>
+
+      {/* Data Source Connection Modal */}
+      <Dialog open={isDataSourceModalOpen} onOpenChange={setIsDataSourceModalOpen}>
+        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Connect Data Source</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Choose a data source to connect and start analyzing your data
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
+            {integrations.map((integration, index) => (
+              <button
+                key={index}
+                className="group relative bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-purple-500 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20"
+                onClick={() => {
+                  // TODO: Implement actual data source connection
+                  alert(`Connecting to ${integration.name}...`);
+                  setIsDataSourceModalOpen(false);
+                }}
+              >
+                <div className="flex flex-col items-center space-y-2">
+                  <div 
+                    className="w-12 h-12 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: `${integration.color}20` }}
+                  >
+                    <Database className="w-6 h-6" style={{ color: integration.color }} />
+                  </div>
+                  <span className="text-xs text-gray-400 text-center group-hover:text-white transition-colors">
+                    {integration.name}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <div className="pt-4 border-t border-gray-800">
+            <p className="text-sm text-gray-400 text-center">
+              Don't see your data source? <span className="text-purple-400 cursor-pointer hover:underline">Contact support</span>
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
