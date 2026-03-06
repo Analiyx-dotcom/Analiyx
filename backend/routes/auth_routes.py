@@ -29,7 +29,7 @@ async def register(user_data: UserCreate):
         "name": user_data.name,
         "email": user_data.email,
         "password": hashed_password,
-        "plan": "Hobby",
+        "plan": "Starter",
         "status": "active",
         "credits": 100,
         "role": "user",  # Regular users always get "user" role
