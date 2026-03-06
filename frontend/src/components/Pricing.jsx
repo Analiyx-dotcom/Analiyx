@@ -18,7 +18,7 @@ const Pricing = () => {
           </h2>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {pricingPlans.map((plan) => (
             <Card
               key={plan.id}
@@ -43,7 +43,7 @@ const Pricing = () => {
                   <div className="flex items-baseline justify-center">
                     {typeof plan.price === 'number' ? (
                       <>
-                        <span className="text-4xl font-bold text-white">${plan.price}</span>
+                        <span className="text-4xl font-bold text-white">₹{plan.price.toLocaleString('en-IN')}</span>
                         <span className="text-gray-400 ml-2">/ {plan.period}</span>
                       </>
                     ) : (

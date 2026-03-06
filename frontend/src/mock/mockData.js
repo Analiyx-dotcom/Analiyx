@@ -39,62 +39,54 @@ export const integrations = [
 export const pricingPlans = [
   {
     id: 1,
-    name: 'Hobby',
-    description: 'Entry level plan to get you started.',
-    price: 19,
+    name: 'Starter',
+    description: 'Perfect for small businesses getting started with data analytics.',
+    price: 1599,
     period: 'month',
     features: [
-      'Add teammates to workspaces',
-      'Limited to 2 workspaces',
+      'Up to 2 workspaces',
       'No daily requests cap',
-      '100 credits monthly'
+      '100 credits monthly',
+      'Add up to 2 team members',
+      'Email support',
+      'Basic analytics dashboard'
     ],
     highlighted: false
   },
   {
     id: 2,
-    name: 'Business Essential',
-    description: 'Our recommended Plan for small businesses.',
-    price: 50,
+    name: 'Business Pro',
+    description: 'Our recommended plan for growing businesses.',
+    price: 4999,
     period: 'month',
     features: [
-      'Create up to 5 workspaces',
+      'Up to 10 workspaces',
       'No daily requests cap',
       '500 credits monthly',
-      'Add teammates to workspaces',
-      'Extra usage based spending',
-      'Includes Up to 3 seats/users'
+      'Add up to 10 team members',
+      'Priority email & chat support',
+      'Advanced analytics & reports',
+      'API access',
+      'Custom integrations'
     ],
     highlighted: true
   },
   {
     id: 3,
-    name: 'Business Pro',
-    description: 'Our recommended Plan for medium and large businesses.',
-    price: 299,
-    period: 'month',
-    features: [
-      'Unlimited workspaces',
-      'No daily requests cap',
-      '1000 credits monthly',
-      'Add teammates to workspaces',
-      'Extra usage based spending',
-      'Includes up to 5 seats/users',
-      'Embed Analiyx in your app'
-    ],
-    highlighted: false
-  },
-  {
-    id: 4,
-    name: 'Ultra',
-    description: 'Ship client-facing analytics fast without building a BI stack.',
+    name: 'Enterprise',
+    description: 'For large teams with custom requirements.',
     price: 'Custom',
     period: '',
     features: [
-      'Everything in Business Pro for internal use',
-      'White-label Analiyx on your platform with full multi-tenant support',
-      'Unlimited usage with postpaid, usage-based invoicing',
-      'Dedicated development support'
+      'Unlimited workspaces',
+      'Unlimited requests',
+      'Custom credits allocation',
+      'Unlimited team members',
+      '24/7 dedicated support',
+      'White-label solution',
+      'On-premise deployment option',
+      'Custom SLA & contracts',
+      'Dedicated account manager'
     ],
     highlighted: false
   }

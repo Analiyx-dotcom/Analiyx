@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Facebook, Twitter, Linkedin, Instagram, Mail } from 'lucide-react';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -39,9 +39,32 @@ const Footer = () => {
               </div>
               <span className="text-xl font-bold text-white">Analiyx</span>
             </Link>
-            <p className="text-gray-500 text-sm">
+            <p className="text-gray-500 text-sm mb-4">
               Big Data for Small Teams. No-code data platform powered by AI.
             </p>
+            {/* Social Media Links */}
+            <div className="flex space-x-3">
+              <a href="https://facebook.com/analiyx" target="_blank" rel="noopener noreferrer" 
+                className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
+                <Facebook className="w-4 h-4 text-gray-400 hover:text-white" />
+              </a>
+              <a href="https://twitter.com/analiyx" target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
+                <Twitter className="w-4 h-4 text-gray-400 hover:text-white" />
+              </a>
+              <a href="https://linkedin.com/company/analiyx" target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
+                <Linkedin className="w-4 h-4 text-gray-400 hover:text-white" />
+              </a>
+              <a href="https://instagram.com/analiyx" target="_blank" rel="noopener noreferrer"
+                className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
+                <Instagram className="w-4 h-4 text-gray-400 hover:text-white" />
+              </a>
+              <a href="mailto:contact@analiyx.com"
+                className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
+                <Mail className="w-4 h-4 text-gray-400 hover:text-white" />
+              </a>
+            </div>
           </div>
 
           {/* Product */}
