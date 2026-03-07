@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
-import { integrations } from '../mock/mockData';
+import { integrations, connectedSources, aiVisibilityInsights } from '../mock/mockData';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -120,53 +120,111 @@ const UserDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Dashboard Content */}
-        <Card className="bg-gray-900 border-gray-800">
+        {/* Main Dashboard Content - Connected Data Sources Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {connectedSources.map((source) => {
+            const iconMap = {
+              brain: Brain,
+              facebook: Facebook,
+              megaphone: Megaphone,
+              'bar-chart': BarChart,
+              'book-open': BookOpen
+            };
+            const Icon = iconMap[source.icon] || Database;
+
+            return (
+              <Card key={source.id} className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${source.color}20` }}
+                      >
+                        <Icon className="w-5 h-5" style={{ color: source.color }} />
+                      </div>
+                      <div>
+                        <CardTitle className="text-white text-lg">{source.name}</CardTitle>
+                        <p className="text-xs text-gray-500">Last synced: {source.lastSync}</p>
+                      </div>
+                    </div>
+                    <span className="px-2 py-1 bg-green-900/20 text-green-400 text-xs rounded-full border border-green-700">
+                      {source.status}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    {Object.entries(source.metrics).map(([key, value], index) => (
+                      <div key={index} className="bg-gray-800/50 rounded-lg p-3">
+                        <p className="text-gray-400 text-xs capitalize mb-1">
+                          {key.replace(/([A-Z])/g, ' $1').trim()}
+                        </p>
+                        <p className="text-white font-semibold">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* AI Visibility Detailed Insights */}
+        <Card className="bg-gray-900 border-gray-800 mt-6">
           <CardHeader>
-            <CardTitle className="text-white">Your Analytics Dashboard</CardTitle>
+            <CardTitle className="text-white">AI Visibility Insights</CardTitle>
+            <p className="text-gray-400 text-sm">Your brand's presence across AI platforms</p>
           </CardHeader>
-          <CardContent className="p-8 text-center">
-            <div className="py-12">
-              <Sparkles className="w-16 h-16 text-purple-500 mx-auto mb-4 animate-pulse" />
-              <h3 className="text-xl font-semibold text-white mb-2">
-                Start Connecting Your Data
-              </h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">
-                Connect your data sources to start getting insights. Our AI-powered platform makes it easy to analyze your data without any coding.
-              </p>
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
-                onClick={() => setIsDataSourceModalOpen(true)}
-              >
-                Connect Data Source
-              </Button>
+          <CardContent>
+            <div className="space-y-4">
+              {aiVisibilityInsights.map((insight, index) => {
+                const trendIcons = {
+                  up: <ArrowUp className="w-4 h-4 text-green-500" />,
+                  down: <ArrowDown className="w-4 h-4 text-red-500" />,
+                  neutral: <Minus className="w-4 h-4 text-gray-500" />
+                };
+
+                return (
+                  <div key={index} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-purple-900/20 rounded-lg flex items-center justify-center">
+                        <Brain className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-semibold">{insight.platform}</p>
+                        <p className="text-gray-400 text-sm">{insight.appearances} appearances</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <span className="text-gray-400 text-sm">{insight.ranking}</span>
+                      {trendIcons[insight.trend]}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
 
-        {/* Features Coming Soon */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white text-lg">Data Sources</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-400 text-sm">
-                Connect PostgreSQL, MySQL, MongoDB, Shopify, and more to start analyzing your data.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white text-lg">AI Insights</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-400 text-sm">
-                Ask questions in natural language and get instant insights powered by AI.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Connect More Sources CTA */}
+        <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-500/30 mt-6">
+          <CardContent className="p-8 text-center">
+            <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">
+              Connect More Data Sources
+            </h3>
+            <p className="text-gray-400 mb-6">
+              Get deeper insights by connecting all your business data sources
+            </p>
+            <Button 
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
+              onClick={() => setIsDataSourceModalOpen(true)}
+            >
+              Browse Integrations
+            </Button>
+          </CardContent>
+        </Card>
       </main>
 
       {/* Data Source Connection Modal */}
