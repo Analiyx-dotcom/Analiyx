@@ -2,7 +2,7 @@ import React from 'react';
 import { integrations } from '../mock/mockData';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Database, Zap, Sheet, FileSpreadsheet, FileText, CreditCard, ShoppingBag, Book, BarChart, Store, Square, Users } from 'lucide-react';
+import { Database, Zap, Sheet, FileSpreadsheet, FileText, CreditCard, ShoppingBag, Book, BarChart, Store, Square, Users, Brain, Facebook, BookOpen, Megaphone, Cloud } from 'lucide-react';
 
 const iconMap = {
   database: Database,
@@ -16,7 +16,12 @@ const iconMap = {
   'bar-chart': BarChart,
   store: Store,
   square: Square,
-  users: Users
+  users: Users,
+  brain: Brain,
+  facebook: Facebook,
+  'book-open': BookOpen,
+  megaphone: Megaphone,
+  cloud: Cloud
 };
 
 const Integrations = () => {

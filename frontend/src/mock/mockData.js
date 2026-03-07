@@ -23,17 +23,17 @@ export const integrations = [
   { name: 'PostgreSQL', icon: 'database', color: '#336791' },
   { name: 'MySQL', icon: 'database', color: '#4479A1' },
   { name: 'MongoDB', icon: 'database', color: '#47A248' },
-  { name: 'Supabase', icon: 'zap', color: '#3ECF8E' },
+  { name: 'AI Visibility', icon: 'brain', color: '#8B5CF6' },
   { name: 'Google Sheets', icon: 'sheet', color: '#0F9D58' },
   { name: 'Excel', icon: 'file-spreadsheet', color: '#217346' },
   { name: 'CSV', icon: 'file-text', color: '#6B7280' },
-  { name: 'Stripe', icon: 'credit-card', color: '#635BFF' },
+  { name: 'Meta Ads', icon: 'facebook', color: '#1877F2' },
   { name: 'Shopify', icon: 'shopping-bag', color: '#96BF48' },
-  { name: 'QuickBooks', icon: 'book', color: '#2CA01C' },
+  { name: 'Zoho Books', icon: 'book-open', color: '#E42527' },
   { name: 'Google Analytics', icon: 'bar-chart', color: '#E37400' },
-  { name: 'Shopline', icon: 'store', color: '#FF6B6B' },
-  { name: 'Square', icon: 'square', color: '#000000' },
-  { name: 'HubSpot', icon: 'users', color: '#FF7A59' }
+  { name: 'Google Ads', icon: 'megaphone', color: '#4285F4' },
+  { name: 'HubSpot', icon: 'users', color: '#FF7A59' },
+  { name: 'Salesforce', icon: 'cloud', color: '#00A1E0' }
 ];
 
 export const pricingPlans = [
@@ -159,3 +159,110 @@ export const chartData = {
     { plan: 'Ultra', count: 66 }
   ]
 };
+
+// Connected Data Sources Analytics
+export const connectedSources = [
+  {
+    id: 1,
+    name: 'AI Visibility',
+    icon: 'brain',
+    color: '#8B5CF6',
+    status: 'connected',
+    lastSync: '2 hours ago',
+    metrics: {
+      aiSearchAppearances: 1247,
+      searchRankings: 'Top 3 in 45 queries',
+      llmMentions: 342,
+      brandVisibility: '89%',
+      competitorGap: '+23%'
+    }
+  },
+  {
+    id: 2,
+    name: 'Meta Ads',
+    icon: 'facebook',
+    color: '#1877F2',
+    status: 'connected',
+    lastSync: '1 hour ago',
+    metrics: {
+      impressions: 45230,
+      clicks: 1234,
+      conversions: 89,
+      ctr: '2.73%',
+      spend: '₹12,450'
+    }
+  },
+  {
+    id: 3,
+    name: 'Google Ads',
+    icon: 'megaphone',
+    color: '#4285F4',
+    status: 'connected',
+    lastSync: '30 mins ago',
+    metrics: {
+      impressions: 67890,
+      clicks: 2341,
+      conversions: 156,
+      ctr: '3.45%',
+      spend: '₹23,780'
+    }
+  },
+  {
+    id: 4,
+    name: 'Google Analytics',
+    icon: 'bar-chart',
+    color: '#E37400',
+    status: 'connected',
+    lastSync: '5 mins ago',
+    metrics: {
+      sessions: 12456,
+      users: 8934,
+      pageviews: 34567,
+      bounceRate: '42.3%',
+      avgDuration: '3m 24s'
+    }
+  },
+  {
+    id: 5,
+    name: 'Zoho Books',
+    icon: 'book-open',
+    color: '#E42527',
+    status: 'connected',
+    lastSync: '4 hours ago',
+    metrics: {
+      revenue: '₹4,56,789',
+      invoices: 234,
+      paid: 198,
+      pending: 36,
+      overdueAmount: '₹45,600'
+    }
+  }
+];
+
+// AI Visibility Insights
+export const aiVisibilityInsights = [
+  {
+    platform: 'ChatGPT',
+    appearances: 523,
+    ranking: 'Top 3',
+    trend: 'up'
+  },
+  {
+    platform: 'Google Gemini',
+    appearances: 412,
+    ranking: 'Top 5',
+    trend: 'up'
+  },
+  {
+    platform: 'Claude',
+    appearances: 234,
+    ranking: 'Top 10',
+    trend: 'neutral'
+  },
+  {
+    platform: 'Perplexity',
+    appearances: 78,
+    ranking: 'Not in Top 10',
+    trend: 'down'
+  }
+];
