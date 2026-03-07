@@ -47,8 +47,8 @@ const ForgotPassword = () => {
           </CardTitle>
           <CardDescription className="text-gray-400">
             {emailSent 
-              ? "We've sent password reset instructions to your email"
-              : "Enter your email and we'll send you reset instructions"}
+              ?('We have sent password reset instructions to your emaie')
+              :('Enter your email and we will send you reset instructions')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -66,7 +66,20 @@ const ForgotPassword = () => {
                   required
                   className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
                 />
-              </div>
+              </div><div className="space-y-2">
+ <Label htmlFor="email" className="text-gray-300">Email</Label>
+ <Input
+ id="email"
+ name="email"
+ type="email"
+ placeholder="name@example.com"
+ value={email}
+ onChange={(e) => setEmail(e.target.value)}
+ required
+ className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+ />
+</div>
+
               <Button
                 type="submit"
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
