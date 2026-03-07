@@ -47,8 +47,8 @@ const ForgotPassword = () => {
           </CardTitle>
           <CardDescription className="text-gray-400">
             {emailSent 
-              ? 'We've sent password reset instructions to your email'
-              : 'Enter your email and we'll send you reset instructions'}
+              ? "We've sent password reset instructions to your email"
+              : "Enter your email and we'll send you reset instructions"}
           </CardDescription>
         </CardHeader>
         <CardContent>
