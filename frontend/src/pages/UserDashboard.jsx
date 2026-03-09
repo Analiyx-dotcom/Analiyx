@@ -2,14 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { integrations, connectedSources, aiVisibilityInsights } from '../mock/mockData';
+import { dataSourceAPI } from '../services/api';
+import { toast } from '../hooks/use-toast';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isDataSourceModalOpen, setIsDataSourceModalOpen] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showFileUpload, setShowFileUpload] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -28,7 +34,72 @@ const UserDashboard = () => {
     }
 
     setUser(parsedUser);
+    fetchUploadedFiles();
   }, [navigate]);
+
+  const fetchUploadedFiles = async () => {
+    try {
+      const data = await dataSourceAPI.getUploadedFiles();
+      setUploadedFiles(data.files || []);
+    } catch (error) {
+      console.error('Error fetching files:', error);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ['text/csv', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(csv|xlsx|xls)$/i)) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please upload CSV or Excel files only.',
+          variant: 'destructive'
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    try {
+      const result = await dataSourceAPI.uploadFile(selectedFile);
+      
+      toast({
+        title: 'File uploaded successfully!',
+        description: result.message,
+      });
+      
+      setSelectedFile(null);
+      setShowFileUpload(false);
+      setIsDataSourceModalOpen(false);
+      fetchUploadedFiles();
+      
+    } catch (error) {
+      toast({
+        title: 'Upload failed',
+        description: error.response?.data?.detail || 'Failed to upload file',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleIntegrationClick = (integration) => {
+    if (integration.name === 'Excel' || integration.name === 'CSV') {
+      setShowFileUpload(true);
+    } else {
+      toast({
+        title: 'Coming Soon',
+        description: `${integration.name} integration will be available soon!`,
+      });
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -119,6 +190,43 @@ const UserDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Uploaded Files Section */}
+        {uploadedFiles.length > 0 && (
+          <Card className="bg-gray-900 border-gray-800 mb-6">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <FileSpreadsheet className="w-5 h-5 mr-2" />
+                Your Uploaded Files
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {uploadedFiles.map((file) => (
+                  <div 
+                    key={file.id}
+                    className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-10 h-10 bg-green-900/20 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{file.filename}</p>
+                        <p className="text-gray-400 text-sm">
+                          {file.total_rows} rows × {file.total_columns} columns • Uploaded {file.uploaded_at}
+                        </p>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 bg-green-900/20 text-green-400 text-xs rounded-full border border-green-700">
+                      {file.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Main Dashboard Content - Connected Data Sources Analytics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -231,43 +339,118 @@ const UserDashboard = () => {
       <Dialog open={isDataSourceModalOpen} onOpenChange={setIsDataSourceModalOpen}>
         <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-3xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Connect Data Source</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">
+              {showFileUpload ? 'Upload File' : 'Connect Data Source'}
+            </DialogTitle>
             <DialogDescription className="text-gray-400">
-              Choose a data source to connect and start analyzing your data
+              {showFileUpload 
+                ? 'Upload your CSV or Excel file to analyze data'
+                : 'Choose a data source to connect and start analyzing your data'}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
-            {integrations.map((integration, index) => (
-              <button
-                key={index}
-                className="group relative bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-purple-500 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20"
-                onClick={() => {
-                  // TODO: Implement actual data source connection
-                  alert(`Connecting to ${integration.name}...`);
-                  setIsDataSourceModalOpen(false);
-                }}
-              >
-                <div className="flex flex-col items-center space-y-2">
-                  <div 
-                    className="w-12 h-12 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${integration.color}20` }}
-                  >
-                    <Database className="w-6 h-6" style={{ color: integration.color }} />
-                  </div>
-                  <span className="text-xs text-gray-400 text-center group-hover:text-white transition-colors">
-                    {integration.name}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
+          {showFileUpload ? (
+            <div className="py-6">
+              <div className="border-2 border-dashed border-gray-700 rounded-xl p-8 text-center hover:border-purple-500 transition-colors">
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label htmlFor="file-upload" className="cursor-pointer">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-white font-semibold mb-2">
+                    {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
+                  </p>
+                  <p className="text-gray-400 text-sm">CSV or Excel files (max 10MB)</p>
+                </label>
+              </div>
 
-          <div className="pt-4 border-t border-gray-800">
-            <p className="text-sm text-gray-400 text-center">
-              Don't see your data source? <span className="text-purple-400 cursor-pointer hover:underline">Contact support</span>
-            </p>
-          </div>
+              {selectedFile && (
+                <div className="mt-4 bg-gray-800 rounded-lg p-4 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <FileSpreadsheet className="w-8 h-8 text-green-500" />
+                    <div>
+                      <p className="text-white font-medium">{selectedFile.name}</p>
+                      <p className="text-gray-400 text-sm">
+                        {(selectedFile.size / 1024).toFixed(2)} KB
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedFile(null)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
+              <div className="flex space-x-3 mt-6">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+                  onClick={() => {
+                    setShowFileUpload(false);
+                    setSelectedFile(null);
+                  }}
+                >
+                  Back
+                </Button>
+                <Button
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  onClick={handleFileUpload}
+                  disabled={!selectedFile || isUploading}
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload & Analyze
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4">
+                {integrations.map((integration, index) => (
+                  <button
+                    key={index}
+                    className="group relative bg-gray-800 border border-gray-700 rounded-xl p-4 hover:border-purple-500 transition-all duration-300 transform hover:scale-105 hover:shadow-xl hover:shadow-purple-500/20"
+                    onClick={() => handleIntegrationClick(integration)}
+                  >
+                    <div className="flex flex-col items-center space-y-2">
+                      <div 
+                        className="w-12 h-12 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${integration.color}20` }}
+                      >
+                        <Database className="w-6 h-6" style={{ color: integration.color }} />
+                      </div>
+                      <span className="text-xs text-gray-400 text-center group-hover:text-white transition-colors">
+                        {integration.name}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="pt-4 border-t border-gray-800">
+                <p className="text-sm text-gray-400 text-center">
+                  Don't see your data source? <span className="text-purple-400 cursor-pointer hover:underline">Contact support</span>
+                </p>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

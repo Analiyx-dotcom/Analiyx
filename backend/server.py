@@ -13,6 +13,7 @@ from datetime import datetime, timezone
 # Import route modules
 from routes.auth_routes import router as auth_router
 from routes.admin_routes import router as admin_router
+from routes.data_source_routes import router as data_source_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -76,11 +77,13 @@ app.include_router(api_router)
 # Include auth and admin routers
 app.include_router(auth_router)
 app.include_router(admin_router)
+app.include_router(data_source_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes
+from routes import auth_routes, admin_routes, data_source_routes
 auth_routes.set_database(db)
 admin_routes.set_database(db)
+data_source_routes.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,

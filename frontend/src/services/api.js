@@ -61,4 +61,34 @@ export const adminAPI = {
   },
 };
 
+// Data Source API
+export const dataSourceAPI = {
+  uploadFile: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await api.post('/data-sources/upload-file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  
+  getUploadedFiles: async () => {
+    const response = await api.get('/data-sources/uploaded-files');
+    return response.data;
+  },
+  
+  getFileDetails: async (fileId) => {
+    const response = await api.get(`/data-sources/file-details/${fileId}`);
+    return response.data;
+  },
+  
+  deleteFile: async (fileId) => {
+    const response = await api.delete(`/data-sources/file/${fileId}`);
+    return response.data;
+  },
+};
+
 export default api;
