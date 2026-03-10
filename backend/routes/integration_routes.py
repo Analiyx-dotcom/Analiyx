@@ -5,6 +5,7 @@ from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 from datetime import datetime
 from bson import ObjectId
+import os
 
 router = APIRouter(prefix="/api/integrations", tags=["Integrations"])
 
@@ -170,18 +171,31 @@ async def get_oauth_authorization_url(
             detail="This integration does not use OAuth"
         )
     
-    # Generate OAuth URLs based on integration
-    auth_urls = {
-        "google_ads": f"https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope={'+'.join(metadata['scopes'])}&response_type=code&access_type=offline",
-        "google_analytics": f"https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope={'+'.join(metadata['scopes'])}&response_type=code&access_type=offline",
-        "google_sheets": f"https://accounts.google.com/o/oauth2/v2/auth?client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope={'+'.join(metadata['scopes'])}&response_type=code&access_type=offline",
-        "meta_ads": "https://www.facebook.com/v12.0/dialog/oauth?client_id=YOUR_APP_ID&redirect_uri=YOUR_REDIRECT_URI&scope=ads_read,ads_management",
-        "salesforce": "https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=YOUR_REDIRECT_URI&scope=api%20refresh_token"
-    }
+    # Generate OAuth URLs using integration classes
+    auth_url = ""
+    
+    if integration_name == "google_ads":
+        from integrations.google_ads import GoogleAdsIntegration
+        auth_url = GoogleAdsIntegration.get_oauth_url(state=user_id)
+    
+    elif integration_name == "meta_ads":
+        from integrations.meta_ads import MetaAdsIntegration
+        auth_url = MetaAdsIntegration.get_oauth_url(state=user_id)
+    
+    elif integration_name in ["google_analytics", "google_sheets"]:
+        # Similar to Google Ads OAuth
+        scopes = "+".join(metadata['scopes'])
+        base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+        auth_url = f"{base_url}?client_id={os.getenv('GOOGLE_ADS_CLIENT_ID')}&redirect_uri={os.getenv('GOOGLE_ADS_REDIRECT_URI')}&scope={scopes}&response_type=code&access_type=offline&prompt=consent&state={user_id}"
+    
+    elif integration_name == "salesforce":
+        client_id = os.getenv("SALESFORCE_CLIENT_ID", "YOUR_CLIENT_ID")
+        redirect_uri = os.getenv("SALESFORCE_REDIRECT_URI", "YOUR_REDIRECT_URI")
+        auth_url = f"https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=api%20refresh_token&state={user_id}"
     
     return {
-        "authorization_url": auth_urls.get(integration_name, ""),
-        "state": user_id,  # Use for CSRF protection
+        "authorization_url": auth_url,
+        "state": user_id,
         "integration_name": integration_name
     }
 
@@ -217,28 +231,157 @@ async def test_mongodb_connection(credentials: Dict[str, Any]):
     await client.server_info()
     client.close()
 
-async def test_api_key_integration(integration_name: str, credentials: Dict[str, Any]):
-    """Test API key based integrations"""
-    import httpx
+@router.get("/oauth/callback/google_ads")
+async def google_ads_oauth_callback(code: str, state: str):
+    """Handle Google Ads OAuth callback"""
+    from integrations.google_ads import GoogleAdsIntegration
     
-    test_endpoints = {
-        "shopify": f"https://{credentials.get('shop_url')}/admin/api/2024-01/shop.json",
-        "hubspot": "https://api.hubapi.com/contacts/v1/lists/all/contacts/all",
-        "zoho_books": "https://www.zohoapis.com/books/v3/organizations"
-    }
+    try:
+        # Exchange code for tokens
+        tokens = await GoogleAdsIntegration.exchange_code_for_token(code)
+        
+        # Store tokens in database for the user
+        user_id = state  # state parameter contains user_id
+        
+        connection_doc = {
+            "user_id": ObjectId(user_id),
+            "integration_name": "google_ads",
+            "integration_type": "oauth",
+            "credentials": {
+                "access_token": tokens.get("access_token"),
+                "refresh_token": tokens.get("refresh_token"),
+                "expires_in": tokens.get("expires_in")
+            },
+            "status": "connected",
+            "connected_at": datetime.utcnow()
+        }
+        
+        await db.integrations.insert_one(connection_doc)
+        
+        # Redirect to success page
+        return {
+            "success": True,
+            "message": "Google Ads connected successfully!",
+            "redirect_url": "/dashboard?integration=google_ads&status=success"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "redirect_url": "/dashboard?integration=google_ads&status=error"
+        }
+
+@router.get("/oauth/callback/meta_ads")
+async def meta_ads_oauth_callback(code: str, state: str):
+    """Handle Meta Ads OAuth callback"""
+    from integrations.meta_ads import MetaAdsIntegration
     
-    headers = {}
-    if integration_name == "shopify":
-        headers = {"X-Shopify-Access-Token": credentials.get("access_token")}
-    elif integration_name == "hubspot":
-        headers = {"Authorization": f"Bearer {credentials.get('api_key')}"}
-    elif integration_name == "zoho_books":
-        headers = {"Authorization": f"Zoho-oauthtoken {credentials.get('access_token')}"}
+    try:
+        # Exchange code for tokens
+        tokens = await MetaAdsIntegration.exchange_code_for_token(code)
+        
+        # Store tokens in database for the user
+        user_id = state
+        
+        connection_doc = {
+            "user_id": ObjectId(user_id),
+            "integration_name": "meta_ads",
+            "integration_type": "oauth",
+            "credentials": {
+                "access_token": tokens.get("access_token"),
+                "expires_in": tokens.get("expires_in")
+            },
+            "status": "connected",
+            "connected_at": datetime.utcnow()
+        }
+        
+        await db.integrations.insert_one(connection_doc)
+        
+        return {
+            "success": True,
+            "message": "Meta Ads connected successfully!",
+            "redirect_url": "/dashboard?integration=meta_ads&status=success"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "redirect_url": "/dashboard?integration=meta_ads&status=error"
+        }
+
+@router.post("/fetch-data/{integration_name}")
+async def fetch_integration_data(
+    integration_name: str,
+    user_id: str = Depends(get_current_user_id)
+):
+    """Fetch data from connected integration"""
     
-    async with httpx.AsyncClient() as client:
-        response = await client.get(
-            test_endpoints.get(integration_name, ""),
-            headers=headers
+    # Get user's connection
+    connection = await db.integrations.find_one({
+        "user_id": ObjectId(user_id),
+        "integration_name": integration_name,
+        "status": "connected"
+    })
+    
+    if not connection:
+        raise HTTPException(status_code=404, detail="Integration not connected")
+    
+    try:
+        if integration_name == "google_ads":
+            from integrations.google_ads import GoogleAdsIntegration
+            
+            integration = GoogleAdsIntegration(connection["credentials"])
+            
+            # Get customer ID from user input or stored config
+            customer_id = connection.get("config", {}).get("customer_id")
+            if not customer_id:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Google Ads Customer ID not configured"
+                )
+            
+            data = await integration.fetch_campaign_metrics(customer_id)
+            
+        elif integration_name == "meta_ads":
+            from integrations.meta_ads import MetaAdsIntegration
+            
+            integration = MetaAdsIntegration(connection["credentials"])
+            
+            # Get ad account ID
+            ad_account_id = connection.get("config", {}).get("ad_account_id")
+            if not ad_account_id:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Meta Ads Account ID not configured"
+                )
+            
+            data = await integration.fetch_campaign_metrics(ad_account_id)
+        
+        else:
+            raise HTTPException(status_code=400, detail="Integration not supported yet")
+        
+        # Store fetched data
+        await db.integration_data.insert_one({
+            "user_id": ObjectId(user_id),
+            "integration_name": integration_name,
+            "data": data,
+            "fetched_at": datetime.utcnow()
+        })
+        
+        # Update last sync
+        await db.integrations.update_one(
+            {"_id": connection["_id"]},
+            {"$set": {"last_sync": {"timestamp": datetime.utcnow(), "status": "success"}}}
         )
-        if response.status_code not in [200, 201]:
-            raise Exception(f"API test failed with status {response.status_code}")
+        
+        return data
+        
+    except Exception as e:
+        # Update last sync with error
+        await db.integrations.update_one(
+            {"_id": connection["_id"]},
+            {"$set": {"last_sync": {"timestamp": datetime.utcnow(), "status": "error", "error": str(e)}}}
+        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
