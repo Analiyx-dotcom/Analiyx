@@ -43,3 +43,4 @@ Thumbs.db
 *.key
 frontend/.env
 backend/.env
+backend/.env

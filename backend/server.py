@@ -15,6 +15,7 @@ from routes.auth_routes import router as auth_router
 from routes.admin_routes import router as admin_router
 from routes.data_source_routes import router as data_source_router
 from routes.integration_routes import router as integration_router
+from routes.admin_management_routes import router as admin_management_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -80,13 +81,15 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(data_source_router)
 app.include_router(integration_router)
+app.include_router(admin_management_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes, data_source_routes, integration_routes
+from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes
 auth_routes.set_database(db)
 admin_routes.set_database(db)
 data_source_routes.set_database(db)
 integration_routes.set_database(db)
+admin_management_routes.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,

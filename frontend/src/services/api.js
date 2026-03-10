@@ -59,6 +59,32 @@ export const adminAPI = {
     const response = await api.get('/admin/charts/revenue');
     return response.data;
   },
+  
+  // User Management
+  getAllUsersDetails: async () => {
+    const response = await api.get('/admin/manage/users/details');
+    return response.data;
+  },
+  
+  updateUserStatus: async (userId, status) => {
+    const response = await api.put(`/admin/manage/users/${userId}/status`, { status });
+    return response.data;
+  },
+  
+  extendTrial: async (userId, days = 7) => {
+    const response = await api.post(`/admin/manage/users/${userId}/extend-trial`, { days });
+    return response.data;
+  },
+  
+  manageCredits: async (userId, credits, action) => {
+    const response = await api.put(`/admin/manage/users/${userId}/credits`, { credits, action });
+    return response.data;
+  },
+  
+  getUserActivity: async (userId) => {
+    const response = await api.get(`/admin/manage/users/${userId}/activity`);
+    return response.data;
+  },
 };
 
 // Data Source API

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2 } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { integrations, connectedSources, aiVisibilityInsights } from '../mock/mockData';
 import { dataSourceAPI } from '../services/api';
@@ -16,6 +16,8 @@ const UserDashboard = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [fileDetails, setFileDetails] = useState(null);
+  const [showFileDetails, setShowFileDetails] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -44,6 +46,28 @@ const UserDashboard = () => {
     } catch (error) {
       console.error('Error fetching files:', error);
     }
+  };
+
+  const handleViewFileDetails = async (fileId) => {
+    try {
+      const details = await dataSourceAPI.getFileDetails(fileId);
+      setFileDetails(details);
+      setShowFileDetails(true);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to load file details',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDownloadReport = () => {
+    toast({
+      title: 'Report Download',
+      description: 'Report download will start shortly...',
+    });
+    // Will implement actual download
   };
 
   const handleFileSelect = (e) => {
@@ -90,9 +114,29 @@ const UserDashboard = () => {
     }
   };
 
-  const handleIntegrationClick = (integration) => {
+  const handleIntegrationClick = async (integration) => {
     if (integration.name === 'Excel' || integration.name === 'CSV') {
       setShowFileUpload(true);
+    } else if (integration.name === 'Google Ads' || integration.name === 'Meta Ads') {
+      // Trigger OAuth flow
+      try {
+        const integrationKey = integration.name === 'Google Ads' ? 'google_ads' : 'meta_ads';
+        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/integrations/oauth/authorize/${integrationKey}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        const data = await response.json();
+        
+        // Redirect to OAuth URL
+        window.location.href = data.authorization_url;
+      } catch (error) {
+        toast({
+          title: 'Connection failed',
+          description: 'Failed to start OAuth flow. Please try again.',
+          variant: 'destructive'
+        });
+      }
     } else {
       toast({
         title: 'Coming Soon',
@@ -195,17 +239,29 @@ const UserDashboard = () => {
         {uploadedFiles.length > 0 && (
           <Card className="bg-gray-900 border-gray-800 mb-6">
             <CardHeader>
-              <CardTitle className="text-white flex items-center">
-                <FileSpreadsheet className="w-5 h-5 mr-2" />
-                Your Uploaded Files
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white flex items-center">
+                  <FileSpreadsheet className="w-5 h-5 mr-2" />
+                  Your Uploaded Files
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadReport}
+                  className="border-purple-500 text-purple-400 hover:bg-purple-900/20"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download All Reports
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {uploadedFiles.map((file) => (
                   <div 
                     key={file.id}
-                    className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer"
+                    onClick={() => handleViewFileDetails(file.id)}
                   >
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-green-900/20 rounded-lg flex items-center justify-center">
@@ -218,9 +274,18 @@ const UserDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 bg-green-900/20 text-green-400 text-xs rounded-full border border-green-700">
-                      {file.status}
-                    </span>
+                    <div className="flex items-center space-x-3">
+                      <span className="px-3 py-1 bg-green-900/20 text-green-400 text-xs rounded-full border border-green-700">
+                        {file.status}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-purple-400 hover:text-purple-300"
+                      >
+                        View Analytics →
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
