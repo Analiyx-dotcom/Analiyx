@@ -51,6 +51,7 @@ async def seed_database():
             "plan": user_data["plan"],
             "status": "active" if i < 8 else "inactive",
             "credits": 100 + (i * 50),
+            "role": "user",
             "created_at": created_at,
             "updated_at": created_at
         }
@@ -124,6 +125,7 @@ async def seed_database():
         "plan": "Ultra",
         "status": "active",
         "credits": 10000,
+        "role": "admin",
         "created_at": datetime.utcnow() - timedelta(days=365),
         "updated_at": datetime.utcnow()
     }
