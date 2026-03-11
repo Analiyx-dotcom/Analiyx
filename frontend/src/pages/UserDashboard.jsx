@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { integrations, connectedSources, aiVisibilityInsights } from '../mock/mockData';
 import { dataSourceAPI } from '../services/api';
 import { toast } from '../hooks/use-toast';
+import { downloadComprehensiveReport } from '../utils/reportExport';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -62,12 +63,31 @@ const UserDashboard = () => {
     }
   };
 
-  const handleDownloadReport = () => {
-    toast({
-      title: 'Report Download',
-      description: 'Report download will start shortly...',
-    });
-    // Will implement actual download
+  const handleDownloadReport = async () => {
+    try {
+      const dashboardData = {
+        user: user,
+        files: uploadedFiles,
+        connectedSources: connectedSources,
+        aiInsights: aiVisibilityInsights
+      };
+      
+      // Show format selection
+      const format = window.confirm('Download as PDF? (Cancel for Excel)') ? 'pdf' : 'excel';
+      
+      await downloadComprehensiveReport(dashboardData, format);
+      
+      toast({
+        title: 'Report Downloaded!',
+        description: `Your dashboard report has been downloaded as ${format.toUpperCase()}.`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Download Failed',
+        description: 'Failed to generate report. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleFileSelect = (e) => {

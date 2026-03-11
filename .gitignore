@@ -44,3 +44,4 @@ Thumbs.db
 frontend/.env
 backend/.env
 backend/.env
+frontend/node_modules/.cache/default-development/2.pack
