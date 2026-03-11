@@ -195,6 +195,7 @@ const UserDashboard = () => {
               variant="ghost"
               className="text-gray-400 hover:text-white"
               onClick={handleLogout}
+              data-testid="logout-button"
             >
               <LogOut className="w-5 h-5 mr-2" />
               Logout
@@ -269,6 +270,7 @@ const UserDashboard = () => {
                   size="sm"
                   onClick={handleDownloadReport}
                   className="border-purple-500 text-purple-400 hover:bg-purple-900/20"
+                  data-testid="download-reports-button"
                 >
                   <Download className="w-4 h-4 mr-2" />
                   Download All Reports
@@ -413,6 +415,7 @@ const UserDashboard = () => {
             <Button 
               className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
               onClick={() => setIsDataSourceModalOpen(true)}
+              data-testid="browse-integrations-button"
             >
               Browse Integrations
             </Button>

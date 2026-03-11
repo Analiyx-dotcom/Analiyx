@@ -91,6 +91,7 @@ const Login = () => {
                 value={formData.email}
                 onChange={handleChange}
                 required
+                data-testid="login-email-input"
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
               />
             </div>
@@ -109,6 +110,7 @@ const Login = () => {
                 value={formData.password}
                 onChange={handleChange}
                 required
+                data-testid="login-password-input"
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
               />
             </div>
@@ -116,6 +118,7 @@ const Login = () => {
               type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white"
               disabled={isLoading}
+              data-testid="login-submit-button"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>

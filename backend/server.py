@@ -85,6 +85,8 @@ app.include_router(admin_management_router)
 
 # Set database for route modules
 from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes
+from auth import set_auth_database
+set_auth_database(db)
 auth_routes.set_database(db)
 admin_routes.set_database(db)
 data_source_routes.set_database(db)

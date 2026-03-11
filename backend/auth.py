@@ -52,10 +52,16 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Security(sec
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return user_id
 
+_db = None
+
+def set_auth_database(database):
+    """Set the database reference for auth module"""
+    global _db
+    _db = database
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> dict:
     """Get current user with role information"""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    import os
+    from bson import ObjectId
     
     token = credentials.credentials
     payload = decode_token(token)
@@ -64,13 +70,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     if user_id is None:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     
-    # Fetch user from database to get role
-    mongo_url = os.environ['MONGO_URL']
-    client = AsyncIOMotorClient(mongo_url)
-    db = client[os.environ['DB_NAME']]
+    if _db is None:
+        raise HTTPException(status_code=500, detail="Database not initialized")
     
-    from bson import ObjectId
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    user = await _db.users.find_one({"_id": ObjectId(user_id)})
     
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
