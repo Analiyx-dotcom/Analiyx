@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://papermap-dark.preview.emergentagent.com/api"
+BASE_URL = "https://insights-hub-44.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@papermap.com"
 ADMIN_PASSWORD = "admin123"
 

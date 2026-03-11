@@ -1,0 +1,333 @@
+<analysis>Analyse the user's request and the conversation history to provide a concise handover summary.
+
+**original_problem_statement:**
+The initial request was to build a dark-themed clone of  with a separate admin dashboard for analytics.
+
+Over the course of the conversation, the requirements evolved significantly to include:
+- **Rebranding:** Change the application name to Analiyx.
+- **Localization:** Use Indian testimonials and INR for pricing plans (reduced to 3 plans).
+- **Core Features:**
+    - Separate admin and regular user roles with distinct dashboards. Admin URL should be .
+    - Admin controls to manage users: enable/disable accounts, extend trials, and manage credits.
+    - User signup/login with email/password and an option for Google Sign-In.
+    - Forgot Password functionality.
+    - Welcome email upon client registration.
+- **Integrations:**
+    - Functional Excel/CSV upload for data analysis.
+    - Integration with Google Ads, Meta Ads, Zoho Books, and Google Sheets. The user has provided credentials for Google and Meta Ads.
+    - An AI Visibility feature, where a user can input a URL and get an analysis.
+- **Functionality & Bug Fixes:**
+    - Data from integrations and uploaded files should be analyzed and visualized on the user's dashboard.
+    - Clients should be able to download reports from their dashboard.
+    - Fix numerous issues including non-functional integration buttons, broken admin dashboard access, and intermittent login failures.
+- **Deployment:** The user is self-hosting and requires the final code to be pushed to their GitHub repository.
+- **Payment:** A payment link for clients, with plans for Cashfree/Razorpay integration.
+
+**User's preferred language**: English
+
+**what currently exists?**
+A full-stack application with a React frontend and FastAPI backend, rebranded as Analiyx. It features a dark-themed landing page, user/admin roles, and JWT-based authentication connected to a MongoDB database. Separate, partially functional dashboards exist for users and admins. The code has been pushed to the user's GitHub repository. Several features, such as CSV upload and third-party integrations (Google/Meta Ads), have been partially implemented but are buggy or incomplete.
+
+**Last working item**:
+    - Last item agent was working: The agent was about to diagnose and fix a critical compilation error that made the entire frontend application inaccessible. Screenshots provided by the agent showed an error page instead of the application UI. This was discovered after the user reported multiple issues and the agent was trying to take screenshots to verify the current state.
+    - Status: BLOCKED
+    - Agent Testing Done: N
+    - Which testing method agent to use? First, check frontend logs ((node:81) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:81) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:219) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:219) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:80) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:80) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.) to identify the specific compilation error. After applying a fix, use the screenshot tool to confirm the app loads correctly.
+    - User Testing Done: Y (User confirmed the app is not loading)
+
+**All Pending/In progress Issue list**:
+-   **Issue 1 (P0): Critical Compilation Error - App Not Loading**
+-   **Issue 2 (P1): Admin Dashboard is Inaccessible**
+-   **Issue 3 (P1): Google Ads & Meta Ads Integrations Not Working**
+-   **Issue 4 (P2): View Analytics for CSV/Excel is Not Functional**
+-   **Issue 5 (P3): AI Visibility Feature Shows Dummy Data**
+-   **Issue 6 (P3): Intermittent Login Failures for Registered Users**
+-   **Issue 7 (P4): Admin User Management Controls are Incomplete**
+
+Issues Detail:
+  - **Issue 1: Critical Compilation Error - App Not Loading (P0)**
+     - Attempted fixes: None. The agent just identified the problem.
+     - Next debug checklist:
+        1.  Execute (node:81) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:81) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:219) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:219) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:78) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:80) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:80) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:82) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:85) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option. to find the compilation error.
+        2.  Inspect the file mentioned in the logs (likely  or  due to recent edits).
+        3.  Fix the syntax error, which could be a missing import, incorrect JSX, or an unclosed tag.
+     - Why fix this issue and what will be achieved with the fix? The application is completely unusable. Fixing this will restore basic functionality and allow further debugging.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: No, this is the primary blocker.
+
+  - **Issue 2: Admin Dashboard is Inaccessible (P1)**
+     - Attempted fixes: The agent modified the auth logic to include the user's  in the API response and , but the redirection issue persists. Admins are incorrectly routed to the user dashboard.
+     - Next debug checklist:
+        1.  In , review the logic for the protected admin route (). Ensure it correctly checks for .
+        2.  Use browser developer tools to verify that  contains the user object with the correct  after an admin logs in.
+        3.  Debug the  component to confirm the  is being set correctly upon a successful login API call.
+     - Why fix this issue and what will be achieved with the fix? The admin cannot access the user management panel, which is a critical requirement.
+     - Status: IN PROGRESS
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on other issue: Issue 1 (App Not Loading).
+
+  - **Issue 3: Google Ads & Meta Ads Integrations Not Working (P1)**
+     - Attempted fixes: Backend routes and service files (, ) were created, and user-provided credentials were stored. However, the frontend Connect buttons are still placeholders showing Coming Soon or connection failed.
+     - Next debug checklist:
+        1.  Modify .
+        2.  Update the  handlers for the Google Ads and Meta Ads Connect buttons to trigger the OAuth flow by navigating to  and  respectively.
+        3.  Remove the Coming Soon placeholder logic for these two integrations.
+     - Why fix this issue and what will be achieved with the fix? This is a core feature requested by the user, and they have provided the necessary API keys.
+     - Status: IN PROGRESS
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: Issue 1 (App Not Loading).
+
+  - **Issue 4: View Analytics for CSV/Excel is Not Functional (P2)**
+     - Attempted fixes: The agent created a backend endpoint to handle file uploads and started building a frontend modal () to display results. The implementation is incomplete, and the button does not trigger the modal.
+     - Next debug checklist:
+        1.  In , complete the implementation of the .
+        2.  Wire the View analytics button's  event to open this modal.
+        3.  The modal should receive the file ID and make an API call to a backend endpoint to fetch and display the parsed data (e.g., column names, first 5 rows, basic stats).
+     - Why fix this issue and what will be achieved with the fix? It enables the only currently API-key-free integration, providing immediate value to the user.
+     - Status: IN PROGRESS
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: Issue 1 (App Not Loading).
+
+  - **Issue 5: AI Visibility Feature Shows Dummy Data (P3)**
+     - Attempted fixes: None. The feature is just a hardcoded placeholder.
+     - Next debug checklist:
+        1.  Create a new UI in  to accept a URL from the user.
+        2.  Implement a new backend endpoint (e.g., ).
+        3.  This endpoint should scrape the content of the provided URL and use an LLM via  to generate an analysis.
+     - Why fix this issue and what will be achieved with the fix? Implements a unique, AI-powered feature requested by the user.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: Issue 1 (App Not Loading).
+
+  - **Issue 6: Intermittent Login Failures for Registered Users (P3)**
+     - Attempted fixes: None.
+     - Next debug checklist:
+        1.  Review the JWT generation and validation logic in , paying attention to token expiration.
+        2.  Examine the frontend API service () to ensure the auth token is correctly retrieved from  and attached to headers for every authenticated request.
+     - Why fix this issue and what will be achieved with the fix? Improves application stability and user trust.
+     - Status: NOT STARTED
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: Issue 1 (App Not Loading).
+
+  - **Issue 7: Admin User Management Controls are Incomplete (P4)**
+     - Attempted fixes: A user management table was added to  and backend endpoints were created. However, the controls for enabling/disabling users, extending trials, or managing credits are not yet functional.
+     - Next debug checklist:
+        1.  Add interactive elements (buttons, modals) to the user management table in .
+        2.  Implement the frontend logic to call the respective admin APIs (, etc.) when an admin performs an action.
+        3.  Ensure the UI updates dynamically after a successful action.
+     - Why fix this issue and what will be achieved with the fix? Gives the admin the full control over users that they requested.
+     - Status: IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: Issue 2 (Admin Dashboard Inaccessible).
+
+**In progress Task List**:
+-   **Task 1: Full API Integration Framework**
+    - Where to resume: The generic integration framework in  needs to be fleshed out to support the remaining requested services like Zoho Books and Google Sheets. The frontend needs corresponding UI components.
+    - What will be achieved with this? A scalable system to connect multiple third-party data sources.
+    - Status: IN PROGRESS
+    - Should Test frontend/backend/both after fix? Both
+    - Blocked on something: Requires API keys from the user for the remaining services.
+
+**Upcoming and Future Tasks**
+- **Upcoming Tasks:**
+    - **(P0) Implement Google Sign-In:** Integrate Google OAuth for user registration and login using  or a similar library and a corresponding backend verification endpoint.
+    - **(P1) Implement Forgot Password Backend Flow:** The UI exists, but the backend is needed. Create endpoints to: 1. Generate a password reset token. 2. Send the reset link via email. 3. Verify the token and update the user's password.
+    - **(P1) Implement Report Download:** The current download button is a placeholder. Implement a function using a library like  and  or by generating a CSV on the backend to allow users to download their dashboard analytics.
+- **Future Tasks:**
+    - **(P2) Payment Gateway Integration:** Integrate Cashfree or Razorpay. This will require creating backend endpoints to generate payment orders and handle webhooks for successful payments. User API keys will be needed.
+    - **(P2) Welcome Email on Signup:** Integrate an email service (like SendGrid) and create a backend hook that triggers on new user registration.
+    - **(P3) AI-Powered Data Analysis Engine:** A major feature to analyze data from all connected sources (Excel, Google Ads, etc.) using an LLM to provide comprehensive insights on the user's dashboard.
+
+**Completed work in this session**
+- **Initial Clone and Rebranding:** Built a full-stack clone of papermap.ai and rebranded it to Analiyx.
+- **Core Architecture:** Established a React frontend, FastAPI backend, and MongoDB database structure.
+- **Authentication:** Implemented JWT-based authentication with distinct 'user' and 'admin' roles.
+- **UI Development:** Created separate dashboards for users and admins, a dark theme, and updated the landing page with new integrations and Indian-centric content (testimonials, INR pricing).
+- **Code Management:** Successfully pushed the entire application codebase to the user's GitHub repository (), including a  and .
+
+**Earlier issues found/mentioned but not fixed**
+All known issues have been captured in the **All Pending/In progress Issue list** and **Upcoming and Future Tasks** sections. The agent was in the process of addressing a large batch of user feedback when the session was interrupted.
+
+**Known issue recurrence from previous fork**
+-   Issue recurrence in previous fork: N/A
+-   Recurrence count: N/A
+-   Status: N/A
+
+**Code Architecture**
+
+
+**Key Technical Concepts**
+-   **Frontend:** React, React Router, Tailwind CSS, Shadcn/ui
+-   **Backend:** FastAPI, Pydantic
+-   **Database:** MongoDB (accessed via  async driver)
+-   **Authentication:** JSON Web Tokens (JWT) with Role-Based Access Control (RBAC)
+-   **API Communication:** Axios for frontend HTTP requests
+-   **Deployment:** User is self-hosting on their own server, with code managed via GitHub.
+
+**key DB schema**
+-   : { , , , : ('user'|'admin'), , , ,  }
+-   : { , , : str, : dict (encrypted), : ('connected'|'disconnected') }
+-   : { , , : str, : str, : ('uploaded'|'processing'|'analyzed'), : dict }
+
+**changes in tech stack**
+-   None.
+
+**All files of reference**
+-   ****: Key file for user-facing features. Contains logic for file uploads, integrations, and displaying analytics. It is currently very large and is the likely source of compilation errors.
+-   ****: Contains user management features. Needs to be made accessible again.
+-   ****: Manages all frontend routing, including the protected routes for user and admin dashboards. The logic here is critical for fixing the admin access issue.
+-   ****: The main entry point for the backend, where all routes and middleware (like CORS) are configured.
+-   ****: Core logic for authentication and role checking.
+-   ****, ****: Contain the API logic for the most critical pending features.
+
+**Areas that need refactoring**:
+-   ****: This component has become a monolith, managing state for integrations, file uploads, analytics display, and multiple modals. It should be broken down into smaller, more manageable child components (e.g., , , ).
+-   **Frontend API Error Handling**: Many API calls in the frontend lack robust error handling ( blocks) that would display user-friendly messages (e.g., using ) on failure.
+
+**key api endpoints**
+-   , 
+-   , 
+-   
+-   
+-   
+
+**Critical Info for New Agent**
+-   **The app is currently broken and does not compile.** Your first priority is to fix the frontend compilation error. Check the frontend logs.
+-   The user is **non-technical** and is self-hosting the application. All instructions must be clear, and all code changes must be pushed to their GitHub repository: .
+-   The previous agent was approaching its context memory limit. Be efficient and prioritize fixing the long list of existing bugs over adding new features.
+-   **Admin access is broken.** After fixing the compilation error, the next priority is to fix the admin dashboard redirection bug.
+-   Credentials for Google Ads and Meta Ads are in . Do not commit this file. Use  as a template.
+
+**documents and test reports created in this job**
+-   
+-   
+-   
+-   
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **User (Chat 459):** Provided a comprehensive list of 8 critical issues: View analytics not working, Google/Meta Ads failing, needs Google sign-in, AI visibility not working, Admin dashboard gives 404, intermittent login failures.
+2.  **User (Chat 482):** Stated that clients cannot download reports.
+3.  **User (Chat 494):** Requested the latest code to be pushed to GitHub.
+4.  **User (Chat 500):** Asked for screenshots of the latest app version.
+5.  **User (Chat 503):** Expressed confusion about the agent's internal state messages (Fork This Chat).
+6.  **User (Chat 506):** Asked for an explanation of the context limit warning.
+7.  **User (Chat 362):** Asked for help with all API integrations.
+8.  **User (Chat 384):** Provided API credentials for Google Ads and Meta Ads.
+9.  **User (Chat 409):** Provided another list of 8 critical issues, largely overlapping with the list from message 459.
+10. **User (Chat 432):** Requested the updated code to be pushed to the GitHub repository.
+
+**Project Health Check:**
+-   **Broken**: The entire frontend application is failing to compile and is inaccessible.
+-   **Mocked**: The AI Visibility feature is a placeholder. All integrations except for CSV/Excel upload and the in-progress Google/Meta Ads are non-functional placeholders.
+
+**3rd Party Integrations**
+-   **Google Ads:** In-progress. Requires User API Key (provided).
+-   **Meta Ads:** In-progress. Requires User API Key (provided).
+-   **Google Sign-In (OAuth):** Planned.
+-   **Cashfree/Razorpay:** Planned. Requires User API Key.
+-   **Zoho Books:** Planned. Requires User API Key.
+-   **Google Sheets:** Planned. Requires User API Key.
+
+**Testing status**
+-   Testing agent used after significant changes: NO (Backend was tested once, but many changes have occurred since).
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: []
+-   Known regressions:
+    - The entire application is not compiling.
+    - Admin dashboard is inaccessible.
+
+**Credentials to test flow:**
+-   **Admin User:**
+    -   Email: 
+    -   Password: 
+-   **Regular User:** Create a new one via the signup page (once the app is running).
+
+**What agent forgot to execute**
+- The agent did not complete the frontend implementation for Google/Meta Ads after receiving the keys (i.e., making the Connect buttons work).
+- The agent started but did not finish the View Analytics modal for uploaded files.
+- The agent's fix for the admin dashboard redirection was incomplete and did not solve the issue.
+- The backend logic for several features with existing UI (like Forgot Password and admin controls) was never implemented.</analysis>

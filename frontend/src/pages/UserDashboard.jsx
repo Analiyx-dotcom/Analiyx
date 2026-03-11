@@ -538,6 +538,146 @@ const UserDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+      {/* File Analytics Modal */}
+      <Dialog open={showFileDetails} onOpenChange={setShowFileDetails}>
+        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">File Analytics</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {fileDetails?.filename || 'Detailed analysis of your uploaded file'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {fileDetails && (
+            <div className="space-y-6 py-4">
+              {/* Summary Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-gray-400 text-sm">Total Rows</p>
+                    <p className="text-2xl font-bold text-white">{fileDetails.analytics.total_rows}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-gray-400 text-sm">Total Columns</p>
+                    <p className="text-2xl font-bold text-white">{fileDetails.analytics.total_columns}</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-gray-800 border-gray-700">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-gray-400 text-sm">File Type</p>
+                    <p className="text-2xl font-bold text-purple-400">{fileDetails.source_type}</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Columns Information */}
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-3">Columns</h3>
+                <div className="bg-gray-800 rounded-lg p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {fileDetails.analytics.columns.map((col, idx) => (
+                      <div key={idx} className="bg-gray-700 rounded p-3">
+                        <p className="text-white font-medium text-sm">{col}</p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          {fileDetails.analytics.data_types[col] || 'Unknown'}
+                        </p>
+                        {fileDetails.analytics.missing_values[col] > 0 && (
+                          <p className="text-yellow-400 text-xs mt-1">
+                            {fileDetails.analytics.missing_values[col]} missing
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Sample Data */}
+              {fileDetails.sample_data && fileDetails.sample_data.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Sample Data (First 5 Rows)</h3>
+                  <div className="bg-gray-800 rounded-lg p-4 overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          {Object.keys(fileDetails.sample_data[0]).map((key, idx) => (
+                            <th key={idx} className="text-left py-2 px-3 text-gray-400 font-medium">
+                              {key}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fileDetails.sample_data.map((row, idx) => (
+                          <tr key={idx} className="border-b border-gray-700">
+                            {Object.values(row).map((value, vidx) => (
+                              <td key={vidx} className="py-2 px-3 text-gray-300">
+                                {String(value)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Numeric Summary */}
+              {fileDetails.analytics.numeric_summary && 
+               Object.keys(fileDetails.analytics.numeric_summary).length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-3">Numeric Summary</h3>
+                  <div className="bg-gray-800 rounded-lg p-4 overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-700">
+                          <th className="text-left py-2 px-3 text-gray-400">Column</th>
+                          <th className="text-left py-2 px-3 text-gray-400">Mean</th>
+                          <th className="text-left py-2 px-3 text-gray-400">Std Dev</th>
+                          <th className="text-left py-2 px-3 text-gray-400">Min</th>
+                          <th className="text-left py-2 px-3 text-gray-400">Max</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.entries(fileDetails.analytics.numeric_summary).map(([col, stats]) => (
+                          <tr key={col} className="border-b border-gray-700">
+                            <td className="py-2 px-3 text-white font-medium">{col}</td>
+                            <td className="py-2 px-3 text-gray-300">{stats.mean?.toFixed(2) || 'N/A'}</td>
+                            <td className="py-2 px-3 text-gray-300">{stats.std?.toFixed(2) || 'N/A'}</td>
+                            <td className="py-2 px-3 text-gray-300">{stats.min?.toFixed(2) || 'N/A'}</td>
+                            <td className="py-2 px-3 text-gray-300">{stats.max?.toFixed(2) || 'N/A'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-4">
+                <Button
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  onClick={() => downloadComprehensiveReport({ files: uploadedFiles, fileDetails }, 'excel')}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Full Report
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-gray-700 text-gray-300"
+                  onClick={() => setShowFileDetails(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
