@@ -23,26 +23,43 @@ const AdminDashboard = () => {
     data_sources: 0
   });
   const [users, setUsers] = useState([]);
+  const [detailedUsers, setDetailedUsers] = useState([]);
   const [userGrowthData, setUserGrowthData] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedUserId, setSelectedUserId] = useState(null);
+  const [showUserManagement, setShowUserManagement] = useState(false);
 
   useEffect(() => {
     // Check if user is admin
     const userData = localStorage.getItem('user');
-    if (!userData) {
+    const token = localStorage.getItem('token');
+    
+    if (!userData || !token) {
       navigate('/login');
       return;
     }
 
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== 'admin') {
-      // Not an admin, redirect to user dashboard
-      navigate('/dashboard');
-      return;
-    }
+    try {
+      const parsedUser = JSON.parse(userData);
+      console.log('Current user:', parsedUser);
+      
+      // Check if admin by email (fallback if role not set)
+      const isAdmin = parsedUser.role === 'admin' || 
+                     parsedUser.email === 'admin@papermap.com' ||
+                     parsedUser.email === 'admin@analiyx.com';
+      
+      if (!isAdmin) {
+        console.log('Not an admin, redirecting to dashboard');
+        navigate('/dashboard');
+        return;
+      }
 
-    fetchDashboardData();
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      navigate('/login');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -51,17 +68,19 @@ const AdminDashboard = () => {
       setIsLoading(true);
       
       // Fetch all data in parallel
-      const [statsData, usersData, userGrowth, revenue] = await Promise.all([
+      const [statsData, usersData, userGrowth, revenue, detailedUsersData] = await Promise.all([
         adminAPI.getStats(),
         adminAPI.getUsers(1, 5),
         adminAPI.getUserGrowth(),
-        adminAPI.getRevenue()
+        adminAPI.getRevenue(),
+        adminAPI.getAllUsersDetails()
       ]);
       
       setStats(statsData);
       setUsers(usersData.users);
       setUserGrowthData(userGrowth.data);
       setRevenueData(revenue.data);
+      setDetailedUsers(detailedUsersData.users);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       // If unauthorized, redirect to login
@@ -72,6 +91,50 @@ const AdminDashboard = () => {
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId, currentStatus) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+      await adminAPI.updateUserStatus(userId, newStatus);
+      
+      // Refresh data
+      const detailedUsersData = await adminAPI.getAllUsersDetails();
+      setDetailedUsers(detailedUsersData.users);
+      
+      alert(`User ${newStatus === 'active' ? 'enabled' : 'disabled'} successfully!`);
+    } catch (error) {
+      alert('Failed to update user status: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleExtendTrial = async (userId) => {
+    try {
+      await adminAPI.extendTrial(userId, 7);
+      alert('Trial extended by 7 days successfully!');
+      
+      // Refresh data
+      const detailedUsersData = await adminAPI.getAllUsersDetails();
+      setDetailedUsers(detailedUsersData.users);
+    } catch (error) {
+      alert('Failed to extend trial: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleManageCredits = async (userId, action) => {
+    const credits = prompt(`Enter number of credits to ${action}:`, '100');
+    if (!credits || isNaN(credits)) return;
+    
+    try {
+      await adminAPI.manageCredits(userId, parseInt(credits), action);
+      alert(`Credits ${action}ed successfully!`);
+      
+      // Refresh data
+      const detailedUsersData = await adminAPI.getAllUsersDetails();
+      setDetailedUsers(detailedUsersData.users);
+    } catch (error) {
+      alert('Failed to manage credits: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -239,25 +302,37 @@ const AdminDashboard = () => {
             {/* Recent Users Table */}
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-white">Recent Users</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white">All Users Management</CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fetchDashboardData()}
+                    className="border-purple-500 text-purple-400"
+                  >
+                    Refresh
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {isLoading ? (
                   <div className="text-center py-8 text-gray-400">Loading users...</div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-800">
                           <th className="text-left py-3 px-4 text-gray-400 font-medium">Name</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-medium">Email</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-medium">Plan</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Credits</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-medium">Status</th>
                           <th className="text-left py-3 px-4 text-gray-400 font-medium">Joined</th>
+                          <th className="text-left py-3 px-4 text-gray-400 font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map((user) => (
+                        {detailedUsers.map((user) => (
                           <tr key={user.id} className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors">
                             <td className="py-3 px-4 text-white">{user.name}</td>
                             <td className="py-3 px-4 text-gray-400">{user.email}</td>
@@ -266,12 +341,41 @@ const AdminDashboard = () => {
                                 {user.plan}
                               </Badge>
                             </td>
+                            <td className="py-3 px-4 text-white">{user.credits}</td>
                             <td className="py-3 px-4">
-                              <Badge className={user.status === 'active' ? 'bg-green-900/30 text-green-400 border-green-700' : 'bg-gray-700/30 text-gray-400 border-gray-600'}>
+                              <Badge className={user.status === 'active' ? 'bg-green-900/30 text-green-400 border-green-700' : 'bg-red-900/30 text-red-400 border-red-700'}>
                                 {user.status}
                               </Badge>
                             </td>
-                            <td className="py-3 px-4 text-gray-400">{user.joined}</td>
+                            <td className="py-3 px-4 text-gray-400">{new Date(user.created_at).toLocaleDateString()}</td>
+                            <td className="py-3 px-4">
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleToggleUserStatus(user.id, user.status)}
+                                  className={user.status === 'active' ? 'border-red-500 text-red-400 hover:bg-red-900/20' : 'border-green-500 text-green-400 hover:bg-green-900/20'}
+                                >
+                                  {user.status === 'active' ? 'Disable' : 'Enable'}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleExtendTrial(user.id)}
+                                  className="border-blue-500 text-blue-400 hover:bg-blue-900/20"
+                                >
+                                  +7 Days
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleManageCredits(user.id, 'add')}
+                                  className="border-green-500 text-green-400 hover:bg-green-900/20"
+                                >
+                                  + Credits
+                                </Button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
