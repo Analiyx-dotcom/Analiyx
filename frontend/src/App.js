@@ -6,6 +6,8 @@ import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
+import ContactPage from './pages/ContactPage';
+import LegalPage from './pages/LegalPage';
 import { Toaster } from './components/ui/toaster';
 import './App.css';
 
@@ -20,6 +22,8 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<UserDashboard />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/legal" element={<LegalPage />} />
         </Routes>
       </BrowserRouter>
       <Toaster />

@@ -3,19 +3,27 @@
 export const testimonials = [
   {
     id: 1,
-    quote: "Analiyx AI has significantly reduced the time it takes to go from a question to an insight.",
-    description: "What truly differentiates the platform is its natural language interface, which allows users to simply ask questions in plain English and have Analiyx AI automatically interpret the intent, generate the correct queries, and present the results in meaningful ways. We can not only explore data but also create, refine, and edit interactive dashboard widgets effortlessly—without writing SQL, scripts, or manual configurations.",
-    name: "Stephen O.",
-    role: "CTO at VDL Fulfilment",
-    avatar: "SO"
+    quote: "Analiyx AI has completely transformed how we handle data across our retail chain.",
+    description: "Before Analiyx, our team spent days manually pulling reports from different systems. Now, we connect our Zoho Books and Google Sheets, ask questions in plain English, and get instant insights. The AI-powered dashboards have helped us reduce inventory waste by 30% in just three months.",
+    name: "Priya Sharma",
+    role: "COO at FreshBasket India",
+    avatar: "PS"
   },
   {
     id: 2,
-    quote: "It transformed our day-to-day decision-making from 'reactive guessing' to 'proactive knowing.'",
-    description: "In logistics, data gets messy fast. We have shipping logs, carrier invoices, and tracking updates all living in different raw formats. Before Analiyx, my operations team waited days for analysts to clean that data and build a dashboard just to answer a simple question. Analiyx let us skip the 'cleaning' phase entirely. We connected our raw data sources, and now my team asks questions in plain English and gets diagnostic answers instantly.",
-    name: "Amadou D.",
-    role: "CEO/CTO at B-HiTech",
-    avatar: "AD"
+    quote: "From reactive guessing to proactive decision-making — Analiyx made it possible.",
+    description: "Managing ad spend across Google and Meta was a nightmare for our small marketing team. Analiyx unified all our campaign data into one dashboard with real-time metrics. We identified underperforming campaigns instantly and reallocated budgets, resulting in a 45% improvement in ROAS within the first quarter.",
+    name: "Rajesh Menon",
+    role: "Founder & CEO at GrowthPulse Digital, Bangalore",
+    avatar: "RM"
+  },
+  {
+    id: 3,
+    quote: "The best no-code analytics platform we have used — and we have tried many.",
+    description: "As a D2C brand, we needed to track everything from Shopify orders to Meta Ads performance to warehouse data. Analiyx connected all our sources in minutes. The AI visibility feature even showed us how our brand appears across ChatGPT and Gemini searches. Truly next-level for a lean team like ours.",
+    name: "Ananya Reddy",
+    role: "Head of Growth at StyleKraft, Hyderabad",
+    avatar: "AR"
   }
 ];
 

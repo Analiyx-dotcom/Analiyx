@@ -35,6 +35,7 @@ const Navbar = () => {
             <a href="#features" className="text-gray-300 hover:text-white transition-colors duration-200">Features</a>
             <a href="#integrations" className="text-gray-300 hover:text-white transition-colors duration-200">Integrations</a>
             <a href="#pricing" className="text-gray-300 hover:text-white transition-colors duration-200">Pricing</a>
+            <Link to="/contact" className="text-gray-300 hover:text-white transition-colors duration-200">Talk to Us</Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">

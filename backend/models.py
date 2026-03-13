@@ -52,6 +52,7 @@ class UserResponse(BaseModel):
     status: str
     credits: int
     role: str
+    trial_ends_at: Optional[datetime] = None
     created_at: datetime
 
 # Auth Response

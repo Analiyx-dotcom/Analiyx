@@ -96,6 +96,20 @@ async def extend_trial(
     
     new_end_date = datetime.utcnow() + timedelta(days=extension.days)
     
+    # Update user's trial_ends_at
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    current_end = user.get("trial_ends_at")
+    if current_end and current_end > datetime.utcnow():
+        new_end_date = current_end + timedelta(days=extension.days)
+    
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"trial_ends_at": new_end_date, "status": "active", "updated_at": datetime.utcnow()}}
+    )
+    
     if subscription:
         # Update existing subscription
         result = await db.subscriptions.update_one(

@@ -21,7 +21,8 @@ const Footer = () => {
           <Button
             size="lg"
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-lg px-8 py-6 shadow-xl shadow-purple-500/30"
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate('/contact')}
+            data-testid="footer-talk-to-us-button"
           >
             Talk to us
           </Button>
@@ -42,6 +43,11 @@ const Footer = () => {
             <p className="text-gray-500 text-sm mb-4">
               Big Data for Small Teams. No-code data platform powered by AI.
             </p>
+            {/* Email */}
+            <a href="mailto:techmeliora@gmail.com" className="flex items-center space-x-2 text-gray-400 hover:text-purple-400 transition-colors mb-4" data-testid="footer-email-link">
+              <Mail className="w-4 h-4" />
+              <span className="text-sm">techmeliora@gmail.com</span>
+            </a>
             {/* Social Media Links */}
             <div className="flex space-x-3">
               <a href="https://facebook.com/analiyx" target="_blank" rel="noopener noreferrer" 
@@ -60,10 +66,6 @@ const Footer = () => {
                 className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
                 <Instagram className="w-4 h-4 text-gray-400 hover:text-white" />
               </a>
-              <a href="mailto:contact@analiyx.com"
-                className="w-9 h-9 bg-gray-800 hover:bg-purple-600 rounded-full flex items-center justify-center transition-colors duration-200">
-                <Mail className="w-4 h-4 text-gray-400 hover:text-white" />
-              </a>
             </div>
           </div>
 
@@ -81,9 +83,8 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">About</Link></li>
-              <li><Link to="/" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Blog</Link></li>
-              <li><Link to="/" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Careers</Link></li>
+              <li><Link to="/contact" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Contact Us</Link></li>
+              <li><a href="mailto:techmeliora@gmail.com" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Support</a></li>
             </ul>
           </div>
 
@@ -91,15 +92,15 @@ const Footer = () => {
           <div>
             <h4 className="text-white font-semibold mb-4">Legal</h4>
             <ul className="space-y-2">
-              <li><Link to="/" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Privacy Policy</Link></li>
-              <li><Link to="/" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Terms of Service</Link></li>
-              <li><Link to="/" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Cookie Policy</Link></li>
+              <li><Link to="/legal#privacy" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Privacy Policy</Link></li>
+              <li><Link to="/legal#terms" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Terms of Service</Link></li>
+              <li><Link to="/legal#cookies" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} Analiyx. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Analiyx. All rights reserved. | <a href="mailto:techmeliora@gmail.com" className="hover:text-purple-400">techmeliora@gmail.com</a></p>
         </div>
       </div>
     </footer>

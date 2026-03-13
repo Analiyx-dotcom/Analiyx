@@ -117,4 +117,32 @@ export const dataSourceAPI = {
   },
 };
 
+// Workspace API
+export const workspaceAPI = {
+  create: async (name, dataSources) => {
+    const response = await api.post('/workspaces/create', { name, data_sources: dataSources });
+    return response.data;
+  },
+  list: async () => {
+    const response = await api.get('/workspaces/list');
+    return response.data;
+  },
+  delete: async (workspaceId) => {
+    const response = await api.delete(`/workspaces/${workspaceId}`);
+    return response.data;
+  },
+};
+
+// Support API
+export const supportAPI = {
+  createTicket: async (subject, message, priority) => {
+    const response = await api.post('/support/tickets', { subject, message, priority });
+    return response.data;
+  },
+  getTickets: async () => {
+    const response = await api.get('/support/tickets');
+    return response.data;
+  },
+};
+
 export default api;

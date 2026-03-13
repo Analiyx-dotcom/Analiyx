@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from models import UserCreate, UserLogin, AuthResponse, UserResponse
 from auth import hash_password, verify_password, create_access_token, get_current_user_id
-from datetime import datetime
+from datetime import datetime, timedelta
 from bson import ObjectId
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
@@ -32,7 +32,8 @@ async def register(user_data: UserCreate):
         "plan": "Starter",
         "status": "active",
         "credits": 100,
-        "role": "user",  # Regular users always get "user" role
+        "role": "user",
+        "trial_ends_at": datetime.utcnow() + timedelta(days=14),
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
@@ -53,6 +54,7 @@ async def register(user_data: UserCreate):
         status=user_doc["status"],
         credits=user_doc["credits"],
         role=user_doc["role"],
+        trial_ends_at=user_doc.get("trial_ends_at"),
         created_at=user_doc["created_at"]
     )
     
@@ -82,6 +84,7 @@ async def login(credentials: UserLogin):
         status=user["status"],
         credits=user["credits"],
         role=user.get("role", "user"),
+        trial_ends_at=user.get("trial_ends_at"),
         created_at=user["created_at"]
     )
     
@@ -102,5 +105,6 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         status=user["status"],
         credits=user["credits"],
         role=user.get("role", "user"),
+        trial_ends_at=user.get("trial_ends_at"),
         created_at=user["created_at"]
     )
