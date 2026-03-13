@@ -15,13 +15,17 @@ export const exportFilesToExcel = (files, fileDetails = null) => {
   const wb = XLSX.utils.book_new();
   
   // Summary sheet
-  const summaryData = files.map(file => ({
-    'File Name': file.filename,
-    'Rows': file.total_rows,
-    'Columns': file.total_columns,
-    'Status': file.status,
-    'Uploaded': file.uploaded_at
+  const summaryData = (files || []).map(file => ({
+    'File Name': file.filename || 'Unknown',
+    'Rows': file.total_rows != null ? file.total_rows : 'N/A',
+    'Columns': file.total_columns != null ? file.total_columns : 'N/A',
+    'Type': file.source_type || file.status || 'N/A',
+    'Uploaded': file.uploaded_at || 'N/A'
   }));
+  
+  if (summaryData.length === 0) {
+    summaryData.push({ 'File Name': 'No files uploaded', 'Rows': '', 'Columns': '', 'Type': '', 'Uploaded': '' });
+  }
   
   const summaryWs = XLSX.utils.json_to_sheet(summaryData);
   XLSX.utils.book_append_sheet(wb, summaryWs, 'Files Summary');

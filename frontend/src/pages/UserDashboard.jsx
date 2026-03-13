@@ -9,7 +9,7 @@ import { Label } from '../components/ui/label';
 import { integrations } from '../mock/mockData';
 import { dataSourceAPI, workspaceAPI, supportAPI, authAPI } from '../services/api';
 import { toast } from '../hooks/use-toast';
-import { downloadComprehensiveReport } from '../utils/reportExport';
+import { downloadComprehensiveReport, exportFilesToExcel } from '../utils/reportExport';
 import api from '../services/api';
 
 const UserDashboard = () => {
@@ -120,12 +120,16 @@ const UserDashboard = () => {
 
   const handleDownloadReport = async () => {
     try {
-      const dashboardData = { user, files: uploadedFiles };
-      const format = window.confirm('Download as PDF? (Cancel for Excel)') ? 'pdf' : 'excel';
-      await downloadComprehensiveReport(dashboardData, format);
-      toast({ title: 'Report Downloaded!', description: `Report downloaded as ${format.toUpperCase()}.` });
-    } catch {
-      toast({ title: 'Download Failed', description: 'Please try again.', variant: 'destructive' });
+      if (!uploadedFiles || uploadedFiles.length === 0) {
+        toast({ title: 'No Data', description: 'Upload files first to generate a report.', variant: 'destructive' });
+        return;
+      }
+      // Direct Excel download — no confirm dialog
+      exportFilesToExcel(uploadedFiles, null);
+      toast({ title: 'Report Downloaded!', description: 'Excel report saved to your device.' });
+    } catch (err) {
+      console.error('Download error:', err);
+      toast({ title: 'Download Failed', description: String(err.message || err), variant: 'destructive' });
     }
   };
 
