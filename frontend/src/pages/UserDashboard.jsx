@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -10,6 +10,7 @@ import { integrations } from '../mock/mockData';
 import { dataSourceAPI, workspaceAPI, supportAPI, authAPI } from '../services/api';
 import { toast } from '../hooks/use-toast';
 import { downloadComprehensiveReport } from '../utils/reportExport';
+import api from '../services/api';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -29,6 +30,13 @@ const UserDashboard = () => {
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [ticketForm, setTicketForm] = useState({ subject: '', message: '', priority: 'medium' });
   const [tickets, setTickets] = useState([]);
+  const [showAIVisibility, setShowAIVisibility] = useState(false);
+  const [aiUrl, setAiUrl] = useState('');
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const refreshUser = useCallback(async () => {
     try {
@@ -192,6 +200,57 @@ const UserDashboard = () => {
     }));
   };
 
+  const handleAnalyzeUrl = async () => {
+    if (!aiUrl.trim()) return;
+    setIsAnalyzing(true);
+    setAiAnalysis(null);
+    try {
+      const response = await api.post('/ai-visibility/analyze', { url: aiUrl });
+      setAiAnalysis(response.data.analysis);
+      toast({ title: 'Analysis Complete!', description: `Analyzed ${aiUrl}` });
+    } catch (error) {
+      toast({ title: 'Analysis Failed', description: error.response?.data?.detail || 'Could not analyze URL', variant: 'destructive' });
+    } finally { setIsAnalyzing(false); }
+  };
+
+  const handleUpgrade = async (planName) => {
+    setIsProcessingPayment(true);
+    try {
+      const response = await api.post('/payments/create-order', { plan: planName, return_url: window.location.origin });
+      const { payment_session_id, order_id } = response.data;
+      
+      // Load Cashfree SDK
+      const script = document.createElement('script');
+      script.src = 'https://sdk.cashfree.com/js/core/3.0.0/cashfree.pro.min.js';
+      script.async = true;
+      document.body.appendChild(script);
+      script.onload = async () => {
+        try {
+          const cashfree = window.Cashfree({ mode: 'production' });
+          await cashfree.checkout({ paymentSessionId: payment_session_id, returnUrl: `${window.location.origin}/dashboard?payment_status=success&order_id=${order_id}` });
+        } catch (err) {
+          toast({ title: 'Payment Failed', description: 'Checkout could not be loaded.', variant: 'destructive' });
+        }
+      };
+    } catch (error) {
+      toast({ title: 'Payment Error', description: error.response?.data?.detail || 'Failed to create payment order.', variant: 'destructive' });
+    } finally { setIsProcessingPayment(false); }
+  };
+
+  // Check payment status on return
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment_status');
+    const orderId = searchParams.get('order_id');
+    if (paymentStatus === 'success' && orderId) {
+      api.get(`/payments/order-status/${orderId}`).then(res => {
+        if (res.data.order_status === 'PAID') {
+          toast({ title: 'Payment Successful!', description: 'Your plan has been upgraded.' });
+          refreshUser();
+        }
+      }).catch(() => {});
+    }
+  }, [searchParams, refreshUser]);
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -210,7 +269,7 @@ const UserDashboard = () => {
               <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Trial Period Ended</h2>
               <p className="text-gray-400 mb-6">Your 14-day free trial has expired. Upgrade to continue using Analiyx.</p>
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" data-testid="upgrade-button" onClick={() => toast({ title: 'Upgrade', description: 'Payment integration coming soon.' })}>
+              <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" data-testid="upgrade-button" onClick={() => { setTrialExpired(false); setShowUpgradeModal(true); }}>
                 Upgrade Now
               </Button>
               <Button variant="ghost" className="w-full mt-2 text-gray-400" onClick={handleLogout}>Logout</Button>
@@ -327,6 +386,75 @@ const UserDashboard = () => {
                 <Mail className="w-4 h-4 mr-2" /> Contact Support
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Visibility Section */}
+        <Card className="bg-gray-900 border-gray-800 mt-6">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center"><Globe className="w-5 h-5 mr-2 text-purple-400" /> AI Visibility Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-400 text-sm mb-4">Enter any URL to analyze its SEO performance, content quality, and AI discoverability</p>
+            <div className="flex space-x-3">
+              <Input value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} placeholder="https://example.com" className="bg-gray-800 border-gray-700 text-white flex-1" data-testid="ai-url-input" />
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" onClick={handleAnalyzeUrl} disabled={isAnalyzing || !aiUrl.trim()} data-testid="analyze-url-button">
+                {isAnalyzing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing...</> : <><Search className="w-4 h-4 mr-2" />Analyze</>}
+              </Button>
+            </div>
+
+            {/* AI Analysis Results */}
+            {aiAnalysis && (
+              <div className="mt-6 space-y-4" data-testid="ai-analysis-results">
+                {/* Score Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    { label: 'Overall', value: aiAnalysis.overall_score, color: 'text-purple-400' },
+                    { label: 'SEO', value: aiAnalysis.seo_score, color: 'text-blue-400' },
+                    { label: 'AI Visibility', value: aiAnalysis.ai_visibility_score, color: 'text-green-400' },
+                    { label: 'Content', value: aiAnalysis.content_quality_score, color: 'text-yellow-400' },
+                    { label: 'Technical', value: aiAnalysis.technical_seo_score, color: 'text-pink-400' },
+                  ].map((score, i) => (
+                    <div key={i} className="bg-gray-800 rounded-lg p-3 text-center">
+                      <p className="text-gray-500 text-xs mb-1">{score.label}</p>
+                      <p className={`text-2xl font-bold ${score.color}`}>{score.value}<span className="text-xs text-gray-500">/100</span></p>
+                      <div className="w-full bg-gray-700 rounded-full h-1.5 mt-2"><div className={`h-1.5 rounded-full ${score.value >= 70 ? 'bg-green-500' : score.value >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${score.value}%` }}></div></div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Summary */}
+                <div className="bg-gray-800/50 rounded-lg p-4"><p className="text-gray-300 text-sm">{aiAnalysis.summary}</p></div>
+
+                {/* Strengths & Improvements */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-800/50 rounded-lg p-4">
+                    <h4 className="text-green-400 font-medium mb-3 flex items-center"><CheckCircle className="w-4 h-4 mr-2" /> Strengths</h4>
+                    <ul className="space-y-2">{(aiAnalysis.strengths || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-green-500 mr-2">+</span>{s}</li>)}</ul>
+                  </div>
+                  <div className="bg-gray-800/50 rounded-lg p-4">
+                    <h4 className="text-yellow-400 font-medium mb-3 flex items-center"><AlertTriangle className="w-4 h-4 mr-2" /> Improvements</h4>
+                    <ul className="space-y-2">{(aiAnalysis.improvements || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-yellow-500 mr-2">-</span>{s}</li>)}</ul>
+                  </div>
+                </div>
+
+                {/* AI Recommendations */}
+                {aiAnalysis.ai_recommendations?.length > 0 && (
+                  <div className="bg-purple-900/20 border border-purple-700/30 rounded-lg p-4">
+                    <h4 className="text-purple-400 font-medium mb-3 flex items-center"><Brain className="w-4 h-4 mr-2" /> AI Discoverability Tips</h4>
+                    <ul className="space-y-2">{aiAnalysis.ai_recommendations.map((r, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><Zap className="w-3 h-3 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />{r}</li>)}</ul>
+                  </div>
+                )}
+
+                {/* Keywords */}
+                {aiAnalysis.keyword_suggestions?.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-gray-500 text-sm">Suggested Keywords:</span>
+                    {aiAnalysis.keyword_suggestions.map((kw, i) => <span key={i} className="text-xs bg-gray-800 text-purple-300 px-3 py-1 rounded-full border border-purple-700/30">{kw}</span>)}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
@@ -580,6 +708,36 @@ const UserDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Upgrade/Payment Modal */}
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">Upgrade Your Plan</DialogTitle>
+            <DialogDescription className="text-gray-400">Choose a plan to unlock full Analiyx features</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {[
+              { name: 'Starter', price: '2,999', credits: '100', features: ['3 Data Sources', 'Basic AI Insights', '1 Workspace'] },
+              { name: 'Business Pro', price: '7,999', credits: '1,000', features: ['Unlimited Sources', 'Advanced AI', '10 Workspaces', 'Slack Integration'] }
+            ].map((plan) => (
+              <div key={plan.name} className={`bg-gray-800 rounded-xl p-6 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
+                <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
+                <p className="text-3xl font-bold text-white mb-1">₹{plan.price}<span className="text-sm text-gray-400">/mo</span></p>
+                <p className="text-sm text-gray-400 mb-4">{plan.credits} credits/month</p>
+                <ul className="space-y-2 mb-6">
+                  {plan.features.map((f, i) => <li key={i} className="text-gray-300 text-sm flex items-center"><CheckCircle className="w-3 h-3 text-purple-400 mr-2" />{f}</li>)}
+                </ul>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleUpgrade(plan.name)} disabled={isProcessingPayment || user?.plan === plan.name} data-testid={`upgrade-${plan.name.toLowerCase().replace(' ','-')}`}>
+                  {isProcessingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : user?.plan === plan.name ? 'Current Plan' : 'Upgrade'}
+                </Button>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 text-center">For Enterprise plans, <a href="mailto:techmeliora@gmail.com" className="text-purple-400 hover:text-purple-300">contact us</a></p>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
