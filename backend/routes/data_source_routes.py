@@ -48,18 +48,27 @@ async def upload_file(
             "total_columns": len(df.columns),
             "columns": df.columns.tolist(),
             "data_types": df.dtypes.astype(str).to_dict(),
-            "missing_values": df.isnull().sum().to_dict(),
+            "missing_values": {k: int(v) for k, v in df.isnull().sum().to_dict().items()},
             "numeric_summary": {}
         }
         
-        # Get summary statistics for numeric columns
+        # Get summary statistics for numeric columns — sanitize NaN/Inf
         numeric_cols = df.select_dtypes(include=['number']).columns.tolist()
         if numeric_cols:
             summary = df[numeric_cols].describe().to_dict()
-            analytics["numeric_summary"] = summary
+            clean_summary = {}
+            for col, stats in summary.items():
+                clean_summary[col] = {}
+                for stat_name, val in stats.items():
+                    if pd.isna(val) or (isinstance(val, float) and (val == float('inf') or val == float('-inf'))):
+                        clean_summary[col][stat_name] = None
+                    else:
+                        clean_summary[col][stat_name] = round(float(val), 4) if isinstance(val, float) else val
+            analytics["numeric_summary"] = clean_summary
         
-        # Get sample data (first 5 rows)
-        sample_data = df.head(5).to_dict('records')
+        # Get sample data (first 5 rows) — sanitize NaN
+        sample_df = df.head(5).fillna("")
+        sample_data = json.loads(sample_df.to_json(orient='records', default_handler=str))
         
         # Store file metadata in database
         file_doc = {
@@ -68,7 +77,7 @@ async def upload_file(
             "file_type": file_ext,
             "source_type": "Excel" if file_ext in ['.xlsx', '.xls'] else "CSV",
             "analytics": analytics,
-            "sample_data": json.loads(json.dumps(sample_data, default=str)),
+            "sample_data": sample_data,
             "uploaded_at": datetime.utcnow(),
             "status": "processed"
         }
