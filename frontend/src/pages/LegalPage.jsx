@@ -149,26 +149,59 @@ const LegalPage = () => {
 
         {/* Terms of Service */}
         <section id="terms" className="mb-16">
-          <h2 className="text-2xl font-bold text-white mb-6 pb-3 border-b border-gray-800">Terms of Service</h2>
+          <h2 className="text-2xl font-bold text-white mb-6 pb-3 border-b border-gray-800">Terms of Service (Terms & Conditions)</h2>
           <div className="prose prose-invert max-w-none space-y-4 text-gray-400">
-            <p><strong className="text-gray-200">Last updated:</strong> March 2026</p>
-            <p>By accessing and using Analiyx, you agree to be bound by these Terms of Service.</p>
-            <h3 className="text-lg font-semibold text-gray-200 mt-6">Account Terms</h3>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Introduction</h3>
+            <p>Welcome to Analiyx. These Terms of Service govern your access to and use of the Analiyx platform, website, and related services available at <a href="https://analiyx.com" className="text-purple-400 hover:text-purple-300">https://analiyx.com</a></p>
+            <p>By accessing or using the platform, you agree to comply with these terms.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Use of the Platform</h3>
+            <p>Users may access and use the platform solely for legitimate business analytics and reporting purposes.</p>
+            <p>You agree not to:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>You must provide accurate and complete registration information</li>
-              <li>You are responsible for maintaining the security of your account credentials</li>
-              <li>You may not use the service for any illegal or unauthorized purpose</li>
-              <li>One person or legal entity may maintain no more than one free account</li>
+              <li>Use the platform for unlawful activities</li>
+              <li>Attempt to access systems or data without authorization</li>
+              <li>Disrupt or interfere with the platform's functionality</li>
+              <li>Reverse engineer or copy proprietary features of the platform</li>
             </ul>
-            <h3 className="text-lg font-semibold text-gray-200 mt-6">Service Usage</h3>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Account Responsibilities</h3>
+            <p>Users are responsible for maintaining the confidentiality of their login credentials.</p>
+            <p>You agree to:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li>Free trial accounts are provided for evaluation purposes with a limited duration</li>
-              <li>Paid plans are billed in Indian Rupees (INR) on a monthly basis</li>
-              <li>We reserve the right to modify or discontinue features with reasonable notice</li>
-              <li>API usage is subject to rate limits based on your subscription plan</li>
+              <li>Provide accurate information during registration</li>
+              <li>Notify us immediately if unauthorized access occurs</li>
+              <li>Use the platform responsibly within your organization</li>
             </ul>
-            <h3 className="text-lg font-semibold text-gray-200 mt-6">Cancellation & Refunds</h3>
-            <p>You may cancel your subscription at any time. Refund requests are handled on a case-by-case basis. Contact <a href="mailto:techmeliora@gmail.com" className="text-purple-400 hover:text-purple-300">techmeliora@gmail.com</a> for refund inquiries.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Data Ownership</h3>
+            <p>All data uploaded or connected by users remains the property of the user or their organization.</p>
+            <p>Analiyx does not claim ownership of your business data.</p>
+            <p>We process data only to deliver analytics insights and platform functionality.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">AI-Powered Features</h3>
+            <p>Some platform features may include AI-assisted analytics or automated insights.</p>
+            <p>These features are designed to assist users in interpreting business data. Results should be considered informational and not a substitute for professional advice or strategic decision-making.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Service Availability</h3>
+            <p>We strive to maintain reliable service but cannot guarantee uninterrupted access at all times.</p>
+            <p>Maintenance, updates, or technical issues may occasionally affect availability.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Limitation of Liability</h3>
+            <p>To the maximum extent permitted by law, Analiyx shall not be liable for:</p>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Indirect or consequential damages</li>
+              <li>Business losses resulting from reliance on analytics insights</li>
+              <li>Data loss caused by external integrations or user actions</li>
+            </ul>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Termination</h3>
+            <p>We reserve the right to suspend or terminate accounts that violate these terms or misuse the platform.</p>
+            <p>Users may discontinue use of the platform at any time.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Changes to Terms</h3>
+            <p>These Terms may be updated periodically. Continued use of the platform after updates constitutes acceptance of the revised terms.</p>
           </div>
         </section>
 
@@ -176,15 +209,54 @@ const LegalPage = () => {
         <section id="cookies" className="mb-16">
           <h2 className="text-2xl font-bold text-white mb-6 pb-3 border-b border-gray-800">Cookie Policy</h2>
           <div className="prose prose-invert max-w-none space-y-4 text-gray-400">
-            <p><strong className="text-gray-200">Last updated:</strong> March 2026</p>
-            <p>Analiyx uses cookies and similar tracking technologies to improve your browsing experience and analyze platform usage.</p>
-            <h3 className="text-lg font-semibold text-gray-200 mt-6">Types of Cookies We Use</h3>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Introduction</h3>
+            <p>This Cookie Policy explains how Analiyx uses cookies and similar technologies when you visit <a href="https://analiyx.com" className="text-purple-400 hover:text-purple-300">https://analiyx.com</a></p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">What Are Cookies</h3>
+            <p>Cookies are small data files stored on your device when you visit a website. They help websites remember information about your visit and improve the browsing experience.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">How We Use Cookies</h3>
+            <p><strong className="text-gray-200">Essential Cookies</strong></p>
+            <p>These cookies are required for core platform functionality, including login authentication and session management.</p>
+            <p><strong className="text-gray-200">Analytics Cookies</strong></p>
+            <p>We may use analytics tools to understand how visitors interact with the platform. This helps us improve performance and usability.</p>
+            <p><strong className="text-gray-200">Preference Cookies</strong></p>
+            <p>These cookies remember user preferences such as language or interface settings.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Managing Cookies</h3>
+            <p>Most web browsers allow you to control or disable cookies through browser settings.</p>
+            <p>Please note that disabling certain cookies may affect platform functionality.</p>
+          </div>
+        </section>
+
+        {/* AI Usage & Transparency Policy */}
+        <section id="ai-policy" className="mb-16">
+          <h2 className="text-2xl font-bold text-white mb-6 pb-3 border-b border-gray-800">AI Usage & Transparency Policy</h2>
+          <div className="prose prose-invert max-w-none space-y-4 text-gray-400">
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Overview</h3>
+            <p>The Analiyx platform includes AI-assisted capabilities designed to help businesses interpret data, generate insights, and improve decision-making.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Purpose of AI Features</h3>
+            <p>AI tools within Analiyx may be used for:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li><strong className="text-gray-200">Essential Cookies:</strong> Required for authentication and core functionality</li>
-              <li><strong className="text-gray-200">Analytics Cookies:</strong> Help us understand how users interact with our platform</li>
-              <li><strong className="text-gray-200">Preference Cookies:</strong> Remember your settings and preferences</li>
+              <li>Data interpretation</li>
+              <li>Insight generation</li>
+              <li>Business performance summaries</li>
+              <li>Pattern detection in analytics data</li>
             </ul>
-            <p>You can control cookie settings through your browser preferences. Disabling essential cookies may affect platform functionality.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Data Handling</h3>
+            <p>Data processed through AI features is used only to generate insights for the user.</p>
+            <p>We do not use customer data to train external AI models or for advertising purposes.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Responsible Use</h3>
+            <p>AI-generated insights should be used as supportive information, not as the sole basis for critical financial, legal, or operational decisions.</p>
+            <p>Users should independently review analytics results before taking business action.</p>
+
+            <h3 className="text-lg font-semibold text-gray-200 mt-6">Continuous Improvement</h3>
+            <p>We continuously refine AI capabilities to improve accuracy, performance, and usefulness while maintaining strong data protection standards.</p>
           </div>
         </section>
       </div>
