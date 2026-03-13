@@ -25,7 +25,8 @@ async def create_workspace(workspace: WorkspaceCreate, user_id: str = Depends(ge
     
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     plan = user.get("plan", "Starter") if user else "Starter"
-    max_workspaces = {"Starter": 2, "Business Pro": 10, "Enterprise": 999}.get(plan, 2)
+    trial_active = user and user.get("trial_ends_at") and user["trial_ends_at"] > datetime.utcnow()
+    max_workspaces = 999 if trial_active else {"Starter": 2, "Business Pro": 10, "Enterprise": 999}.get(plan, 2)
     
     if existing >= max_workspaces:
         raise HTTPException(status_code=400, detail=f"Workspace limit reached ({max_workspaces}) for your {plan} plan. Please upgrade.")

@@ -414,15 +414,33 @@ const UserDashboard = () => {
       {/* Trial Expired Overlay */}
       {trialExpired && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
-          <Card className="bg-gray-900 border-gray-700 max-w-md mx-4">
-            <CardContent className="p-8 text-center">
-              <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-white mb-2">Trial Period Ended</h2>
-              <p className="text-gray-400 mb-6">Your 14-day free trial has expired. Upgrade to continue using Analiyx.</p>
-              <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" data-testid="upgrade-button" onClick={() => { setTrialExpired(false); setShowUpgradeModal(true); }}>
-                Upgrade Now
-              </Button>
-              <Button variant="ghost" className="w-full mt-2 text-gray-400" onClick={handleLogout}>Logout</Button>
+          <Card className="bg-gray-900 border-gray-700 max-w-2xl mx-4">
+            <CardContent className="p-8">
+              <div className="text-center mb-6">
+                <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                <h2 className="text-2xl font-bold text-white mb-2">Trial Period Ended</h2>
+                <p className="text-gray-400">Your 14-day free trial has expired. Select a plan to continue using Analiyx.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                {[
+                  { name: 'Starter', price: '500', features: ['4 Data Sources', 'AI Visibility (1/month)', '100 Credits', '1 Workspace'] },
+                  { name: 'Business Pro', price: '800', features: ['Unlimited Sources', 'Unlimited AI Visibility', '1,000 Credits', '10 Workspaces', 'Slack Integration'] }
+                ].map((plan) => (
+                  <div key={plan.name} className={`bg-gray-800 rounded-xl p-5 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
+                    {plan.name === 'Business Pro' && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">Recommended</span>}
+                    <h3 className="text-lg font-bold text-white mt-2">{plan.name}</h3>
+                    <p className="text-2xl font-bold text-white mb-3">₹{plan.price}<span className="text-sm text-gray-400">/mo</span></p>
+                    <ul className="space-y-1.5 mb-4">
+                      {plan.features.map((f, i) => <li key={i} className="text-gray-300 text-sm flex items-center"><CheckCircle className="w-3 h-3 text-purple-400 mr-2 flex-shrink-0" />{f}</li>)}
+                    </ul>
+                    <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" onClick={() => handleUpgrade(plan.name)} disabled={isProcessingPayment} data-testid={`trial-upgrade-${plan.name.toLowerCase().replace(' ','-')}`}>
+                      {isProcessingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : `Select ${plan.name}`}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 text-center mb-3">For Enterprise plans, <a href="mailto:techmeliora@gmail.com" className="text-purple-400">contact us</a></p>
+              <Button variant="ghost" className="w-full text-gray-500 text-sm" onClick={handleLogout}>Logout</Button>
             </CardContent>
           </Card>
         </div>

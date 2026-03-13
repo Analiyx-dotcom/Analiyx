@@ -126,8 +126,10 @@ async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_cu
         raise HTTPException(status_code=404, detail="User not found")
     
     plan = user.get("plan", "Starter")
-    if plan == "Starter":
-        # Starter plan: 1 analysis per month
+    trial_active = user.get("trial_ends_at") and user["trial_ends_at"] > datetime.utcnow()
+    
+    if plan == "Starter" and not trial_active:
+        # Starter plan (post-trial): 1 analysis per month
         from datetime import timedelta
         month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         usage_count = await db.ai_visibility_analyses.count_documents({

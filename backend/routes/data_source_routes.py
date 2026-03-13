@@ -21,6 +21,16 @@ DATA_SOURCE_LIMITS = {
     "Enterprise": 999,
 }
 
+async def _is_trial_active(db, user_id):
+    """Check if user's trial period is still active"""
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        return False
+    trial_ends = user.get("trial_ends_at")
+    if trial_ends and trial_ends > datetime.utcnow():
+        return True
+    return False
+
 @router.get("/limits")
 async def get_data_source_limits(user_id: str = Depends(get_current_user_id)):
     """Get data source limits and current usage for user"""
@@ -29,9 +39,9 @@ async def get_data_source_limits(user_id: str = Depends(get_current_user_id)):
         raise HTTPException(status_code=404, detail="User not found")
     
     plan = user.get("plan", "Starter")
-    limit = DATA_SOURCE_LIMITS.get(plan, 4)
+    trial_active = user.get("trial_ends_at") and user["trial_ends_at"] > datetime.utcnow()
+    limit = 999 if trial_active else DATA_SOURCE_LIMITS.get(plan, 4)
     
-    # Count connected data sources (uploaded files + integrations)
     file_count = await db.uploaded_files.count_documents({"user_id": ObjectId(user_id)})
     integration_count = await db.integrations.count_documents({"user_id": ObjectId(user_id), "status": "connected"})
     current = file_count + integration_count
@@ -41,7 +51,8 @@ async def get_data_source_limits(user_id: str = Depends(get_current_user_id)):
         "limit": limit,
         "current": current,
         "remaining": max(0, limit - current),
-        "can_add": current < limit
+        "can_add": current < limit,
+        "trial_active": bool(trial_active)
     }
 
 @router.post("/upload-file")
@@ -51,18 +62,20 @@ async def upload_file(
 ):
     """Upload and analyze CSV/Excel file"""
     
-    # Check data source limit
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
-    if user:
-        plan = user.get("plan", "Starter")
-        limit = DATA_SOURCE_LIMITS.get(plan, 4)
-        file_count = await db.uploaded_files.count_documents({"user_id": ObjectId(user_id)})
-        integration_count = await db.integrations.count_documents({"user_id": ObjectId(user_id), "status": "connected"})
-        if (file_count + integration_count) >= limit:
-            raise HTTPException(
-                status_code=403,
-                detail=f"DATA_SOURCE_LIMIT_REACHED: Your {plan} plan allows {limit} data source connections. Upgrade to Business Pro for unlimited connections."
-            )
+    # Check data source limit — skip during trial
+    trial_active = await _is_trial_active(db, user_id)
+    if not trial_active:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            plan = user.get("plan", "Starter")
+            limit = DATA_SOURCE_LIMITS.get(plan, 4)
+            file_count = await db.uploaded_files.count_documents({"user_id": ObjectId(user_id)})
+            integration_count = await db.integrations.count_documents({"user_id": ObjectId(user_id), "status": "connected"})
+            if (file_count + integration_count) >= limit:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"DATA_SOURCE_LIMIT_REACHED: Your {plan} plan allows {limit} data source connections. Upgrade to Business Pro for unlimited connections."
+                )
     
     # Validate file type
     allowed_extensions = ['.csv', '.xlsx', '.xls']
