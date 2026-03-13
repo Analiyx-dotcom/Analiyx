@@ -108,6 +108,17 @@ const UserDashboard = () => {
     } catch (error) { console.error('Error fetching tickets:', error); }
   };
 
+  const handleDeleteFile = async (fileId, filename) => {
+    if (!window.confirm(`Delete "${filename}"?`)) return;
+    try {
+      await dataSourceAPI.deleteFile(fileId);
+      toast({ title: 'File Deleted', description: `${filename} removed.` });
+      fetchUploadedFiles();
+    } catch {
+      toast({ title: 'Delete Failed', description: 'Could not delete file.', variant: 'destructive' });
+    }
+  };
+
   const handleViewFileDetails = async (fileId) => {
     try {
       const details = await dataSourceAPI.getFileDetails(fileId);
@@ -497,15 +508,18 @@ const UserDashboard = () => {
             <CardContent>
               <div className="space-y-3">
                 {uploadedFiles.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer" onClick={() => handleViewFileDetails(file.id)}>
-                    <div className="flex items-center space-x-4">
+                  <div key={file.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors">
+                    <div className="flex items-center space-x-4 cursor-pointer flex-1" onClick={() => handleViewFileDetails(file.id)}>
                       <div className="w-10 h-10 bg-green-900/20 rounded-lg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-green-500" /></div>
                       <div>
                         <p className="text-white font-medium">{file.filename}</p>
                         <p className="text-gray-400 text-sm">{file.total_rows} rows x {file.total_columns} columns</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300">View Analytics</Button>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300" onClick={() => handleViewFileDetails(file.id)}>View Analytics</Button>
+                      <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-900/20" onClick={() => handleDeleteFile(file.id, file.filename)} data-testid={`delete-file-${file.id}`}><X className="w-4 h-4" /></Button>
+                    </div>
                   </div>
                 ))}
               </div>
