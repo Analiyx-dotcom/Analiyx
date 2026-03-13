@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -37,6 +37,14 @@ const UserDashboard = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [searchParams] = useSearchParams();
+  const [slackConnected, setSlackConnected] = useState(false);
+  const [slackTeam, setSlackTeam] = useState('');
+  const [slackChannels, setSlackChannels] = useState([]);
+  const [showSlackPanel, setShowSlackPanel] = useState(false);
+  const [slackToken, setSlackToken] = useState('');
+  const [isConnectingSlack, setIsConnectingSlack] = useState(false);
+  const [slackMessage, setSlackMessage] = useState('');
+  const [selectedChannel, setSelectedChannel] = useState('');
 
   const refreshUser = useCallback(async () => {
     try {
@@ -75,6 +83,7 @@ const UserDashboard = () => {
     fetchUploadedFiles();
     fetchWorkspaces();
     fetchTickets();
+    fetchSlackStatus();
     refreshUser();
   }, [navigate, refreshUser]);
 
@@ -200,6 +209,60 @@ const UserDashboard = () => {
     }));
   };
 
+  const fetchSlackStatus = async () => {
+    try {
+      const res = await api.get('/slack/status');
+      if (res.data.connected) {
+        setSlackConnected(true);
+        setSlackTeam(res.data.team_name || '');
+        fetchSlackChannels();
+      }
+    } catch { /* not connected */ }
+  };
+
+  const fetchSlackChannels = async () => {
+    try {
+      const res = await api.get('/slack/channels');
+      setSlackChannels(res.data.channels || []);
+    } catch { /* ignore */ }
+  };
+
+  const handleConnectSlack = async () => {
+    if (!slackToken.trim()) return;
+    setIsConnectingSlack(true);
+    try {
+      const res = await api.post('/slack/connect', { bot_token: slackToken });
+      setSlackConnected(true);
+      setSlackTeam(res.data.team_name || '');
+      setSlackToken('');
+      fetchSlackChannels();
+      toast({ title: 'Slack Connected!', description: res.data.message });
+    } catch (error) {
+      toast({ title: 'Connection Failed', description: error.response?.data?.detail || 'Invalid token', variant: 'destructive' });
+    } finally { setIsConnectingSlack(false); }
+  };
+
+  const handleDisconnectSlack = async () => {
+    try {
+      await api.delete('/slack/disconnect');
+      setSlackConnected(false);
+      setSlackTeam('');
+      setSlackChannels([]);
+      toast({ title: 'Disconnected', description: 'Slack workspace disconnected.' });
+    } catch { toast({ title: 'Error', description: 'Failed to disconnect.', variant: 'destructive' }); }
+  };
+
+  const handleSendToSlack = async () => {
+    if (!selectedChannel || !slackMessage.trim()) return;
+    try {
+      await api.post('/slack/send', { channel_id: selectedChannel, message: slackMessage });
+      toast({ title: 'Sent!', description: 'Report shared to Slack channel.' });
+      setSlackMessage('');
+    } catch (error) {
+      toast({ title: 'Failed', description: error.response?.data?.detail || 'Could not send.', variant: 'destructive' });
+    }
+  };
+
   const handleAnalyzeUrl = async () => {
     if (!aiUrl.trim()) return;
     setIsAnalyzing(true);
@@ -261,6 +324,64 @@ const UserDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-950">
+      {/* Slack Floating Panel - Right Side */}
+      <div className="fixed top-20 right-4 z-30" data-testid="slack-panel">
+        {showSlackPanel ? (
+          <Card className="bg-gray-900 border-gray-700 w-80 shadow-2xl shadow-black/50">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white text-base flex items-center">
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.27 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.163 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.163 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.163 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.27a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.315A2.528 2.528 0 0 1 24 15.163a2.528 2.528 0 0 1-2.522 2.523h-6.315z" fill="#E01E5A"/></svg>
+                  Slack
+                </CardTitle>
+                <Button variant="ghost" size="sm" className="text-gray-400 h-6 w-6 p-0" onClick={() => setShowSlackPanel(false)}><X className="w-4 h-4" /></Button>
+              </div>
+            </CardHeader>
+            <CardContent className="pt-0 space-y-3">
+              {slackConnected ? (
+                <>
+                  <div className="flex items-center justify-between bg-green-900/20 border border-green-700/30 rounded-lg p-2.5">
+                    <div className="flex items-center space-x-2"><CheckCircle className="w-4 h-4 text-green-400" /><span className="text-green-300 text-sm">{slackTeam}</span></div>
+                    <Button variant="ghost" size="sm" className="text-red-400 text-xs h-6 px-2" onClick={handleDisconnectSlack}>Disconnect</Button>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400 text-xs">Channel</Label>
+                    <select value={selectedChannel} onChange={(e) => setSelectedChannel(e.target.value)} className="w-full rounded-md bg-gray-800 border border-gray-700 text-white text-sm px-2.5 py-2 focus:outline-none focus:ring-1 focus:ring-purple-500" data-testid="slack-channel-select">
+                      <option value="">Select channel</option>
+                      {slackChannels.map(ch => <option key={ch.id} value={ch.id}><Hash className="w-3 h-3" /> #{ch.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400 text-xs">Message</Label>
+                    <textarea value={slackMessage} onChange={(e) => setSlackMessage(e.target.value)} rows={3} placeholder="Share analytics insights with your team..." className="w-full rounded-md bg-gray-800 border border-gray-700 text-white placeholder:text-gray-500 px-2.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-purple-500" data-testid="slack-message-input" />
+                  </div>
+                  <Button className="w-full bg-[#4A154B] hover:bg-[#3a1039] text-white text-sm" onClick={handleSendToSlack} disabled={!selectedChannel || !slackMessage.trim()} data-testid="slack-send-button">
+                    <Send className="w-3.5 h-3.5 mr-2" /> Share to Slack
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-3">
+                  <p className="text-gray-400 text-xs">Connect your Slack workspace to share reports with your team.</p>
+                  <div className="space-y-2">
+                    <Label className="text-gray-400 text-xs">Bot Token (xoxb-...)</Label>
+                    <Input value={slackToken} onChange={(e) => setSlackToken(e.target.value)} placeholder="xoxb-your-bot-token" className="bg-gray-800 border-gray-700 text-white text-sm" type="password" data-testid="slack-token-input" />
+                  </div>
+                  <p className="text-gray-500 text-[10px]">Create a Slack App at <a href="https://api.slack.com/apps" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">api.slack.com/apps</a> and copy the Bot Token.</p>
+                  <Button className="w-full bg-[#4A154B] hover:bg-[#3a1039] text-white text-sm" onClick={handleConnectSlack} disabled={isConnectingSlack || !slackToken.trim()} data-testid="slack-connect-button">
+                    {isConnectingSlack ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Connect Slack'}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Button onClick={() => setShowSlackPanel(true)} className="bg-[#4A154B] hover:bg-[#3a1039] text-white shadow-lg shadow-black/30 rounded-full px-4 py-2" data-testid="slack-open-button">
+            <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="none"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zm1.271 0a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.521-2.52A2.528 2.528 0 0 1 8.834 0a2.528 2.528 0 0 1 2.521 2.522v2.52H8.834zm0 1.271a2.528 2.528 0 0 1 2.521 2.521 2.528 2.528 0 0 1-2.521 2.521H2.522A2.528 2.528 0 0 1 0 8.834a2.528 2.528 0 0 1 2.522-2.521h6.312zM18.956 8.834a2.528 2.528 0 0 1 2.522-2.521A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522 2.521h-2.522V8.834zm-1.27 0a2.528 2.528 0 0 1-2.523 2.521 2.527 2.527 0 0 1-2.52-2.521V2.522A2.527 2.527 0 0 1 15.163 0a2.528 2.528 0 0 1 2.523 2.522v6.312zM15.163 18.956a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.163 24a2.527 2.527 0 0 1-2.52-2.522v-2.522h2.52zm0-1.27a2.527 2.527 0 0 1-2.52-2.523 2.526 2.526 0 0 1 2.52-2.52h6.315A2.528 2.528 0 0 1 24 15.163a2.528 2.528 0 0 1-2.522 2.523h-6.315z" fill="currentColor"/></svg>
+            Slack
+          </Button>
+        )}
+      </div>
+
       {/* Trial Expired Overlay */}
       {trialExpired && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -718,8 +839,8 @@ const UserDashboard = () => {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             {[
-              { name: 'Starter', price: '2,999', credits: '100', features: ['3 Data Sources', 'Basic AI Insights', '1 Workspace'] },
-              { name: 'Business Pro', price: '7,999', credits: '1,000', features: ['Unlimited Sources', 'Advanced AI', '10 Workspaces', 'Slack Integration'] }
+              { name: 'Starter', price: '500', credits: '100', features: ['3 Data Sources', 'Basic AI Insights', '1 Workspace'] },
+              { name: 'Business Pro', price: '800', credits: '1,000', features: ['Unlimited Sources', 'Advanced AI', '10 Workspaces', 'Slack Integration'] }
             ].map((plan) => (
               <div key={plan.name} className={`bg-gray-800 rounded-xl p-6 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
                 <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>

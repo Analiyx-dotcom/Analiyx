@@ -110,7 +110,7 @@ Build a dark-themed clone of https://www.papermap.ai with a separate admin dashb
 - [ ] Email verification code on login (item 11)
 
 ### P2 - Medium Priority
-- [ ] Slack integration for report sharing (item 18)
+- [ ] Slack integration for report sharing (item 18) — DONE
 - [ ] Google Ads & Meta Ads OAuth flow
 - [ ] Zoho Books & Google Sheets integrations
 - [ ] Welcome email on signup

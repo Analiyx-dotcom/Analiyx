@@ -21,6 +21,7 @@ from routes.support_routes import router as support_router
 from routes.workspace_routes import router as workspace_router
 from routes.ai_visibility_routes import router as ai_visibility_router
 from routes.payment_routes import router as payment_router
+from routes.slack_routes import router as slack_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -92,9 +93,10 @@ app.include_router(support_router)
 app.include_router(workspace_router)
 app.include_router(ai_visibility_router)
 app.include_router(payment_router)
+app.include_router(slack_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes
+from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes
 from auth import set_auth_database
 set_auth_database(db)
 auth_routes.set_database(db)
@@ -107,6 +109,7 @@ support_routes.set_database(db)
 workspace_routes.set_database(db)
 ai_visibility_routes.set_database(db)
 payment_routes.set_database(db)
+slack_routes.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,

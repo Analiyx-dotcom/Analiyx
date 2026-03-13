@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom';
 const plans = [
   {
     name: 'Starter',
-    price: '2,999',
+    price: '500',
     period: '/month',
     description: 'Perfect for small teams getting started with data analytics.',
     features: ['3 Data Source Connections', 'Basic AI Insights', '100 Credits/month', 'Email Support', '1 Workspace'],
@@ -15,7 +15,7 @@ const plans = [
   },
   {
     name: 'Business Pro',
-    price: '7,999',
+    price: '800',
     period: '/month',
     description: 'For growing businesses that need advanced analytics and more integrations.',
     features: ['Unlimited Data Sources', 'Advanced AI Analytics', '1,000 Credits/month', 'Priority Support', '10 Workspaces', 'Slack Integration', 'Report Downloads'],
