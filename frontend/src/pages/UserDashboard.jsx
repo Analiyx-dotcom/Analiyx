@@ -155,7 +155,15 @@ const UserDashboard = () => {
       setIsDataSourceModalOpen(false);
       fetchUploadedFiles();
     } catch (error) {
-      toast({ title: 'Upload failed', description: error.response?.data?.detail || 'Failed to upload file', variant: 'destructive' });
+      const detail = error.response?.data?.detail || '';
+      if (detail.includes('DATA_SOURCE_LIMIT_REACHED')) {
+        setIsDataSourceModalOpen(false);
+        setShowFileUpload(false);
+        setShowUpgradeModal(true);
+        toast({ title: 'Data Source Limit Reached', description: 'Upgrade to Business Pro for unlimited data source connections.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Upload failed', description: detail || 'Failed to upload file', variant: 'destructive' });
+      }
     } finally { setIsUploading(false); }
   };
 
@@ -276,7 +284,13 @@ const UserDashboard = () => {
       setAiAnalysis(response.data.analysis);
       toast({ title: 'Analysis Complete!', description: `Analyzed ${aiUrl}` });
     } catch (error) {
-      toast({ title: 'Analysis Failed', description: error.response?.data?.detail || 'Could not analyze URL', variant: 'destructive' });
+      const detail = error.response?.data?.detail || '';
+      if (detail.includes('AI_VISIBILITY_LIMIT_REACHED')) {
+        setShowUpgradeModal(true);
+        toast({ title: 'Monthly Limit Reached', description: 'Starter plan allows 1 AI Visibility analysis per month. Upgrade to Business Pro for unlimited.', variant: 'destructive' });
+      } else {
+        toast({ title: 'Analysis Failed', description: detail || 'Could not analyze URL', variant: 'destructive' });
+      }
     } finally { setIsAnalyzing(false); }
   };
 
@@ -843,8 +857,8 @@ const UserDashboard = () => {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             {[
-              { name: 'Starter', price: '500', credits: '100', features: ['3 Data Sources', 'Basic AI Insights', '1 Workspace'] },
-              { name: 'Business Pro', price: '800', credits: '1,000', features: ['Unlimited Sources', 'Advanced AI', '10 Workspaces', 'Slack Integration'] }
+              { name: 'Starter', price: '500', credits: '100', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace'] },
+              { name: 'Business Pro', price: '800', credits: '1,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration'] }
             ].map((plan) => (
               <div key={plan.name} className={`bg-gray-800 rounded-xl p-6 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
                 <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>

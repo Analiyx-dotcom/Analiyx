@@ -9,7 +9,7 @@ const plans = [
     price: '500',
     period: '/month',
     description: 'Perfect for small teams getting started with data analytics.',
-    features: ['3 Data Source Connections', 'Basic AI Insights', '100 Credits/month', 'Email Support', '1 Workspace'],
+    features: ['4 Data Source Connections', 'AI Visibility (1/month)', '100 Credits/month', 'Email Support', '1 Workspace'],
     cta: 'Start Free Trial',
     popular: false,
   },

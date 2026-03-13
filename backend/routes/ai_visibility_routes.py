@@ -119,6 +119,27 @@ Return analysis as JSON with these exact keys:
 @router.post("/analyze")
 async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_current_user_id)):
     """Analyze a URL for AI visibility and SEO insights"""
+    
+    # Check plan limits for AI Visibility
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    plan = user.get("plan", "Starter")
+    if plan == "Starter":
+        # Starter plan: 1 analysis per month
+        from datetime import timedelta
+        month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        usage_count = await db.ai_visibility_analyses.count_documents({
+            "user_id": ObjectId(user_id),
+            "created_at": {"$gte": month_start}
+        })
+        if usage_count >= 1:
+            raise HTTPException(
+                status_code=403,
+                detail="AI_VISIBILITY_LIMIT_REACHED: Starter plan allows 1 AI Visibility analysis per month. Upgrade to Business Pro for unlimited analyses."
+            )
+    
     url = request.url.strip()
     if not url.startswith('http'):
         url = 'https://' + url
