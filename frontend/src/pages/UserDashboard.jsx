@@ -11,6 +11,7 @@ import { dataSourceAPI, workspaceAPI, supportAPI, authAPI } from '../services/ap
 import { toast } from '../hooks/use-toast';
 import { downloadComprehensiveReport, exportFilesToExcel } from '../utils/reportExport';
 import api from '../services/api';
+import Joyride from 'react-joyride';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -45,6 +46,10 @@ const UserDashboard = () => {
   const [isConnectingSlack, setIsConnectingSlack] = useState(false);
   const [slackMessage, setSlackMessage] = useState('');
   const [selectedChannel, setSelectedChannel] = useState('');
+  const [aiSearchQuery, setAiSearchQuery] = useState('');
+  const [aiSearchResult, setAiSearchResult] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -360,6 +365,37 @@ const UserDashboard = () => {
     }
   }, [searchParams, refreshUser]);
 
+  const handleAiSearch = async () => {
+    if (!aiSearchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      const res = await api.post('/ai/search', { query: aiSearchQuery });
+      setAiSearchResult(res.data);
+    } catch (error) {
+      toast({ title: 'Search Failed', description: error.response?.data?.detail || 'AI search failed', variant: 'destructive' });
+    } finally { setIsSearching(false); }
+  };
+
+  // Show tour for first-time users
+  useEffect(() => {
+    const tourSeen = localStorage.getItem('analiyx_tour_seen');
+    if (!tourSeen && user) setShowTour(true);
+  }, [user]);
+
+  const handleTourEnd = (data) => {
+    if (data.status === 'finished' || data.status === 'skipped') {
+      setShowTour(false);
+      localStorage.setItem('analiyx_tour_seen', 'true');
+    }
+  };
+
+  const tourSteps = [
+    { target: '[data-testid="new-workspace-button"]', content: 'Create workspaces to organize your data sources and analytics.', disableBeaconClick: false },
+    { target: '[data-testid="browse-integrations-button"]', content: 'Connect your data sources like Excel, CSV, Google Analytics, and more.' },
+    { target: '[data-testid="ai-search-bar"]', content: 'Ask questions about your data using natural language. Our AI will analyze and respond.' },
+    { target: '[data-testid="support-button"]', content: 'Need help? Create a support ticket and our team will assist you.' },
+  ];
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -473,6 +509,23 @@ const UserDashboard = () => {
         </div>
       )}
 
+      {/* Guided Tour */}
+      <Joyride
+        steps={tourSteps}
+        run={showTour}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleTourEnd}
+        styles={{
+          options: { primaryColor: '#9333ea', zIndex: 10000, backgroundColor: '#1f2937', textColor: '#e5e7eb', arrowColor: '#1f2937' },
+          tooltip: { borderRadius: 12 },
+          buttonNext: { backgroundColor: '#9333ea', borderRadius: 8 },
+          buttonBack: { color: '#9ca3af' },
+          buttonSkip: { color: '#9ca3af' },
+        }}
+      />
+
       {/* Top Navigation */}
       <nav className="bg-gray-900 border-b border-gray-800 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -484,6 +537,9 @@ const UserDashboard = () => {
               <span className="text-xl font-bold text-white">Analiyx</span>
             </div>
             <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white" onClick={() => { localStorage.removeItem('analiyx_tour_seen'); setShowTour(true); }} data-testid="take-tour-button">
+                <Sparkles className="w-4 h-4 mr-1" /> Tour
+              </Button>
               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white" onClick={() => setShowSupportModal(true)} data-testid="support-button">
                 <MessageSquare className="w-4 h-4 mr-1" /> Support
               </Button>
@@ -504,6 +560,46 @@ const UserDashboard = () => {
           <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" onClick={() => setShowWorkspaceModal(true)} data-testid="new-workspace-button">
             <Plus className="w-4 h-4 mr-2" /> New Workspace
           </Button>
+        </div>
+
+        {/* AI Search Bar */}
+        <div className="mb-8" data-testid="ai-search-bar">
+          <div className="relative">
+            <div className="flex items-center bg-gray-900 border border-gray-700 rounded-xl overflow-hidden focus-within:border-purple-500 transition-colors">
+              <Search className="w-5 h-5 text-gray-400 ml-4" />
+              <input
+                value={aiSearchQuery}
+                onChange={(e) => setAiSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
+                placeholder="Ask anything about your data... e.g., 'What are my top revenue sources?'"
+                className="flex-1 bg-transparent text-white px-4 py-3 outline-none placeholder-gray-500"
+                data-testid="ai-search-input"
+              />
+              <Button onClick={handleAiSearch} disabled={isSearching || !aiSearchQuery.trim()} className="m-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg" data-testid="ai-search-submit">
+                {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+              </Button>
+            </div>
+          </div>
+          {aiSearchResult && (
+            <Card className="bg-gray-900 border-gray-700 mt-3">
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <Brain className="w-5 h-5 text-purple-400" />
+                    <span className="text-sm font-medium text-purple-400">AI Response</span>
+                  </div>
+                  <button onClick={() => setAiSearchResult(null)} className="text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
+                </div>
+                <p className="text-gray-200 text-sm whitespace-pre-wrap">{aiSearchResult.answer}</p>
+                {aiSearchResult.sources?.length > 0 && (
+                  <div className="mt-3 flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-500">Sources:</span>
+                    {aiSearchResult.sources.map((s, i) => <span key={i} className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">{s}</span>)}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* User Info Cards */}

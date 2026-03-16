@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { adminAPI } from '../services/api';
-import { Users, DollarSign, Database, TrendingUp, ArrowUp, ArrowDown, LogOut, Sparkles, Menu, X } from 'lucide-react';
+import { Users, DollarSign, Database, TrendingUp, ArrowUp, ArrowDown, LogOut, Sparkles, Menu, X, MessageSquare, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
 import { toast } from '../hooks/use-toast';
+import api from '../services/api';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -16,6 +18,10 @@ const AdminDashboard = () => {
   const [userGrowthData, setUserGrowthData] = useState([]);
   const [revenueData, setRevenueData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [slackToken, setSlackToken] = useState('');
+  const [slackConnected, setSlackConnected] = useState(false);
+  const [slackTeam, setSlackTeam] = useState('');
+  const [isConnectingSlack, setIsConnectingSlack] = useState(false);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -42,6 +48,14 @@ const AdminDashboard = () => {
       setUserGrowthData(userGrowth.data || []);
       setRevenueData(revenue.data || []);
       setDetailedUsers(detailedUsersData.users || []);
+      // Check Slack status
+      try {
+        const slackStatus = await api.get('/slack/status');
+        if (slackStatus.data.connected) {
+          setSlackConnected(true);
+          setSlackTeam(slackStatus.data.team_name || '');
+        }
+      } catch {}
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.removeItem('token');
@@ -93,11 +107,35 @@ const AdminDashboard = () => {
     navigate('/login');
   };
 
+  const handleConnectSlack = async () => {
+    if (!slackToken.trim()) return;
+    setIsConnectingSlack(true);
+    try {
+      const res = await api.post('/slack/connect', { bot_token: slackToken });
+      setSlackConnected(true);
+      setSlackTeam(res.data.team_name || '');
+      setSlackToken('');
+      toast({ title: 'Slack Connected!', description: `Connected to ${res.data.team_name}` });
+    } catch (error) {
+      toast({ title: 'Connection Failed', description: error.response?.data?.detail || 'Invalid bot token', variant: 'destructive' });
+    } finally { setIsConnectingSlack(false); }
+  };
+
+  const handleDisconnectSlack = async () => {
+    try {
+      await api.delete('/slack/disconnect');
+      setSlackConnected(false);
+      setSlackTeam('');
+      toast({ title: 'Disconnected', description: 'Slack workspace disconnected.' });
+    } catch { toast({ title: 'Error', description: 'Failed to disconnect.', variant: 'destructive' }); }
+  };
+
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'datasources', label: 'Data Sources', icon: Database },
     { id: 'revenue', label: 'Revenue', icon: DollarSign },
+    { id: 'slack', label: 'Slack', icon: MessageSquare },
   ];
 
   const formatINR = (amount) => `₹${Number(amount).toLocaleString('en-IN')}`;
@@ -318,11 +356,47 @@ const AdminDashboard = () => {
     </div>
   );
 
+  const renderSlackTab = () => (
+    <div className="space-y-6">
+      <div><h1 className="text-3xl font-bold text-white mb-2">Slack Integration</h1><p className="text-gray-400">Connect your Slack workspace for admin notifications</p></div>
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader><CardTitle className="text-white flex items-center"><MessageSquare className="w-5 h-5 mr-2" /> Slack Connection</CardTitle></CardHeader>
+        <CardContent>
+          {slackConnected ? (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3 bg-green-900/20 border border-green-700 rounded-lg p-4">
+                <CheckCircle className="w-6 h-6 text-green-400" />
+                <div>
+                  <p className="text-white font-medium">Connected to {slackTeam}</p>
+                  <p className="text-gray-400 text-sm">Notifications will be sent to your Slack workspace</p>
+                </div>
+              </div>
+              <Button variant="outline" className="border-red-500 text-red-400 hover:bg-red-900/20" onClick={handleDisconnectSlack} data-testid="admin-slack-disconnect">Disconnect Slack</Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-gray-400 text-sm">Connect your Slack workspace to receive platform notifications, new user alerts, and revenue updates.</p>
+              <div className="space-y-2">
+                <label className="text-gray-300 text-sm">Slack Bot Token</label>
+                <Input value={slackToken} onChange={(e) => setSlackToken(e.target.value)} placeholder="xoxb-your-bot-token" className="bg-gray-800 border-gray-700 text-white" data-testid="admin-slack-token-input" />
+                <p className="text-xs text-gray-500">Create a Slack app at api.slack.com and get a bot token with chat:write and channels:read scopes.</p>
+              </div>
+              <Button onClick={handleConnectSlack} disabled={!slackToken.trim() || isConnectingSlack} className="bg-gradient-to-r from-purple-600 to-pink-600" data-testid="admin-slack-connect">
+                {isConnectingSlack ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <MessageSquare className="w-4 h-4 mr-2" />} Connect Slack
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case 'users': return renderUsersTab();
       case 'datasources': return renderDataSourcesTab();
       case 'revenue': return renderRevenueTab();
+      case 'slack': return renderSlackTab();
       default: return renderDashboardTab();
     }
   };

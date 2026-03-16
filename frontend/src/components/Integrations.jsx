@@ -2,7 +2,7 @@ import React from 'react';
 import { integrations } from '../mock/mockData';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Database, Zap, Sheet, FileSpreadsheet, FileText, CreditCard, ShoppingBag, Book, BarChart, Store, Square, Users, Brain, Facebook, BookOpen, Megaphone, Cloud } from 'lucide-react';
+import { Database, Zap, Sheet, FileSpreadsheet, FileText, CreditCard, ShoppingBag, Book, BarChart, Store, Square, Users, Brain, Facebook, BookOpen, Megaphone, Cloud, Layout, HeartPulse } from 'lucide-react';
 
 const iconMap = {
   database: Database,
@@ -21,7 +21,9 @@ const iconMap = {
   facebook: Facebook,
   'book-open': BookOpen,
   megaphone: Megaphone,
-  cloud: Cloud
+  cloud: Cloud,
+  layout: Layout,
+  'heart-pulse': HeartPulse
 };
 
 const Integrations = () => {
@@ -47,7 +49,7 @@ const Integrations = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-6 mt-12">
           {integrations.map((integration, index) => {
-            const Icon = iconMap[integration.icon];
+            const Icon = iconMap[integration.icon] || Database;
             return (
               <div
                 key={index}
