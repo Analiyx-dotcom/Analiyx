@@ -222,7 +222,7 @@ const UserDashboard = () => {
       setNewWorkspace({ name: '', dataSources: [] });
       fetchWorkspaces();
     } catch (error) {
-      toast({ title: 'Failed', description: error.response?.data?.detail || 'Could not create workspace', variant: 'destructive' });
+      toast({ title: 'Failed', description: typeof error.response?.data?.detail === 'string' ? error.response.data.detail : 'Could not create workspace', variant: 'destructive' });
     }
   };
 
@@ -233,7 +233,7 @@ const UserDashboard = () => {
       toast({ title: 'Workspace Deleted', description: `'${wsName}' has been removed.` });
       fetchWorkspaces();
     } catch (error) {
-      toast({ title: 'Delete Failed', description: error.response?.data?.detail || 'Could not delete workspace', variant: 'destructive' });
+      toast({ title: 'Delete Failed', description: typeof error.response?.data?.detail === 'string' ? error.response.data.detail : 'Could not delete workspace', variant: 'destructive' });
     }
   };
 
@@ -288,7 +288,7 @@ const UserDashboard = () => {
       fetchSlackChannels();
       toast({ title: 'Slack Connected!', description: res.data.message });
     } catch (error) {
-      toast({ title: 'Connection Failed', description: error.response?.data?.detail || 'Invalid token', variant: 'destructive' });
+      toast({ title: 'Connection Failed', description: typeof error.response?.data?.detail === 'string' ? error.response.data.detail : 'Invalid token', variant: 'destructive' });
     } finally { setIsConnectingSlack(false); }
   };
 
@@ -309,7 +309,7 @@ const UserDashboard = () => {
       toast({ title: 'Sent!', description: 'Report shared to Slack channel.' });
       setSlackMessage('');
     } catch (error) {
-      toast({ title: 'Failed', description: error.response?.data?.detail || 'Could not send.', variant: 'destructive' });
+      toast({ title: 'Failed', description: typeof error.response?.data?.detail === 'string' ? error.response.data.detail : 'Could not send.', variant: 'destructive' });
     }
   };
 
