@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -210,6 +210,17 @@ const UserDashboard = () => {
     }
   };
 
+  const handleDeleteWorkspace = async (wsId, wsName) => {
+    if (!window.confirm(`Delete workspace "${wsName}"? This cannot be undone.`)) return;
+    try {
+      await workspaceAPI.delete(wsId);
+      toast({ title: 'Workspace Deleted', description: `'${wsName}' has been removed.` });
+      fetchWorkspaces();
+    } catch (error) {
+      toast({ title: 'Delete Failed', description: error.response?.data?.detail || 'Could not delete workspace', variant: 'destructive' });
+    }
+  };
+
   const handleSubmitTicket = async () => {
     if (!ticketForm.subject.trim() || !ticketForm.message.trim()) return;
     try {
@@ -305,27 +316,33 @@ const UserDashboard = () => {
     } finally { setIsAnalyzing(false); }
   };
 
+  const loadCashfreeSDK = useCallback(() => {
+    return new Promise((resolve, reject) => {
+      if (window.Cashfree) { resolve(); return; }
+      const existing = document.querySelector('script[src*="sdk.cashfree.com"]');
+      if (existing) { existing.onload = () => resolve(); return; }
+      const script = document.createElement('script');
+      script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Failed to load Cashfree SDK'));
+      document.body.appendChild(script);
+    });
+  }, []);
+
   const handleUpgrade = async (planName) => {
     setIsProcessingPayment(true);
     try {
       const response = await api.post('/payments/create-order', { plan: planName, return_url: window.location.origin });
       const { payment_session_id, order_id } = response.data;
-      
-      // Load Cashfree SDK
-      const script = document.createElement('script');
-      script.src = 'https://sdk.cashfree.com/js/core/3.0.0/cashfree.pro.min.js';
-      script.async = true;
-      document.body.appendChild(script);
-      script.onload = async () => {
-        try {
-          const cashfree = window.Cashfree({ mode: 'production' });
-          await cashfree.checkout({ paymentSessionId: payment_session_id, returnUrl: `${window.location.origin}/dashboard?payment_status=success&order_id=${order_id}` });
-        } catch (err) {
-          toast({ title: 'Payment Failed', description: 'Checkout could not be loaded.', variant: 'destructive' });
-        }
-      };
+      await loadCashfreeSDK();
+      const cashfree = window.Cashfree({ mode: 'production' });
+      await cashfree.checkout({
+        paymentSessionId: payment_session_id,
+        returnUrl: `${window.location.origin}/dashboard?payment_status=success&order_id=${order_id}`
+      });
     } catch (error) {
-      toast({ title: 'Payment Error', description: error.response?.data?.detail || 'Failed to create payment order.', variant: 'destructive' });
+      toast({ title: 'Payment Error', description: error.response?.data?.detail || 'Failed to initiate payment. Please try again.', variant: 'destructive' });
     } finally { setIsProcessingPayment(false); }
   };
 
@@ -504,7 +521,10 @@ const UserDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {workspaces.map((ws) => (
                   <div key={ws.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-purple-500/50 transition-colors">
-                    <h3 className="text-white font-medium mb-1">{ws.name}</h3>
+                    <div className="flex items-start justify-between mb-1">
+                      <h3 className="text-white font-medium">{ws.name}</h3>
+                      <button onClick={() => handleDeleteWorkspace(ws.id, ws.name)} className="text-gray-500 hover:text-red-400 transition-colors p-1" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-4 h-4" /></button>
+                    </div>
                     <p className="text-gray-400 text-xs mb-2">{ws.data_sources.length} data source{ws.data_sources.length !== 1 ? 's' : ''}</p>
                     <div className="flex flex-wrap gap-1">{ws.data_sources.map((ds, i) => <span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">{ds}</span>)}</div>
                   </div>
@@ -816,7 +836,7 @@ const UserDashboard = () => {
             <div className="space-y-2">
               <Label className="text-gray-300">Select Data Sources</Label>
               <div className="grid grid-cols-3 gap-2">
-                {['Excel', 'CSV', 'Google Ads', 'Meta Ads', 'Google Sheets', 'Zoho Books', 'Google Analytics', 'Shopify'].map(ds => (
+                {['Excel', 'CSV', 'Google Ads', 'Meta Ads', 'Google Sheets', 'Zoho Books', 'Google Analytics', 'Zoho CRM', 'Notion API', 'Practo API', 'Shopify'].map(ds => (
                   <button key={ds} onClick={() => toggleDataSource(ds)} className={`px-3 py-2 rounded-lg text-xs border transition-all ${newWorkspace.dataSources.includes(ds) ? 'bg-purple-900/40 border-purple-500 text-purple-300' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'}`}>
                     {ds}
                   </button>
