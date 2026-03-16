@@ -1,64 +1,60 @@
 # Analiyx - Product Requirements Document
 
 ## Original Problem Statement
-Build a dark-themed clone of https://www.papermap.ai with a separate admin dashboard for analytics, rebranded as "Analiyx".
+Build a dark-themed analytics platform "Analiyx" with user/admin dashboards, 14-day trial, plan-based restrictions, and AI-powered data analysis.
 
 ## Tech Stack
-- **Frontend**: React, React Router, Tailwind CSS, Shadcn/ui, react-joyride
-- **Backend**: FastAPI, Pydantic, Motor (async MongoDB)
-- **Database**: MongoDB
-- **Auth**: JWT with RBAC
-- **Payments**: Cashfree PG SDK v3 (Production)
-- **AI**: GPT-5.2 via emergentintegrations
+- **Frontend**: React, Tailwind CSS, Shadcn/ui, react-joyride
+- **Backend**: FastAPI, Motor (async MongoDB)
+- **AI**: GPT-5.2 via emergentintegrations (multi-turn chat)
+- **Payments**: Cashfree PG SDK v3
 
 ## Implemented Features
 
-### Landing Page
-- [x] "Try for Free" hero → /signup, Dashboard preview, Indian testimonials
-- [x] Pricing in INR, Footer with techmeliora@gmail.com, Legal links
+### User Dashboard (P2 Redesigned)
+- [x] Welcome Hero with stats overview (Workspaces, Files, AI Queries, Plan)
+- [x] Quick Actions grid + 2/3+1/3 layout + Recent Activity feed
+- [x] Clickable workspace cards → WorkspaceView
 
-### Authentication & Trial
-- [x] JWT login/signup with RBAC (user/admin)
-- [x] 14-day free trial, floating badge, expired popup, admin trial extension
-
-### User Dashboard (REDESIGNED - P2)
-- [x] **Welcome Hero** — Date, personalized greeting, gradient background
-- [x] **Stats Overview** — 4 dynamic cards (Workspaces, Files, AI Queries, Plan) with "+X this week" badges
-- [x] **Quick Actions** — Create Workspace, Upload File, AI Visibility, Browse Integrations
-- [x] **2/3 + 1/3 Layout** — Workspaces & files left, Plan card + Activity feed + CTA right
-- [x] **Recent Activity Feed** — Color-coded activity items (uploads, workspace creations, AI searches)
-- [x] **Clickable Workspace Cards** → WorkspaceView detail with integrations, AI search, file upload
-- [x] **WorkspaceView** — Connected sources, AI Search bar (GPT-5.2), file upload/analytics, integrations modal
-- [x] AI Visibility analysis, Take a Tour (Joyride), Support tickets, Slack integration
-- [x] Cashfree payment (SDK v3), Report download, File deletion
+### WorkspaceView — Interactive AI Chat (NEW)
+- [x] **ChatGPT-like multi-turn AI chat** scoped to workspace data
+- [x] Chat history persistence (session_id per workspace)
+- [x] Chat history loads on workspace open
+- [x] Markdown rendering (bold, headers, bullets, tables)
+- [x] Typing indicator (bouncing dots) while AI processes
+- [x] Quick prompts in empty state ("Summarize my data", etc.)
+- [x] User messages (purple, right) / AI messages (dark, left)
+- [x] Tab navigation: AI Chat | Files | Sources
+- [x] File upload scoped to workspace
+- [x] File analytics modal
+- [x] Integration connection modal
 
 ### Admin Dashboard
 - [x] 5 tabs: Dashboard, Users, Data Sources, Revenue, Slack
-- [x] Stats, user management, charts, Slack connection panel
 
-### Backend API Endpoints
-- `/api/dashboard/summary` — Dynamic stats + activity feed
-- `/api/ai/search` — GPT-5.2 workspace-scoped AI search
-- `/api/data-sources/upload-file?workspace_id` — Workspace-scoped uploads
-- `/api/payments/create-order` — Cashfree payment
-- `/api/ai/analyze-url` — AI Visibility
-- Full CRUD for workspaces, files, users, Slack
+### Authentication & Trial
+- [x] JWT + RBAC, 14-day trial, trial badge, expired popup
 
-## Architecture
-```
-/app/backend/routes/ — auth, admin, data_source, workspace, ai_search, ai_visibility, dashboard, payment, slack, contact, support, integration
-/app/frontend/src/pages/ — UserDashboard, WorkspaceView, AdminDashboard, Login, Signup, Home, Contact, Legal
-```
+### Other
+- [x] Cashfree payment (SDK v3), AI Visibility, Slack integration
+- [x] Landing page, contact form, legal pages, Take a Tour
+
+## API Endpoints
+- `POST /api/ai/chat` — Multi-turn AI chat with session persistence
+- `GET /api/ai/chat/history/{workspace_id}` — Load chat history
+- `POST /api/ai/search` — Legacy single-query (backward compatible)
+- `GET /api/dashboard/summary` — Dashboard stats + activity feed
+- `POST /api/data-sources/upload-file?workspace_id` — Workspace-scoped upload
+- Full CRUD for workspaces, files, users, payments, Slack
 
 ## Credentials
 - Admin: admin@papermap.com / admin123
 - Test: testpay@analiyx.com / test1234
 
 ## Backlog
-### P2 - Medium
-- [ ] Google Ads & Meta Ads OAuth flow (frontend wiring)
-
-### P3 - Lower
+### P2
+- [ ] Google Ads & Meta Ads OAuth frontend wiring
+### P3
 - [ ] Gmail + Microsoft OAuth signup
 - [ ] Email verification on login (2FA)
 - [ ] Forgot Password backend (email sending)
