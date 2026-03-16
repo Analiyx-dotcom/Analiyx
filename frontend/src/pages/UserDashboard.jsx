@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2 } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -52,6 +52,7 @@ const UserDashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [showTour, setShowTour] = useState(false);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+  const [dashboardSummary, setDashboardSummary] = useState(null);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -92,7 +93,15 @@ const UserDashboard = () => {
     fetchTickets();
     fetchSlackStatus();
     refreshUser();
+    fetchDashboardSummary();
   }, [navigate, refreshUser]);
+
+  const fetchDashboardSummary = async () => {
+    try {
+      const res = await api.get('/dashboard/summary');
+      setDashboardSummary(res.data);
+    } catch { }
+  };
 
   const fetchUploadedFiles = async () => {
     try {
@@ -558,101 +567,223 @@ const UserDashboard = () => {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Welcome, {user.name}!</h1>
-            <p className="text-gray-400">Manage your data analytics and subscriptions</p>
-          </div>
-          <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" onClick={() => setShowWorkspaceModal(true)} data-testid="new-workspace-button">
-            <Plus className="w-4 h-4 mr-2" /> New Workspace
-          </Button>
-        </div>
-
-        {/* User Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gray-900 border-gray-800"><CardContent className="p-6"><div className="flex items-center space-x-4"><div className="p-3 bg-purple-900/20 rounded-lg"><CreditCard className="w-6 h-6 text-purple-400" /></div><div><p className="text-gray-400 text-sm">Current Plan</p><p className="text-xl font-bold text-white">{user.plan}</p></div></div></CardContent></Card>
-          <Card className="bg-gray-900 border-gray-800"><CardContent className="p-6"><div className="flex items-center space-x-4"><div className="p-3 bg-green-900/20 rounded-lg"><TrendingUp className="w-6 h-6 text-green-400" /></div><div><p className="text-gray-400 text-sm">Credits Available</p><p className="text-xl font-bold text-white">{user.credits}</p></div></div></CardContent></Card>
-          <Card className="bg-gray-900 border-gray-800"><CardContent className="p-6"><div className="flex items-center space-x-4"><div className="p-3 bg-blue-900/20 rounded-lg"><Database className="w-6 h-6 text-blue-400" /></div><div><p className="text-gray-400 text-sm">Account Status</p><p className="text-xl font-bold text-white capitalize">{user.status}</p></div></div></CardContent></Card>
-        </div>
-
-        {/* Workspaces */}
-        {workspaces.length > 0 && (
-          <Card className="bg-gray-900 border-gray-800 mb-6">
-            <CardHeader><CardTitle className="text-white flex items-center"><Folder className="w-5 h-5 mr-2" /> Your Workspaces</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {workspaces.map((ws) => (
-                  <div key={ws.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition-all cursor-pointer group" onClick={() => setSelectedWorkspace(ws)} data-testid={`workspace-card-${ws.id}`}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center group-hover:from-purple-500/40 group-hover:to-pink-500/40 transition-all">
-                          <Folder className="w-4 h-4 text-purple-400" />
-                        </div>
-                        <h3 className="text-white font-medium">{ws.name}</h3>
-                      </div>
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkspace(ws.id, ws.name); }} className="text-gray-600 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                    <p className="text-gray-400 text-xs mb-2">{ws.data_sources.length} data source{ws.data_sources.length !== 1 ? 's' : ''}</p>
-                    <div className="flex flex-wrap gap-1">{ws.data_sources.slice(0, 4).map((ds, i) => <span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">{ds}</span>)}{ws.data_sources.length > 4 && <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded">+{ws.data_sources.length - 4}</span>}</div>
-                    <div className="mt-3 flex items-center text-xs text-purple-400 group-hover:text-purple-300">
-                      <span>Open workspace</span>
-                      <ArrowUp className="w-3 h-3 ml-1 rotate-90" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Uploaded Files with Graphical Analytics */}
-        {uploadedFiles.length > 0 && (
-          <Card className="bg-gray-900 border-gray-800 mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white flex items-center"><FileSpreadsheet className="w-5 h-5 mr-2" /> Your Uploaded Files</CardTitle>
-                <Button variant="outline" size="sm" onClick={handleDownloadReport} className="border-purple-500 text-purple-400 hover:bg-purple-900/20" data-testid="download-reports-button"><Download className="w-4 h-4 mr-2" /> Download All Reports</Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {uploadedFiles.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-4 bg-gray-800/50 rounded-lg hover:bg-gray-800 transition-colors">
-                    <div className="flex items-center space-x-4 cursor-pointer flex-1" onClick={() => handleViewFileDetails(file.id)}>
-                      <div className="w-10 h-10 bg-green-900/20 rounded-lg flex items-center justify-center"><CheckCircle className="w-5 h-5 text-green-500" /></div>
-                      <div>
-                        <p className="text-white font-medium">{file.filename}</p>
-                        <p className="text-gray-400 text-sm">{file.total_rows} rows x {file.total_columns} columns</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300" onClick={() => handleViewFileDetails(file.id)}>View Analytics</Button>
-                      <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-900/20" onClick={() => handleDeleteFile(file.id, file.filename)} data-testid={`delete-file-${file.id}`}><X className="w-4 h-4" /></Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Connect More Sources CTA */}
-        <Card className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border-purple-500/30 mt-6">
-          <CardContent className="p-8 text-center">
-            <Sparkles className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">Connect More Data Sources</h3>
-            <p className="text-gray-400 mb-6">Get deeper insights by connecting all your business data sources</p>
-            <div className="flex justify-center space-x-3">
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white" onClick={() => setIsDataSourceModalOpen(true)} data-testid="browse-integrations-button">Browse Integrations</Button>
-              <Button variant="outline" className="border-gray-700 text-gray-300 hover:bg-gray-800" onClick={() => window.location.href = 'mailto:techmeliora@gmail.com'}>
-                <Mail className="w-4 h-4 mr-2" /> Contact Support
-              </Button>
+        {/* Welcome Hero */}
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-purple-950/40 to-gray-900 border border-gray-800 p-8">
+          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-gray-400 text-sm mb-1">{new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">Welcome back, {user.name}!</h1>
+              <p className="text-gray-400">Here's what's happening with your analytics</p>
             </div>
-          </CardContent>
-        </Card>
+            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-900/30" onClick={() => setShowWorkspaceModal(true)} data-testid="new-workspace-button">
+              <Plus className="w-4 h-4 mr-2" /> New Workspace
+            </Button>
+          </div>
+        </div>
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Workspaces', value: dashboardSummary?.workspaces ?? workspaces.length, icon: Layers, color: 'from-purple-500 to-violet-600', bg: 'bg-purple-500/10' },
+            { label: 'Files Uploaded', value: dashboardSummary?.total_files ?? uploadedFiles.length, icon: FileSpreadsheet, color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-500/10' },
+            { label: 'AI Queries', value: dashboardSummary?.ai_queries ?? 0, icon: Brain, color: 'from-blue-500 to-cyan-600', bg: 'bg-blue-500/10' },
+            { label: 'Plan', value: user.plan, icon: CreditCard, color: 'from-amber-500 to-orange-600', bg: 'bg-amber-500/10', isText: true }
+          ].map((stat, i) => (
+            <div key={i} className="group relative bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all overflow-hidden" data-testid={`stat-${stat.label.toLowerCase().replace(/\s/g, '-')}`}>
+              <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity" style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }} />
+              <div className="flex items-center justify-between mb-3">
+                <div className={`p-2.5 rounded-lg ${stat.bg}`}>
+                  <stat.icon className={`w-5 h-5 bg-gradient-to-r ${stat.color} bg-clip-text`} style={{ color: stat.color.includes('purple') ? '#a855f7' : stat.color.includes('emerald') ? '#10b981' : stat.color.includes('blue') ? '#3b82f6' : '#f59e0b' }} />
+                </div>
+                {!stat.isText && dashboardSummary?.recent_files > 0 && stat.label === 'Files Uploaded' && (
+                  <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">+{dashboardSummary.recent_files} this week</span>
+                )}
+              </div>
+              <p className={`${stat.isText ? 'text-xl' : 'text-2xl'} font-bold text-white`}>{stat.value}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {[
+            { label: 'Create Workspace', icon: Plus, action: () => setShowWorkspaceModal(true), accent: 'hover:border-purple-500/50 hover:bg-purple-500/5' },
+            { label: 'Upload File', icon: Upload, action: () => setIsDataSourceModalOpen(true), accent: 'hover:border-emerald-500/50 hover:bg-emerald-500/5' },
+            { label: 'AI Visibility', icon: Globe, action: () => { const el = document.getElementById('ai-visibility-section'); el?.scrollIntoView({ behavior: 'smooth' }); }, accent: 'hover:border-blue-500/50 hover:bg-blue-500/5' },
+            { label: 'Browse Integrations', icon: Database, action: () => setIsDataSourceModalOpen(true), accent: 'hover:border-amber-500/50 hover:bg-amber-500/5' },
+          ].map((action, i) => (
+            <button key={i} onClick={action.action} className={`flex items-center space-x-3 bg-gray-900 border border-gray-800 rounded-xl p-4 transition-all ${action.accent}`} data-testid={`quick-action-${action.label.toLowerCase().replace(/\s/g, '-')}`}>
+              <action.icon className="w-4 h-4 text-gray-400" />
+              <span className="text-sm text-gray-300">{action.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Left Column - Workspaces (2/3) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Workspaces */}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white flex items-center text-base"><Folder className="w-5 h-5 mr-2 text-purple-400" /> Your Workspaces</CardTitle>
+                  {workspaces.length > 0 && <span className="text-xs text-gray-500">{workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''}</span>}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {workspaces.length === 0 ? (
+                  <div className="text-center py-10 border-2 border-dashed border-gray-800 rounded-xl">
+                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><Layers className="w-7 h-7 text-purple-400" /></div>
+                    <h3 className="text-white font-semibold mb-1">Create your first workspace</h3>
+                    <p className="text-gray-500 text-sm mb-4 max-w-sm mx-auto">Workspaces let you organize data sources, upload files, and query your data with AI</p>
+                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setShowWorkspaceModal(true)}>
+                      <Plus className="w-4 h-4 mr-2" /> Create Workspace
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {workspaces.map((ws) => (
+                      <div key={ws.id} className="group relative bg-gray-800/40 rounded-xl p-4 border border-gray-700/50 hover:border-purple-500/50 transition-all cursor-pointer" onClick={() => setSelectedWorkspace(ws)} data-testid={`workspace-card-${ws.id}`}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 to-pink-500/3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="relative">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center group-hover:from-purple-500/30 group-hover:to-pink-500/30 transition-all">
+                                <Folder className="w-5 h-5 text-purple-400" />
+                              </div>
+                              <div>
+                                <h3 className="text-white font-semibold text-sm">{ws.name}</h3>
+                                <p className="text-gray-500 text-xs">{ws.data_sources.length} source{ws.data_sources.length !== 1 ? 's' : ''}</p>
+                              </div>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkspace(ws.id, ws.name); }} className="text-gray-600 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-3.5 h-3.5" /></button>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            {ws.data_sources.slice(0, 3).map((ds, i) => (
+                              <span key={i} className="text-[10px] bg-gray-700/60 text-gray-300 px-2 py-0.5 rounded-md">{ds}</span>
+                            ))}
+                            {ws.data_sources.length > 3 && <span className="text-[10px] bg-gray-700/60 text-gray-400 px-2 py-0.5 rounded-md">+{ws.data_sources.length - 3}</span>}
+                          </div>
+                          <div className="flex items-center text-xs text-purple-400/70 group-hover:text-purple-400 transition-colors">
+                            <span>Open workspace</span><ChevronRight className="w-3 h-3 ml-0.5" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {/* Add Workspace Card */}
+                    <div className="flex items-center justify-center bg-gray-800/20 rounded-xl p-4 border border-dashed border-gray-700/50 hover:border-purple-500/40 transition-all cursor-pointer min-h-[130px]" onClick={() => setShowWorkspaceModal(true)}>
+                      <div className="text-center">
+                        <Plus className="w-6 h-6 text-gray-600 mx-auto mb-1" />
+                        <span className="text-xs text-gray-500">New Workspace</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Uploaded Files */}
+            {uploadedFiles.length > 0 && (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-white flex items-center text-base"><FileSpreadsheet className="w-5 h-5 mr-2 text-emerald-400" /> Recent Files</CardTitle>
+                    <Button variant="ghost" size="sm" onClick={handleDownloadReport} className="text-purple-400 hover:text-purple-300 text-xs" data-testid="download-reports-button"><Download className="w-3 h-3 mr-1" /> Export All</Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {uploadedFiles.slice(0, 5).map((file) => (
+                      <div key={file.id} className="flex items-center justify-between p-3 bg-gray-800/40 rounded-lg hover:bg-gray-800/70 transition-colors group">
+                        <div className="flex items-center space-x-3 cursor-pointer flex-1" onClick={() => handleViewFileDetails(file.id)}>
+                          <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center"><CheckCircle className="w-4 h-4 text-emerald-500" /></div>
+                          <div>
+                            <p className="text-white text-sm font-medium">{file.filename}</p>
+                            <p className="text-gray-500 text-xs">{file.total_rows} rows x {file.total_columns} cols</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300 text-xs h-7" onClick={() => handleViewFileDetails(file.id)}><Eye className="w-3 h-3" /></Button>
+                          <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-900/20 h-7" onClick={() => handleDeleteFile(file.id, file.filename)} data-testid={`delete-file-${file.id}`}><Trash2 className="w-3 h-3" /></Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {/* Right Column - Activity & Quick Info (1/3) */}
+          <div className="space-y-6">
+            {/* Plan Card */}
+            <Card className="bg-gray-900 border-gray-800 overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-gray-500 text-xs uppercase tracking-wider">Current Plan</p>
+                    <p className="text-xl font-bold text-white">{user.plan}</p>
+                  </div>
+                  <div className="p-2.5 bg-purple-500/10 rounded-xl"><CreditCard className="w-5 h-5 text-purple-400" /></div>
+                </div>
+                <div className="flex items-center justify-between text-sm mb-3">
+                  <span className="text-gray-400">Credits</span><span className="text-white font-medium">{user.credits}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm mb-4">
+                  <span className="text-gray-400">Status</span><span className="text-emerald-400 font-medium capitalize">{user.status}</span>
+                </div>
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm" onClick={() => setShowUpgradeModal(true)} data-testid="upgrade-plan-button">
+                  <ArrowUp className="w-3.5 h-3.5 mr-1.5" /> Upgrade Plan
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-white flex items-center text-base"><Activity className="w-5 h-5 mr-2 text-blue-400" /> Recent Activity</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {dashboardSummary?.activities?.length > 0 ? (
+                  <div className="space-y-3">
+                    {dashboardSummary.activities.slice(0, 6).map((act, i) => (
+                      <div key={i} className="flex items-start space-x-3">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${act.type === 'upload' ? 'bg-emerald-500/10' : act.type === 'workspace' ? 'bg-purple-500/10' : 'bg-blue-500/10'}`}>
+                          {act.type === 'upload' ? <Upload className="w-3.5 h-3.5 text-emerald-400" /> : act.type === 'workspace' ? <Folder className="w-3.5 h-3.5 text-purple-400" /> : <Brain className="w-3.5 h-3.5 text-blue-400" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-gray-200 text-sm truncate">{act.title}</p>
+                          <p className="text-gray-600 text-xs">{act.subtitle}{act.time ? ` · ${new Date(act.time).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}` : ''}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <Activity className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                    <p className="text-gray-600 text-sm">No activity yet</p>
+                    <p className="text-gray-700 text-xs">Create a workspace to get started</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Connect Sources CTA */}
+            <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/20 rounded-xl p-5">
+              <Sparkles className="w-8 h-8 text-purple-400 mb-3" />
+              <h3 className="text-white font-semibold mb-1 text-sm">Connect Data Sources</h3>
+              <p className="text-gray-400 text-xs mb-4">Link your tools for deeper insights</p>
+              <Button size="sm" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-xs" onClick={() => setIsDataSourceModalOpen(true)} data-testid="browse-integrations-button">Browse Integrations</Button>
+            </div>
+          </div>
+        </div>
 
         {/* AI Visibility Section */}
-        <Card className="bg-gray-900 border-gray-800 mt-6">
+        <Card className="bg-gray-900 border-gray-800" id="ai-visibility-section">
           <CardHeader>
             <CardTitle className="text-white flex items-center"><Globe className="w-5 h-5 mr-2 text-purple-400" /> AI Visibility Analysis</CardTitle>
           </CardHeader>
