@@ -29,7 +29,7 @@ Build a dark-themed clone of https://www.papermap.ai with a separate admin dashb
 - **Backend**: FastAPI, Pydantic, Motor (async MongoDB)
 - **Database**: MongoDB
 - **Auth**: JWT with RBAC
-- **Payments**: Cashfree PG SDK (Production)
+- **Payments**: Cashfree PG SDK v3 (Production)
 - **AI**: GPT-5.2 via emergentintegrations
 - **Scraping**: httpx + BeautifulSoup4
 
@@ -55,15 +55,21 @@ Build a dark-themed clone of https://www.papermap.ai with a separate admin dashb
 ### User Dashboard
 - [x] User info cards (Plan, Credits, Status)
 - [x] Workspace creation modal (name + data source selection)
-- [x] Workspace display with data source tags
+- [x] **Clickable workspace cards** → opens workspace detail view
 - [x] Workspace deletion with confirmation
-- [x] File upload (CSV/Excel) with analytics
-- [x] Graphical file analytics (bar charts, data type distribution, numeric stats)
+- [x] **WorkspaceView component** with:
+  - Connected data sources with green checkmarks
+  - Add Source button → integration modal
+  - AI Search Bar (workspace-scoped, GPT-5.2)
+  - File upload scoped to workspace
+  - File analytics (bar charts, data types, numeric stats)
+  - File deletion
+  - Quick action cards (Connect Sources, Ask AI)
+  - Back to dashboard navigation
+- [x] Browse integrations modal (Practo API, Notion API, Zoho CRM, Google Analytics, etc.)
 - [x] AI Visibility analysis (GPT-5.2 powered URL analysis with scores)
-- [x] AI Search Bar (natural language queries over user data, GPT-5.2)
 - [x] Take a Tour (react-joyride guided tour for new users)
 - [x] Support ticket creation (subject, priority, message)
-- [x] Browse integrations modal (Practo API, Notion API, Zoho CRM, Google Analytics, etc.)
 - [x] Report download (PDF/Excel)
 - [x] Upgrade modal with Cashfree payment (SDK v3)
 - [x] Slack integration panel
@@ -86,7 +92,7 @@ Build a dark-themed clone of https://www.papermap.ai with a separate admin dashb
 ### Integrations
 - [x] Cashfree Payment Gateway (Production keys, SDK v3)
 - [x] GPT-5.2 via emergentintegrations (AI Visibility + AI Search)
-- [x] CSV/Excel file upload and analysis
+- [x] CSV/Excel file upload and analysis (workspace-scoped)
 - [x] Slack integration (user + admin)
 
 ## Architecture
@@ -101,7 +107,8 @@ Build a dark-themed clone of https://www.papermap.ai with a separate admin dashb
     payment_routes.py, slack_routes.py
 
 /app/frontend/src/
-  App.js, pages/ (Login, Signup, UserDashboard, AdminDashboard, ContactPage, LegalPage, ForgotPassword)
+  App.js
+  pages/ (Login, Signup, UserDashboard, AdminDashboard, WorkspaceView, ContactPage, LegalPage, ForgotPassword)
   components/ (Hero, Navbar, Footer, Pricing, Testimonials, Integrations, ui/)
   services/api.js, mock/mockData.js, utils/reportExport.js
 ```
