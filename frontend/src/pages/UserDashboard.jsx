@@ -12,6 +12,7 @@ import { toast } from '../hooks/use-toast';
 import { downloadComprehensiveReport, exportFilesToExcel } from '../utils/reportExport';
 import api from '../services/api';
 import Joyride from 'react-joyride';
+import WorkspaceView from './WorkspaceView';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -50,6 +51,7 @@ const UserDashboard = () => {
   const [aiSearchResult, setAiSearchResult] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
   const [showTour, setShowTour] = useState(false);
+  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -390,9 +392,8 @@ const UserDashboard = () => {
   };
 
   const tourSteps = [
-    { target: '[data-testid="new-workspace-button"]', content: 'Create workspaces to organize your data sources and analytics.', disableBeaconClick: false },
+    { target: '[data-testid="new-workspace-button"]', content: 'Create workspaces to organize your data sources and analytics.' },
     { target: '[data-testid="browse-integrations-button"]', content: 'Connect your data sources like Excel, CSV, Google Analytics, and more.' },
-    { target: '[data-testid="ai-search-bar"]', content: 'Ask questions about your data using natural language. Our AI will analyze and respond.' },
     { target: '[data-testid="support-button"]', content: 'Need help? Create a support ticket and our team will assist you.' },
   ];
 
@@ -403,6 +404,11 @@ const UserDashboard = () => {
   };
 
   if (!user) return <div className="min-h-screen bg-gray-950 flex items-center justify-center"><div className="text-gray-400">Loading...</div></div>;
+
+  // Workspace Detail View
+  if (selectedWorkspace) {
+    return <WorkspaceView workspace={selectedWorkspace} onBack={() => setSelectedWorkspace(null)} user={user} />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-950">
@@ -562,46 +568,6 @@ const UserDashboard = () => {
           </Button>
         </div>
 
-        {/* AI Search Bar */}
-        <div className="mb-8" data-testid="ai-search-bar">
-          <div className="relative">
-            <div className="flex items-center bg-gray-900 border border-gray-700 rounded-xl overflow-hidden focus-within:border-purple-500 transition-colors">
-              <Search className="w-5 h-5 text-gray-400 ml-4" />
-              <input
-                value={aiSearchQuery}
-                onChange={(e) => setAiSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAiSearch()}
-                placeholder="Ask anything about your data... e.g., 'What are my top revenue sources?'"
-                className="flex-1 bg-transparent text-white px-4 py-3 outline-none placeholder-gray-500"
-                data-testid="ai-search-input"
-              />
-              <Button onClick={handleAiSearch} disabled={isSearching || !aiSearchQuery.trim()} className="m-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg" data-testid="ai-search-submit">
-                {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-              </Button>
-            </div>
-          </div>
-          {aiSearchResult && (
-            <Card className="bg-gray-900 border-gray-700 mt-3">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <Brain className="w-5 h-5 text-purple-400" />
-                    <span className="text-sm font-medium text-purple-400">AI Response</span>
-                  </div>
-                  <button onClick={() => setAiSearchResult(null)} className="text-gray-500 hover:text-white"><X className="w-4 h-4" /></button>
-                </div>
-                <p className="text-gray-200 text-sm whitespace-pre-wrap">{aiSearchResult.answer}</p>
-                {aiSearchResult.sources?.length > 0 && (
-                  <div className="mt-3 flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-gray-500">Sources:</span>
-                    {aiSearchResult.sources.map((s, i) => <span key={i} className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded">{s}</span>)}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
         {/* User Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-gray-900 border-gray-800"><CardContent className="p-6"><div className="flex items-center space-x-4"><div className="p-3 bg-purple-900/20 rounded-lg"><CreditCard className="w-6 h-6 text-purple-400" /></div><div><p className="text-gray-400 text-sm">Current Plan</p><p className="text-xl font-bold text-white">{user.plan}</p></div></div></CardContent></Card>
@@ -616,13 +582,22 @@ const UserDashboard = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {workspaces.map((ws) => (
-                  <div key={ws.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-purple-500/50 transition-colors">
-                    <div className="flex items-start justify-between mb-1">
-                      <h3 className="text-white font-medium">{ws.name}</h3>
-                      <button onClick={() => handleDeleteWorkspace(ws.id, ws.name)} className="text-gray-500 hover:text-red-400 transition-colors p-1" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-4 h-4" /></button>
+                  <div key={ws.id} className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 hover:border-purple-500 transition-all cursor-pointer group" onClick={() => setSelectedWorkspace(ws)} data-testid={`workspace-card-${ws.id}`}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center group-hover:from-purple-500/40 group-hover:to-pink-500/40 transition-all">
+                          <Folder className="w-4 h-4 text-purple-400" />
+                        </div>
+                        <h3 className="text-white font-medium">{ws.name}</h3>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkspace(ws.id, ws.name); }} className="text-gray-600 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-4 h-4" /></button>
                     </div>
                     <p className="text-gray-400 text-xs mb-2">{ws.data_sources.length} data source{ws.data_sources.length !== 1 ? 's' : ''}</p>
-                    <div className="flex flex-wrap gap-1">{ws.data_sources.map((ds, i) => <span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">{ds}</span>)}</div>
+                    <div className="flex flex-wrap gap-1">{ws.data_sources.slice(0, 4).map((ds, i) => <span key={i} className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded">{ds}</span>)}{ws.data_sources.length > 4 && <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded">+{ws.data_sources.length - 4}</span>}</div>
+                    <div className="mt-3 flex items-center text-xs text-purple-400 group-hover:text-purple-300">
+                      <span>Open workspace</span>
+                      <ArrowUp className="w-3 h-3 ml-1 rotate-90" />
+                    </div>
                   </div>
                 ))}
               </div>

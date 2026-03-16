@@ -18,6 +18,7 @@ def set_database(database):
 
 class SearchQuery(BaseModel):
     query: str
+    workspace_id: str = None
 
 @router.post("/search")
 async def ai_search(req: SearchQuery, user_id: str = Depends(get_current_user_id)):
@@ -27,14 +28,22 @@ async def ai_search(req: SearchQuery, user_id: str = Depends(get_current_user_id
 
     from emergentintegrations.llm.chat import LlmChat, UserMessage
 
-    # Gather user's data context
+    # Gather user's data context (optionally scoped to workspace)
+    file_query = {"user_id": ObjectId(user_id)}
+    if req.workspace_id:
+        file_query["workspace_id"] = ObjectId(req.workspace_id)
+
     files = await db.uploaded_files.find(
-        {"user_id": ObjectId(user_id)},
-        {"_id": 0, "filename": 1, "analysis_results": 1}
+        file_query,
+        {"_id": 0, "filename": 1, "analysis_results": 1, "analytics": 1}
     ).to_list(20)
 
+    ws_query = {"user_id": ObjectId(user_id)}
+    if req.workspace_id:
+        ws_query["_id"] = ObjectId(req.workspace_id)
+
     workspaces = await db.workspaces.find(
-        {"user_id": ObjectId(user_id)},
+        ws_query,
         {"_id": 0, "name": 1, "data_sources": 1}
     ).to_list(20)
 
@@ -42,14 +51,17 @@ async def ai_search(req: SearchQuery, user_id: str = Depends(get_current_user_id
     data_context = ""
     for f in files:
         data_context += f"\n--- File: {f['filename']} ---\n"
-        ar = f.get("analysis_results", {})
+        ar = f.get("analysis_results") or f.get("analytics") or {}
         if ar.get("summary"):
             data_context += f"Summary: {json.dumps(ar['summary'])}\n"
         if ar.get("column_analysis"):
             cols = list(ar["column_analysis"].keys())
             data_context += f"Columns: {', '.join(cols)}\n"
-        if ar.get("numeric_stats"):
-            data_context += f"Stats: {json.dumps(ar['numeric_stats'])}\n"
+        if ar.get("columns"):
+            data_context += f"Columns: {', '.join(ar['columns'])}\n"
+        if ar.get("numeric_stats") or ar.get("numeric_summary"):
+            stats = ar.get("numeric_stats") or ar.get("numeric_summary")
+            data_context += f"Stats: {json.dumps(stats)}\n"
 
     ws_context = ""
     for ws in workspaces:

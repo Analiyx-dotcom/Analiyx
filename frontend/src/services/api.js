@@ -89,20 +89,19 @@ export const adminAPI = {
 
 // Data Source API
 export const dataSourceAPI = {
-  uploadFile: async (file) => {
+  uploadFile: async (file, workspaceId = null) => {
     const formData = new FormData();
     formData.append('file', file);
-    
-    const response = await api.post('/data-sources/upload-file', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const url = workspaceId ? `/data-sources/upload-file?workspace_id=${workspaceId}` : '/data-sources/upload-file';
+    const response = await api.post(url, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
   
-  getUploadedFiles: async () => {
-    const response = await api.get('/data-sources/uploaded-files');
+  getUploadedFiles: async (workspaceId = null) => {
+    const url = workspaceId ? `/data-sources/uploaded-files?workspace_id=${workspaceId}` : '/data-sources/uploaded-files';
+    const response = await api.get(url);
     return response.data;
   },
   

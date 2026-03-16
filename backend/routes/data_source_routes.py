@@ -58,7 +58,8 @@ async def get_data_source_limits(user_id: str = Depends(get_current_user_id)):
 @router.post("/upload-file")
 async def upload_file(
     file: UploadFile = File(...),
-    user_id: str = Depends(get_current_user_id)
+    user_id: str = Depends(get_current_user_id),
+    workspace_id: str = None
 ):
     """Upload and analyze CSV/Excel file"""
     
@@ -136,6 +137,8 @@ async def upload_file(
             "uploaded_at": datetime.utcnow(),
             "status": "processed"
         }
+        if workspace_id:
+            file_doc["workspace_id"] = ObjectId(workspace_id)
         
         result = await db.uploaded_files.insert_one(file_doc)
         
@@ -155,12 +158,14 @@ async def upload_file(
         )
 
 @router.get("/uploaded-files")
-async def get_uploaded_files(user_id: str = Depends(get_current_user_id)):
-    """Get all uploaded files for current user"""
+async def get_uploaded_files(user_id: str = Depends(get_current_user_id), workspace_id: str = None):
+    """Get all uploaded files for current user, optionally filtered by workspace"""
     
-    files_cursor = db.uploaded_files.find(
-        {"user_id": ObjectId(user_id)}
-    ).sort("uploaded_at", -1)
+    query = {"user_id": ObjectId(user_id)}
+    if workspace_id:
+        query["workspace_id"] = ObjectId(workspace_id)
+    
+    files_cursor = db.uploaded_files.find(query).sort("uploaded_at", -1)
     
     files = await files_cursor.to_list(length=100)
     
