@@ -28,20 +28,20 @@ export const testimonials = [
 ];
 
 export const integrations = [
-  { name: 'PostgreSQL', icon: 'database', color: '#336791' },
-  { name: 'MySQL', icon: 'database', color: '#4479A1' },
-  { name: 'MongoDB', icon: 'database', color: '#47A248' },
-  { name: 'AI Visibility', icon: 'brain', color: '#8B5CF6' },
-  { name: 'Google Sheets', icon: 'sheet', color: '#0F9D58' },
-  { name: 'Excel', icon: 'file-spreadsheet', color: '#217346' },
-  { name: 'CSV', icon: 'file-text', color: '#6B7280' },
-  { name: 'Meta Ads', icon: 'facebook', color: '#1877F2' },
-  { name: 'Shopify', icon: 'shopping-bag', color: '#96BF48' },
-  { name: 'Zoho Books', icon: 'book-open', color: '#E42527' },
   { name: 'Google Analytics', icon: 'bar-chart', color: '#E37400' },
   { name: 'Google Ads', icon: 'megaphone', color: '#4285F4' },
+  { name: 'Google Sheets', icon: 'sheet', color: '#0F9D58' },
+  { name: 'Meta Ads', icon: 'facebook', color: '#1877F2' },
+  { name: 'Excel', icon: 'file-spreadsheet', color: '#217346' },
+  { name: 'CSV', icon: 'file-text', color: '#6B7280' },
+  { name: 'Zoho Books', icon: 'book-open', color: '#E42527' },
+  { name: 'Zoho CRM', icon: 'users', color: '#D0342C' },
+  { name: 'Notion API', icon: 'layout', color: '#000000' },
+  { name: 'Practo API', icon: 'heart-pulse', color: '#FF6B6B' },
+  { name: 'MongoDB', icon: 'database', color: '#47A248' },
+  { name: 'Shopify', icon: 'shopping-bag', color: '#96BF48' },
   { name: 'HubSpot', icon: 'users', color: '#FF7A59' },
-  { name: 'Salesforce', icon: 'cloud', color: '#00A1E0' }
+  { name: 'AI Visibility', icon: 'brain', color: '#8B5CF6' }
 ];
 
 export const pricingPlans = [
