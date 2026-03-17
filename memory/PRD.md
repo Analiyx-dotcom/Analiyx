@@ -4,30 +4,33 @@
 Build a dark-themed analytics platform "Analiyx" with user/admin dashboards, 14-day trial, plan-based restrictions, and AI-powered data analysis.
 
 ## Tech Stack
-- **Frontend**: React, Tailwind CSS, Shadcn/ui, react-joyride
+- **Frontend**: React, Tailwind CSS, Shadcn/ui, react-joyride, recharts
 - **Backend**: FastAPI, Motor (async MongoDB)
 - **AI**: GPT-5.2 via emergentintegrations (multi-turn chat)
 - **Payments**: Cashfree PG SDK v3
 
 ## Implemented Features
 
-### User Dashboard (P2 Redesigned)
-- [x] Welcome Hero with stats overview (Workspaces, Files, AI Queries, Plan)
-- [x] Quick Actions grid + 2/3+1/3 layout + Recent Activity feed
-- [x] Clickable workspace cards → WorkspaceView
+### User Dashboard (Fully Redesigned)
+- [x] **Tab Navigation**: Dashboard | Notes | Reports | Data Sources
+- [x] **Stats Overview**: 4 dynamic cards (Workspaces, Files, AI Queries, Plan) with badges
+- [x] **Auto-Generated Charts** (on file upload):
+  - KPI Metric Cards (rows, cols, type, averages, totals)
+  - Bar Chart (column comparisons)
+  - Line Chart (growth/trends)
+  - Donut Charts (data type & category distribution)
+  - Data Tables (sample data, numeric statistics)
+  - Chart actions: Expand/fullscreen, Delete
+- [x] **AI Search Bar** — Persistent at bottom of dashboard, ChatGPT-like multi-turn conversation
+- [x] **Notes** — Full CRUD (Create, Read, Update, Delete) with modal editor
+- [x] **Reports** — Lists all uploaded files as reports with view/export
+- [x] **Data Sources** — Grid of all available integrations
+- [x] **Clickable Workspace Cards** → WorkspaceView with interactive AI chat
 
-### WorkspaceView — Interactive AI Chat (NEW)
-- [x] **ChatGPT-like multi-turn AI chat** scoped to workspace data
-- [x] Chat history persistence (session_id per workspace)
-- [x] Chat history loads on workspace open
-- [x] Markdown rendering (bold, headers, bullets, tables)
-- [x] Typing indicator (bouncing dots) while AI processes
-- [x] Quick prompts in empty state ("Summarize my data", etc.)
-- [x] User messages (purple, right) / AI messages (dark, left)
-- [x] Tab navigation: AI Chat | Files | Sources
-- [x] File upload scoped to workspace
-- [x] File analytics modal
-- [x] Integration connection modal
+### WorkspaceView
+- [x] Interactive multi-turn AI chat (GPT-5.2, session persistence)
+- [x] Tabs: AI Chat | Files | Sources
+- [x] File upload scoped to workspace, file analytics, integrations
 
 ### Admin Dashboard
 - [x] 5 tabs: Dashboard, Users, Data Sources, Revenue, Slack
@@ -39,13 +42,12 @@ Build a dark-themed analytics platform "Analiyx" with user/admin dashboards, 14-
 - [x] Cashfree payment (SDK v3), AI Visibility, Slack integration
 - [x] Landing page, contact form, legal pages, Take a Tour
 
-## API Endpoints
-- `POST /api/ai/chat` — Multi-turn AI chat with session persistence
-- `GET /api/ai/chat/history/{workspace_id}` — Load chat history
-- `POST /api/ai/search` — Legacy single-query (backward compatible)
-- `GET /api/dashboard/summary` — Dashboard stats + activity feed
-- `POST /api/data-sources/upload-file?workspace_id` — Workspace-scoped upload
-- Full CRUD for workspaces, files, users, payments, Slack
+## Key API Endpoints
+- `GET /api/charts/generate/{file_id}` — Auto-generate chart configs
+- `POST/GET/PUT/DELETE /api/charts/notes` — Notes CRUD
+- `GET /api/charts/reports` — Reports listing
+- `POST /api/ai/chat` — Multi-turn AI chat
+- `GET /api/dashboard/summary` — Dashboard stats + activity
 
 ## Credentials
 - Admin: admin@papermap.com / admin123

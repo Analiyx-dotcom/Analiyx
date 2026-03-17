@@ -659,7 +659,7 @@ const UserDashboard = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24">
         {/* Hero + Tabs */}
         <div className="flex items-center justify-between mb-6">
           <div>
