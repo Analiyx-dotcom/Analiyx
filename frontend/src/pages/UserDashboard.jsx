@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -13,6 +13,7 @@ import { downloadComprehensiveReport, exportFilesToExcel } from '../utils/report
 import api from '../services/api';
 import Joyride from 'react-joyride';
 import WorkspaceView from './WorkspaceView';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -53,6 +54,19 @@ const UserDashboard = () => {
   const [showTour, setShowTour] = useState(false);
   const [selectedWorkspace, setSelectedWorkspace] = useState(null);
   const [dashboardSummary, setDashboardSummary] = useState(null);
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [chartsData, setChartsData] = useState({});
+  const [notes, setNotes] = useState([]);
+  const [reports, setReports] = useState([]);
+  const [showNoteModal, setShowNoteModal] = useState(false);
+  const [editingNote, setEditingNote] = useState(null);
+  const [noteTitle, setNoteTitle] = useState('');
+  const [noteContent, setNoteContent] = useState('');
+  const [aiChatInput, setAiChatInput] = useState('');
+  const [aiChatMessages, setAiChatMessages] = useState([]);
+  const [isChatSending, setIsChatSending] = useState(false);
+  const [chatSessionId, setChatSessionId] = useState(null);
+  const chatEndRef = useRef(null);
 
   const refreshUser = useCallback(async () => {
     try {
@@ -101,6 +115,85 @@ const UserDashboard = () => {
       const res = await api.get('/dashboard/summary');
       setDashboardSummary(res.data);
     } catch { }
+  };
+
+  const fetchNotes = async () => {
+    try {
+      const res = await api.get('/charts/notes');
+      setNotes(res.data.notes || []);
+    } catch { }
+  };
+
+  const fetchReports = async () => {
+    try {
+      const res = await api.get('/charts/reports');
+      setReports(res.data.reports || []);
+    } catch { }
+  };
+
+  const fetchChartsForFile = async (fileId) => {
+    if (chartsData[fileId]) return;
+    try {
+      const res = await api.get(`/charts/generate/${fileId}`);
+      setChartsData(prev => ({ ...prev, [fileId]: res.data }));
+    } catch { }
+  };
+
+  // Auto-generate charts for all uploaded files
+  useEffect(() => {
+    uploadedFiles.forEach(f => fetchChartsForFile(f.id));
+  }, [uploadedFiles]);
+
+  useEffect(() => {
+    if (activeTab === 'notes') fetchNotes();
+    if (activeTab === 'reports') fetchReports();
+  }, [activeTab]);
+
+  // AI Chat on dashboard
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [aiChatMessages]);
+
+  const handleDashboardChat = async () => {
+    if (!aiChatInput.trim() || isChatSending) return;
+    const msg = aiChatInput.trim();
+    setAiChatInput('');
+    setAiChatMessages(prev => [...prev, { role: 'user', content: msg }]);
+    setIsChatSending(true);
+    try {
+      const res = await api.post('/ai/chat', { query: msg, session_id: chatSessionId });
+      if (res.data.session_id) setChatSessionId(res.data.session_id);
+      setAiChatMessages(prev => [...prev, { role: 'assistant', content: res.data.answer, sources: res.data.sources }]);
+    } catch {
+      setAiChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', isError: true }]);
+    } finally { setIsChatSending(false); }
+  };
+
+  const handleSaveNote = async () => {
+    if (!noteTitle.trim()) return;
+    try {
+      if (editingNote) {
+        await api.put(`/charts/notes/${editingNote}`, { title: noteTitle, content: noteContent });
+        toast({ title: 'Note Updated' });
+      } else {
+        await api.post('/charts/notes', { title: noteTitle, content: noteContent });
+        toast({ title: 'Note Created' });
+      }
+      setShowNoteModal(false);
+      setEditingNote(null);
+      setNoteTitle('');
+      setNoteContent('');
+      fetchNotes();
+    } catch { toast({ title: 'Error', description: 'Failed to save note', variant: 'destructive' }); }
+  };
+
+  const handleDeleteNote = async (id) => {
+    if (!window.confirm('Delete this note?')) return;
+    try {
+      await api.delete(`/charts/notes/${id}`);
+      toast({ title: 'Note Deleted' });
+      fetchNotes();
+    } catch { toast({ title: 'Error', variant: 'destructive' }); }
   };
 
   const fetchUploadedFiles = async () => {
@@ -566,291 +659,311 @@ const UserDashboard = () => {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Hero */}
-        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900 via-purple-950/40 to-gray-900 border border-gray-800 p-8">
-          <div className="absolute top-0 right-0 w-72 h-72 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative flex items-center justify-between">
-            <div>
-              <p className="text-gray-400 text-sm mb-1">{new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
-              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-1">Welcome back, {user.name}!</h1>
-              <p className="text-gray-400">Here's what's happening with your analytics</p>
-            </div>
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-900/30" onClick={() => setShowWorkspaceModal(true)} data-testid="new-workspace-button">
-              <Plus className="w-4 h-4 mr-2" /> New Workspace
-            </Button>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Hero + Tabs */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Welcome, {user.name}!</h1>
+            <p className="text-gray-500 text-sm">{new Date().toLocaleDateString('en-IN', { weekday: 'long', month: 'long', day: 'numeric' })}</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white" onClick={() => setShowWorkspaceModal(true)} data-testid="new-workspace-button"><Plus className="w-4 h-4 mr-1" /> New Workspace</Button>
+            <Button size="sm" variant="outline" className="border-gray-700 text-gray-300" onClick={() => setIsDataSourceModalOpen(true)} data-testid="browse-integrations-button"><Upload className="w-4 h-4 mr-1" /> Upload</Button>
           </div>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Tab Navigation */}
+        <div className="flex items-center space-x-1 bg-gray-900 border border-gray-800 rounded-xl p-1 mb-6 overflow-x-auto" data-testid="dashboard-tabs">
           {[
-            { label: 'Workspaces', value: dashboardSummary?.workspaces ?? workspaces.length, icon: Layers, color: 'from-purple-500 to-violet-600', bg: 'bg-purple-500/10' },
-            { label: 'Files Uploaded', value: dashboardSummary?.total_files ?? uploadedFiles.length, icon: FileSpreadsheet, color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-500/10' },
-            { label: 'AI Queries', value: dashboardSummary?.ai_queries ?? 0, icon: Brain, color: 'from-blue-500 to-cyan-600', bg: 'bg-blue-500/10' },
-            { label: 'Plan', value: user.plan, icon: CreditCard, color: 'from-amber-500 to-orange-600', bg: 'bg-amber-500/10', isText: true }
-          ].map((stat, i) => (
-            <div key={i} className="group relative bg-gray-900 border border-gray-800 rounded-xl p-5 hover:border-gray-700 transition-all overflow-hidden" data-testid={`stat-${stat.label.toLowerCase().replace(/\s/g, '-')}`}>
-              <div className="absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-5 transition-opacity" style={{ backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))` }} />
-              <div className="flex items-center justify-between mb-3">
-                <div className={`p-2.5 rounded-lg ${stat.bg}`}>
-                  <stat.icon className={`w-5 h-5 bg-gradient-to-r ${stat.color} bg-clip-text`} style={{ color: stat.color.includes('purple') ? '#a855f7' : stat.color.includes('emerald') ? '#10b981' : stat.color.includes('blue') ? '#3b82f6' : '#f59e0b' }} />
-                </div>
-                {!stat.isText && dashboardSummary?.recent_files > 0 && stat.label === 'Files Uploaded' && (
-                  <span className="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full">+{dashboardSummary.recent_files} this week</span>
-                )}
-              </div>
-              <p className={`${stat.isText ? 'text-xl' : 'text-2xl'} font-bold text-white`}>{stat.value}</p>
-              <p className="text-gray-500 text-xs mt-0.5">{stat.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          {[
-            { label: 'Create Workspace', icon: Plus, action: () => setShowWorkspaceModal(true), accent: 'hover:border-purple-500/50 hover:bg-purple-500/5' },
-            { label: 'Upload File', icon: Upload, action: () => setIsDataSourceModalOpen(true), accent: 'hover:border-emerald-500/50 hover:bg-emerald-500/5' },
-            { label: 'AI Visibility', icon: Globe, action: () => { const el = document.getElementById('ai-visibility-section'); el?.scrollIntoView({ behavior: 'smooth' }); }, accent: 'hover:border-blue-500/50 hover:bg-blue-500/5' },
-            { label: 'Browse Integrations', icon: Database, action: () => setIsDataSourceModalOpen(true), accent: 'hover:border-amber-500/50 hover:bg-amber-500/5' },
-          ].map((action, i) => (
-            <button key={i} onClick={action.action} className={`flex items-center space-x-3 bg-gray-900 border border-gray-800 rounded-xl p-4 transition-all ${action.accent}`} data-testid={`quick-action-${action.label.toLowerCase().replace(/\s/g, '-')}`}>
-              <action.icon className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-300">{action.label}</span>
+            { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+            { id: 'notes', label: 'Notes', icon: StickyNote },
+            { id: 'reports', label: 'Reports', icon: FileBarChart },
+            { id: 'sources', label: 'Data Sources', icon: Database },
+          ].map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center space-x-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`} data-testid={`tab-${tab.id}`}>
+              <tab.icon className="w-4 h-4" /><span>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Left Column - Workspaces (2/3) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Workspaces */}
+        {/* ===== DASHBOARD TAB ===== */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            {/* Stats Overview */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: 'Workspaces', value: dashboardSummary?.workspaces ?? workspaces.length, icon: Layers, bg: 'bg-purple-500/10', ic: 'text-purple-400' },
+                { label: 'Files Uploaded', value: dashboardSummary?.total_files ?? uploadedFiles.length, icon: FileSpreadsheet, bg: 'bg-emerald-500/10', ic: 'text-emerald-400', badge: dashboardSummary?.recent_files > 0 ? `+${dashboardSummary.recent_files} this week` : null },
+                { label: 'AI Queries', value: dashboardSummary?.ai_queries ?? 0, icon: Brain, bg: 'bg-blue-500/10', ic: 'text-blue-400' },
+                { label: 'Plan', value: user.plan, icon: CreditCard, bg: 'bg-amber-500/10', ic: 'text-amber-400', isText: true },
+              ].map((s, i) => (
+                <Card key={i} className="bg-gray-900 border-gray-800" data-testid={`stat-${s.label.toLowerCase().replace(/\s/g, '-')}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`p-2 rounded-lg ${s.bg}`}><s.icon className={`w-4 h-4 ${s.ic}`} /></div>
+                      {s.badge && <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded-full">{s.badge}</span>}
+                    </div>
+                    <p className={`${s.isText ? 'text-lg' : 'text-2xl'} font-bold text-white`}>{s.value}</p>
+                    <p className="text-gray-500 text-xs">{s.label}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Auto-Generated Charts for each file */}
+            {uploadedFiles.length > 0 ? (
+              uploadedFiles.map(file => (
+                <div key={file.id} data-testid={`file-charts-${file.id}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center"><FileSpreadsheet className="w-4 h-4 text-emerald-400" /></div>
+                      <div>
+                        <h3 className="text-white font-semibold text-sm">{file.filename}</h3>
+                        <p className="text-gray-500 text-xs">{file.total_rows} rows x {file.total_columns} cols</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" className="text-purple-400 text-xs" onClick={() => handleViewFileDetails(file.id)}><Eye className="w-3 h-3 mr-1" /> Details</Button>
+                      <Button variant="ghost" size="sm" className="text-red-400 text-xs" onClick={() => handleDeleteFile(file.id, file.filename)} data-testid={`delete-file-${file.id}`}><Trash2 className="w-3 h-3" /></Button>
+                    </div>
+                  </div>
+                  {chartsData[file.id] ? (
+                    <AnalyticsDashboard charts={chartsData[file.id].charts} filename={file.filename} />
+                  ) : (
+                    <div className="flex items-center justify-center py-8 bg-gray-900 border border-gray-800 rounded-xl">
+                      <Loader2 className="w-5 h-5 text-purple-400 animate-spin mr-2" /><span className="text-gray-400 text-sm">Generating charts...</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <Card className="bg-gray-900 border-gray-800">
+                <CardContent className="py-16 text-center">
+                  <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><BarChart className="w-7 h-7 text-purple-400" /></div>
+                  <h3 className="text-white font-semibold mb-1">No analytics yet</h3>
+                  <p className="text-gray-500 text-sm mb-4">Upload a CSV or Excel file to auto-generate charts and insights</p>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setIsDataSourceModalOpen(true)}><Upload className="w-4 h-4 mr-2" /> Upload File</Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Workspaces Grid */}
             <Card className="bg-gray-900 border-gray-800">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white flex items-center text-base"><Folder className="w-5 h-5 mr-2 text-purple-400" /> Your Workspaces</CardTitle>
-                  {workspaces.length > 0 && <span className="text-xs text-gray-500">{workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''}</span>}
+                  <CardTitle className="text-white flex items-center text-base"><Folder className="w-5 h-5 mr-2 text-purple-400" /> Workspaces</CardTitle>
+                  <span className="text-xs text-gray-500">{workspaces.length} workspace{workspaces.length !== 1 ? 's' : ''}</span>
                 </div>
               </CardHeader>
               <CardContent>
                 {workspaces.length === 0 ? (
-                  <div className="text-center py-10 border-2 border-dashed border-gray-800 rounded-xl">
-                    <div className="w-14 h-14 bg-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4"><Layers className="w-7 h-7 text-purple-400" /></div>
-                    <h3 className="text-white font-semibold mb-1">Create your first workspace</h3>
-                    <p className="text-gray-500 text-sm mb-4 max-w-sm mx-auto">Workspaces let you organize data sources, upload files, and query your data with AI</p>
-                    <Button className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setShowWorkspaceModal(true)}>
-                      <Plus className="w-4 h-4 mr-2" /> Create Workspace
-                    </Button>
+                  <div className="text-center py-8 border-2 border-dashed border-gray-800 rounded-xl">
+                    <Layers className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+                    <p className="text-gray-400 mb-2">No workspaces yet</p>
+                    <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setShowWorkspaceModal(true)}><Plus className="w-3 h-3 mr-1" /> Create Workspace</Button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {workspaces.map((ws) => (
-                      <div key={ws.id} className="group relative bg-gray-800/40 rounded-xl p-4 border border-gray-700/50 hover:border-purple-500/50 transition-all cursor-pointer" onClick={() => setSelectedWorkspace(ws)} data-testid={`workspace-card-${ws.id}`}>
-                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/3 to-pink-500/3 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl flex items-center justify-center group-hover:from-purple-500/30 group-hover:to-pink-500/30 transition-all">
-                                <Folder className="w-5 h-5 text-purple-400" />
-                              </div>
-                              <div>
-                                <h3 className="text-white font-semibold text-sm">{ws.name}</h3>
-                                <p className="text-gray-500 text-xs">{ws.data_sources.length} source{ws.data_sources.length !== 1 ? 's' : ''}</p>
-                              </div>
-                            </div>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkspace(ws.id, ws.name); }} className="text-gray-600 hover:text-red-400 transition-colors p-1 opacity-0 group-hover:opacity-100" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-3.5 h-3.5" /></button>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    {workspaces.map(ws => (
+                      <div key={ws.id} className="group bg-gray-800/40 rounded-xl p-4 border border-gray-700/50 hover:border-purple-500/50 transition-all cursor-pointer" onClick={() => setSelectedWorkspace(ws)} data-testid={`workspace-card-${ws.id}`}>
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center"><Folder className="w-4 h-4 text-purple-400" /></div>
+                            <div><h3 className="text-white font-medium text-sm">{ws.name}</h3><p className="text-gray-500 text-xs">{ws.data_sources.length} sources</p></div>
                           </div>
-                          <div className="flex flex-wrap gap-1.5 mb-3">
-                            {ws.data_sources.slice(0, 3).map((ds, i) => (
-                              <span key={i} className="text-[10px] bg-gray-700/60 text-gray-300 px-2 py-0.5 rounded-md">{ds}</span>
-                            ))}
-                            {ws.data_sources.length > 3 && <span className="text-[10px] bg-gray-700/60 text-gray-400 px-2 py-0.5 rounded-md">+{ws.data_sources.length - 3}</span>}
-                          </div>
-                          <div className="flex items-center text-xs text-purple-400/70 group-hover:text-purple-400 transition-colors">
-                            <span>Open workspace</span><ChevronRight className="w-3 h-3 ml-0.5" />
-                          </div>
+                          <button onClick={(e) => { e.stopPropagation(); handleDeleteWorkspace(ws.id, ws.name); }} className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 p-1" data-testid={`delete-workspace-${ws.id}`}><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
+                        <div className="flex flex-wrap gap-1 mb-2">{ws.data_sources.slice(0, 3).map((ds, i) => <span key={i} className="text-[10px] bg-gray-700/60 text-gray-300 px-2 py-0.5 rounded">{ds}</span>)}</div>
+                        <p className="text-xs text-purple-400/70 group-hover:text-purple-400 flex items-center">Open<ChevronRight className="w-3 h-3 ml-0.5" /></p>
                       </div>
                     ))}
-                    {/* Add Workspace Card */}
-                    <div className="flex items-center justify-center bg-gray-800/20 rounded-xl p-4 border border-dashed border-gray-700/50 hover:border-purple-500/40 transition-all cursor-pointer min-h-[130px]" onClick={() => setShowWorkspaceModal(true)}>
-                      <div className="text-center">
-                        <Plus className="w-6 h-6 text-gray-600 mx-auto mb-1" />
-                        <span className="text-xs text-gray-500">New Workspace</span>
-                      </div>
-                    </div>
                   </div>
                 )}
               </CardContent>
             </Card>
 
-            {/* Uploaded Files */}
-            {uploadedFiles.length > 0 && (
-              <Card className="bg-gray-900 border-gray-800">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-white flex items-center text-base"><FileSpreadsheet className="w-5 h-5 mr-2 text-emerald-400" /> Recent Files</CardTitle>
-                    <Button variant="ghost" size="sm" onClick={handleDownloadReport} className="text-purple-400 hover:text-purple-300 text-xs" data-testid="download-reports-button"><Download className="w-3 h-3 mr-1" /> Export All</Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {uploadedFiles.slice(0, 5).map((file) => (
-                      <div key={file.id} className="flex items-center justify-between p-3 bg-gray-800/40 rounded-lg hover:bg-gray-800/70 transition-colors group">
-                        <div className="flex items-center space-x-3 cursor-pointer flex-1" onClick={() => handleViewFileDetails(file.id)}>
-                          <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center"><CheckCircle className="w-4 h-4 text-emerald-500" /></div>
-                          <div>
-                            <p className="text-white text-sm font-medium">{file.filename}</p>
-                            <p className="text-gray-500 text-xs">{file.total_rows} rows x {file.total_columns} cols</p>
+            {/* Recent Activity + Plan */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardHeader className="pb-3"><CardTitle className="text-white flex items-center text-base"><Activity className="w-5 h-5 mr-2 text-blue-400" /> Recent Activity</CardTitle></CardHeader>
+                  <CardContent>
+                    {dashboardSummary?.activities?.length > 0 ? (
+                      <div className="space-y-3">{dashboardSummary.activities.slice(0, 5).map((act, i) => (
+                        <div key={i} className="flex items-start space-x-3">
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${act.type === 'upload' ? 'bg-emerald-500/10' : act.type === 'workspace' ? 'bg-purple-500/10' : 'bg-blue-500/10'}`}>
+                            {act.type === 'upload' ? <Upload className="w-3.5 h-3.5 text-emerald-400" /> : act.type === 'workspace' ? <Folder className="w-3.5 h-3.5 text-purple-400" /> : <Brain className="w-3.5 h-3.5 text-blue-400" />}
                           </div>
+                          <div><p className="text-gray-200 text-sm">{act.title}</p><p className="text-gray-600 text-xs">{act.subtitle}{act.time ? ` · ${new Date(act.time).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}` : ''}</p></div>
                         </div>
-                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="sm" className="text-purple-400 hover:text-purple-300 text-xs h-7" onClick={() => handleViewFileDetails(file.id)}><Eye className="w-3 h-3" /></Button>
-                          <Button variant="ghost" size="sm" className="text-red-400 hover:text-red-300 hover:bg-red-900/20 h-7" onClick={() => handleDeleteFile(file.id, file.filename)} data-testid={`delete-file-${file.id}`}><Trash2 className="w-3 h-3" /></Button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}</div>
+                    ) : <p className="text-gray-600 text-sm text-center py-6">No activity yet</p>}
+                  </CardContent>
+                </Card>
+              </div>
+              <Card className="bg-gray-900 border-gray-800 overflow-hidden">
+                <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
+                <CardContent className="p-5">
+                  <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Current Plan</p>
+                  <p className="text-xl font-bold text-white mb-4">{user.plan}</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between text-sm"><span className="text-gray-400">Credits</span><span className="text-white">{user.credits}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-gray-400">Status</span><span className="text-emerald-400 capitalize">{user.status}</span></div>
                   </div>
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-sm" onClick={() => setShowUpgradeModal(true)} data-testid="upgrade-plan-button"><ArrowUp className="w-3.5 h-3.5 mr-1" /> Upgrade</Button>
                 </CardContent>
               </Card>
-            )}
+            </div>
           </div>
+        )}
 
-          {/* Right Column - Activity & Quick Info (1/3) */}
-          <div className="space-y-6">
-            {/* Plan Card */}
-            <Card className="bg-gray-900 border-gray-800 overflow-hidden">
-              <div className="h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-500" />
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wider">Current Plan</p>
-                    <p className="text-xl font-bold text-white">{user.plan}</p>
-                  </div>
-                  <div className="p-2.5 bg-purple-500/10 rounded-xl"><CreditCard className="w-5 h-5 text-purple-400" /></div>
-                </div>
-                <div className="flex items-center justify-between text-sm mb-3">
-                  <span className="text-gray-400">Credits</span><span className="text-white font-medium">{user.credits}</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mb-4">
-                  <span className="text-gray-400">Status</span><span className="text-emerald-400 font-medium capitalize">{user.status}</span>
-                </div>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-sm" onClick={() => setShowUpgradeModal(true)} data-testid="upgrade-plan-button">
-                  <ArrowUp className="w-3.5 h-3.5 mr-1.5" /> Upgrade Plan
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-white flex items-center text-base"><Activity className="w-5 h-5 mr-2 text-blue-400" /> Recent Activity</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {dashboardSummary?.activities?.length > 0 ? (
-                  <div className="space-y-3">
-                    {dashboardSummary.activities.slice(0, 6).map((act, i) => (
-                      <div key={i} className="flex items-start space-x-3">
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 ${act.type === 'upload' ? 'bg-emerald-500/10' : act.type === 'workspace' ? 'bg-purple-500/10' : 'bg-blue-500/10'}`}>
-                          {act.type === 'upload' ? <Upload className="w-3.5 h-3.5 text-emerald-400" /> : act.type === 'workspace' ? <Folder className="w-3.5 h-3.5 text-purple-400" /> : <Brain className="w-3.5 h-3.5 text-blue-400" />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-gray-200 text-sm truncate">{act.title}</p>
-                          <p className="text-gray-600 text-xs">{act.subtitle}{act.time ? ` · ${new Date(act.time).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}` : ''}</p>
+        {/* ===== NOTES TAB ===== */}
+        {activeTab === 'notes' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Notes</h2>
+              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => { setEditingNote(null); setNoteTitle(''); setNoteContent(''); setShowNoteModal(true); }} data-testid="create-note-btn"><Plus className="w-4 h-4 mr-1" /> New Note</Button>
+            </div>
+            {notes.length === 0 ? (
+              <Card className="bg-gray-900 border-gray-800"><CardContent className="py-12 text-center">
+                <StickyNote className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+                <p className="text-gray-400 mb-2">No notes yet</p>
+                <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => { setNoteTitle(''); setNoteContent(''); setShowNoteModal(true); }}><Plus className="w-3 h-3 mr-1" /> Create Note</Button>
+              </CardContent></Card>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {notes.map(note => (
+                  <Card key={note.id} className="bg-gray-900 border-gray-800 group hover:border-gray-700 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="text-white font-medium text-sm">{note.title}</h3>
+                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => { setEditingNote(note.id); setNoteTitle(note.title); setNoteContent(note.content); setShowNoteModal(true); }} className="p-1 text-gray-500 hover:text-white"><Pencil className="w-3 h-3" /></button>
+                          <button onClick={() => handleDeleteNote(note.id)} className="p-1 text-gray-500 hover:text-red-400"><Trash2 className="w-3 h-3" /></button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <Activity className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-                    <p className="text-gray-600 text-sm">No activity yet</p>
-                    <p className="text-gray-700 text-xs">Create a workspace to get started</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      <p className="text-gray-400 text-sm line-clamp-4 whitespace-pre-wrap">{note.content}</p>
+                      <p className="text-gray-600 text-xs mt-3">{new Date(note.updated_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-            {/* Connect Sources CTA */}
-            <div className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/20 rounded-xl p-5">
-              <Sparkles className="w-8 h-8 text-purple-400 mb-3" />
-              <h3 className="text-white font-semibold mb-1 text-sm">Connect Data Sources</h3>
-              <p className="text-gray-400 text-xs mb-4">Link your tools for deeper insights</p>
-              <Button size="sm" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-xs" onClick={() => setIsDataSourceModalOpen(true)} data-testid="browse-integrations-button">Browse Integrations</Button>
+        {/* ===== REPORTS TAB ===== */}
+        {activeTab === 'reports' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Reports</h2>
+              {reports.length > 0 && <Button size="sm" variant="outline" className="border-purple-500 text-purple-400 text-xs" onClick={handleDownloadReport} data-testid="download-reports-button"><Download className="w-3 h-3 mr-1" /> Export All</Button>}
+            </div>
+            {reports.length === 0 ? (
+              <Card className="bg-gray-900 border-gray-800"><CardContent className="py-12 text-center">
+                <FileBarChart className="w-10 h-10 text-gray-700 mx-auto mb-3" />
+                <p className="text-gray-400 mb-2">No reports yet</p>
+                <p className="text-gray-600 text-sm">Upload files to auto-generate reports</p>
+              </CardContent></Card>
+            ) : (
+              <div className="space-y-2">
+                {reports.map(r => (
+                  <Card key={r.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => { setActiveTab('dashboard'); }}>
+                    <CardContent className="p-4 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center"><FileBarChart className="w-5 h-5 text-emerald-400" /></div>
+                        <div>
+                          <p className="text-white font-medium text-sm">{r.filename}</p>
+                          <p className="text-gray-500 text-xs">{r.total_rows} rows x {r.total_columns} cols · {r.source_type}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs text-gray-500">{new Date(r.uploaded_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</span>
+                        <Button variant="ghost" size="sm" className="text-purple-400 text-xs" onClick={(e) => { e.stopPropagation(); handleViewFileDetails(r.id); }}><Eye className="w-3 h-3 mr-1" /> View</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ===== DATA SOURCES TAB ===== */}
+        {activeTab === 'sources' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-white">Data Sources</h2>
+              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setIsDataSourceModalOpen(true)}><Plus className="w-4 h-4 mr-1" /> Connect Source</Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {integrations.map((intg, i) => (
+                <Card key={i} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => handleIntegrationClick(intg)}>
+                  <CardContent className="p-4 flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${intg.color}15` }}><Database className="w-5 h-5" style={{ color: intg.color }} /></div>
+                    <div className="flex-1"><p className="text-white text-sm font-medium">{intg.name}</p><p className="text-gray-500 text-xs">{intg.type || 'Integration'}</p></div>
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </main>
+
+      {/* AI Chat Bar - Fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent pt-6 pb-4 px-4" data-testid="ai-chat-bar">
+        <div className="max-w-3xl mx-auto">
+          {/* Chat messages popover */}
+          {aiChatMessages.length > 0 && (
+            <div className="bg-gray-900 border border-gray-800 rounded-t-2xl max-h-[50vh] overflow-y-auto p-4 space-y-3 mb-0">
+              {aiChatMessages.map((msg, i) => (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${msg.role === 'user' ? 'bg-purple-600 text-white rounded-tr-sm' : msg.isError ? 'bg-red-900/20 border border-red-800 text-gray-300 rounded-tl-sm' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-tl-sm'}`}>
+                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                    {msg.sources?.length > 0 && <div className="mt-1 flex gap-1 flex-wrap">{msg.sources.map((s, si) => <span key={si} className="text-[10px] bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded">{s}</span>)}</div>}
+                  </div>
+                </div>
+              ))}
+              {isChatSending && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-800 border border-gray-700 rounded-2xl rounded-tl-sm px-4 py-2.5">
+                    <div className="flex space-x-1.5"><div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" /><div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} /><div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} /></div>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+          )}
+          {/* Chat Input */}
+          <div className={`bg-gray-900 border border-gray-700 ${aiChatMessages.length > 0 ? 'rounded-b-2xl border-t-0' : 'rounded-2xl'} overflow-hidden focus-within:border-purple-500/50 transition-colors shadow-xl shadow-black/30`}>
+            <div className="flex items-center">
+              <Brain className="w-5 h-5 text-purple-400 ml-4 flex-shrink-0" />
+              <input value={aiChatInput} onChange={(e) => setAiChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleDashboardChat(); }} placeholder="Ask anything about your data..." className="flex-1 bg-transparent text-white px-3 py-3.5 outline-none placeholder-gray-500 text-sm" data-testid="dashboard-ai-input" />
+              <Button onClick={handleDashboardChat} disabled={isChatSending || !aiChatInput.trim()} className="m-1.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl h-8 w-8 p-0" data-testid="dashboard-ai-send">
+                {isChatSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* AI Visibility Section */}
-        <Card className="bg-gray-900 border-gray-800" id="ai-visibility-section">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center"><Globe className="w-5 h-5 mr-2 text-purple-400" /> AI Visibility Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-400 text-sm mb-4">Enter any URL to analyze its SEO performance, content quality, and AI discoverability</p>
+      {/* Notes Modal */}
+      <Dialog open={showNoteModal} onOpenChange={setShowNoteModal}>
+        <DialogContent className="bg-gray-900 border-gray-800 text-white">
+          <DialogHeader>
+            <DialogTitle>{editingNote ? 'Edit Note' : 'New Note'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div><Label className="text-gray-300 text-sm">Title</Label><Input value={noteTitle} onChange={(e) => setNoteTitle(e.target.value)} placeholder="Note title..." className="bg-gray-800 border-gray-700 text-white mt-1" data-testid="note-title-input" /></div>
+            <div><Label className="text-gray-300 text-sm">Content</Label><textarea value={noteContent} onChange={(e) => setNoteContent(e.target.value)} placeholder="Write your notes..." className="w-full bg-gray-800 border border-gray-700 text-white rounded-md p-3 mt-1 outline-none focus:border-purple-500 min-h-[150px] text-sm" data-testid="note-content-input" /></div>
             <div className="flex space-x-3">
-              <Input value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} placeholder="https://example.com" className="bg-gray-800 border-gray-700 text-white flex-1" data-testid="ai-url-input" />
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" onClick={handleAnalyzeUrl} disabled={isAnalyzing || !aiUrl.trim()} data-testid="analyze-url-button">
-                {isAnalyzing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing...</> : <><Search className="w-4 h-4 mr-2" />Analyze</>}
-              </Button>
+              <Button variant="outline" className="flex-1 border-gray-700 text-gray-300" onClick={() => setShowNoteModal(false)}>Cancel</Button>
+              <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600" onClick={handleSaveNote} disabled={!noteTitle.trim()} data-testid="save-note-btn"><Save className="w-4 h-4 mr-1" /> Save</Button>
             </div>
-
-            {/* AI Analysis Results */}
-            {aiAnalysis && (
-              <div className="mt-6 space-y-4" data-testid="ai-analysis-results">
-                {/* Score Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                  {[
-                    { label: 'Overall', value: aiAnalysis.overall_score, color: 'text-purple-400' },
-                    { label: 'SEO', value: aiAnalysis.seo_score, color: 'text-blue-400' },
-                    { label: 'AI Visibility', value: aiAnalysis.ai_visibility_score, color: 'text-green-400' },
-                    { label: 'Content', value: aiAnalysis.content_quality_score, color: 'text-yellow-400' },
-                    { label: 'Technical', value: aiAnalysis.technical_seo_score, color: 'text-pink-400' },
-                  ].map((score, i) => (
-                    <div key={i} className="bg-gray-800 rounded-lg p-3 text-center">
-                      <p className="text-gray-500 text-xs mb-1">{score.label}</p>
-                      <p className={`text-2xl font-bold ${score.color}`}>{score.value}<span className="text-xs text-gray-500">/100</span></p>
-                      <div className="w-full bg-gray-700 rounded-full h-1.5 mt-2"><div className={`h-1.5 rounded-full ${score.value >= 70 ? 'bg-green-500' : score.value >= 40 ? 'bg-yellow-500' : 'bg-red-500'}`} style={{ width: `${score.value}%` }}></div></div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Summary */}
-                <div className="bg-gray-800/50 rounded-lg p-4"><p className="text-gray-300 text-sm">{aiAnalysis.summary}</p></div>
-
-                {/* Strengths & Improvements */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-gray-800/50 rounded-lg p-4">
-                    <h4 className="text-green-400 font-medium mb-3 flex items-center"><CheckCircle className="w-4 h-4 mr-2" /> Strengths</h4>
-                    <ul className="space-y-2">{(aiAnalysis.strengths || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-green-500 mr-2">+</span>{s}</li>)}</ul>
-                  </div>
-                  <div className="bg-gray-800/50 rounded-lg p-4">
-                    <h4 className="text-yellow-400 font-medium mb-3 flex items-center"><AlertTriangle className="w-4 h-4 mr-2" /> Improvements</h4>
-                    <ul className="space-y-2">{(aiAnalysis.improvements || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-yellow-500 mr-2">-</span>{s}</li>)}</ul>
-                  </div>
-                </div>
-
-                {/* AI Recommendations */}
-                {aiAnalysis.ai_recommendations?.length > 0 && (
-                  <div className="bg-purple-900/20 border border-purple-700/30 rounded-lg p-4">
-                    <h4 className="text-purple-400 font-medium mb-3 flex items-center"><Brain className="w-4 h-4 mr-2" /> AI Discoverability Tips</h4>
-                    <ul className="space-y-2">{aiAnalysis.ai_recommendations.map((r, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><Zap className="w-3 h-3 text-purple-400 mr-2 mt-0.5 flex-shrink-0" />{r}</li>)}</ul>
-                  </div>
-                )}
-
-                {/* Keywords */}
-                {aiAnalysis.keyword_suggestions?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-gray-500 text-sm">Suggested Keywords:</span>
-                    {aiAnalysis.keyword_suggestions.map((kw, i) => <span key={i} className="text-xs bg-gray-800 text-purple-300 px-3 py-1 rounded-full border border-purple-700/30">{kw}</span>)}
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </main>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Data Source Modal */}
       <Dialog open={isDataSourceModalOpen} onOpenChange={setIsDataSourceModalOpen}>
