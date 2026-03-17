@@ -61,7 +61,7 @@ async def create_payment_order(req: CreatePaymentRequest, user_id: str = Depends
         customer_name=user.get("name", "User")
     )
     
-    frontend_url = os.environ.get("FRONTEND_URL", req.return_url or "https://analiyx-preview.preview.emergentagent.com")
+    frontend_url = os.environ.get("FRONTEND_URL", req.return_url or "https://data-analytics-dev.preview.emergentagent.com")
     
     order_meta = OrderMeta(
         return_url=f"{frontend_url}/dashboard?payment_status=success&order_id={order_id}"

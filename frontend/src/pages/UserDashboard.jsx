@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -66,6 +66,7 @@ const UserDashboard = () => {
   const [aiChatMessages, setAiChatMessages] = useState([]);
   const [isChatSending, setIsChatSending] = useState(false);
   const [chatSessionId, setChatSessionId] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const chatEndRef = useRef(null);
 
   const refreshUser = useCallback(async () => {
@@ -158,6 +159,7 @@ const UserDashboard = () => {
     if (!aiChatInput.trim() || isChatSending) return;
     const msg = aiChatInput.trim();
     setAiChatInput('');
+    setIsChatOpen(true);
     setAiChatMessages(prev => [...prev, { role: 'user', content: msg }]);
     setIsChatSending(true);
     try {
@@ -679,6 +681,7 @@ const UserDashboard = () => {
             { id: 'notes', label: 'Notes', icon: StickyNote },
             { id: 'reports', label: 'Reports', icon: FileBarChart },
             { id: 'sources', label: 'Data Sources', icon: Database },
+            { id: 'visibility', label: 'AI Visibility', icon: Globe },
           ].map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={`flex items-center space-x-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-purple-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`} data-testid={`tab-${tab.id}`}>
               <tab.icon className="w-4 h-4" /><span>{tab.label}</span>
@@ -909,14 +912,101 @@ const UserDashboard = () => {
             </div>
           </div>
         )}
+
+        {/* ===== AI VISIBILITY TAB ===== */}
+        {activeTab === 'visibility' && (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-xl font-bold text-white mb-1">AI Visibility Analysis</h2>
+              <p className="text-gray-500 text-sm">Analyze any URL for SEO performance and AI discoverability</p>
+            </div>
+            <Card className="bg-gray-900 border-gray-800">
+              <CardContent className="p-5">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-1 flex items-center bg-gray-800 border border-gray-700 rounded-xl overflow-hidden focus-within:border-purple-500 transition-colors">
+                    <Globe className="w-5 h-5 text-gray-400 ml-4" />
+                    <input value={aiUrl} onChange={(e) => setAiUrl(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleAnalyzeUrl(); }} placeholder="Enter a URL to analyze (e.g., https://example.com)" className="flex-1 bg-transparent text-white px-3 py-3 outline-none placeholder-gray-500 text-sm" data-testid="ai-visibility-url-input" />
+                  </div>
+                  <Button onClick={handleAnalyzeUrl} disabled={isAnalyzing || !aiUrl.trim()} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6" data-testid="ai-visibility-analyze-btn">
+                    {isAnalyzing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Analyzing...</> : <><Search className="w-4 h-4 mr-2" />Analyze</>}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Analysis Results */}
+            {aiAnalysis && (
+              <div className="space-y-4">
+                {/* Score Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {[
+                    { label: 'Overall', value: aiAnalysis.overall_score, color: 'text-purple-400' },
+                    { label: 'SEO', value: aiAnalysis.seo_score, color: 'text-blue-400' },
+                    { label: 'AI Visibility', value: aiAnalysis.ai_visibility_score, color: 'text-cyan-400' },
+                    { label: 'Content', value: aiAnalysis.content_quality_score, color: 'text-emerald-400' },
+                    { label: 'Technical', value: aiAnalysis.technical_seo_score, color: 'text-amber-400' },
+                  ].map((s, i) => (
+                    <Card key={i} className="bg-gray-800/60 border-gray-700/50">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-gray-400 text-xs mb-1">{s.label}</p>
+                        <p className={`text-3xl font-bold ${s.color}`}>{s.value}<span className="text-base text-gray-500">/100</span></p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Summary */}
+                <Card className="bg-gray-900 border-gray-800">
+                  <CardContent className="p-5"><p className="text-gray-300 text-sm">{aiAnalysis.summary}</p></CardContent>
+                </Card>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-emerald-400" /> Strengths</CardTitle></CardHeader>
+                    <CardContent><ul className="space-y-2">{(aiAnalysis.strengths || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-emerald-400 mr-2 mt-1">+</span>{s}</li>)}</ul></CardContent>
+                  </Card>
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm flex items-center"><AlertTriangle className="w-4 h-4 mr-2 text-amber-400" /> Improvements</CardTitle></CardHeader>
+                    <CardContent><ul className="space-y-2">{(aiAnalysis.improvements || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-amber-400 mr-2 mt-1">!</span>{s}</li>)}</ul></CardContent>
+                  </Card>
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm flex items-center"><Brain className="w-4 h-4 mr-2 text-purple-400" /> AI Recommendations</CardTitle></CardHeader>
+                    <CardContent><ul className="space-y-2">{(aiAnalysis.ai_recommendations || []).map((s, i) => <li key={i} className="text-gray-300 text-sm flex items-start"><span className="text-purple-400 mr-2 mt-1">*</span>{s}</li>)}</ul></CardContent>
+                  </Card>
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm flex items-center"><Search className="w-4 h-4 mr-2 text-blue-400" /> Suggested Keywords</CardTitle></CardHeader>
+                    <CardContent><div className="flex flex-wrap gap-2">{(aiAnalysis.keyword_suggestions || []).map((k, i) => <span key={i} className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-xs">{k}</span>)}</div></CardContent>
+                  </Card>
+                </div>
+
+                {/* Technical Details */}
+                {aiAnalysis.scraped_data && (
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm">Technical Details</CardTitle></CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div><p className="text-gray-500">Title</p><p className="text-gray-200 truncate">{aiAnalysis.scraped_data.title}</p></div>
+                        <div><p className="text-gray-500">Images</p><p className="text-gray-200">{aiAnalysis.scraped_data.total_images} ({aiAnalysis.scraped_data.images_without_alt} no alt)</p></div>
+                        <div><p className="text-gray-500">Links</p><p className="text-gray-200">Int: {aiAnalysis.scraped_data.internal_links} / Ext: {aiAnalysis.scraped_data.external_links}</p></div>
+                        <div><p className="text-gray-500">Word Count</p><p className="text-gray-200">{aiAnalysis.scraped_data.word_count}</p></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       {/* AI Chat Bar - Fixed at bottom */}
       <div className="fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-gray-950 via-gray-950 to-transparent pt-6 pb-4 px-4" data-testid="ai-chat-bar">
         <div className="max-w-3xl mx-auto">
-          {/* Chat messages popover */}
-          {aiChatMessages.length > 0 && (
-            <div className="bg-gray-900 border border-gray-800 rounded-t-2xl max-h-[50vh] overflow-y-auto p-4 space-y-3 mb-0">
+          {/* Chat messages popover - only show when open */}
+          {isChatOpen && aiChatMessages.length > 0 && (
+            <div className="bg-gray-900 border border-gray-800 rounded-t-2xl max-h-[50vh] overflow-y-auto p-4 space-y-3 mb-0 relative">
+              <button onClick={() => setIsChatOpen(false)} className="absolute top-2 right-2 p-1.5 text-gray-500 hover:text-white bg-gray-800 rounded-lg z-10" data-testid="chat-minimize-btn"><ChevronDown className="w-4 h-4" /></button>
               {aiChatMessages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${msg.role === 'user' ? 'bg-purple-600 text-white rounded-tr-sm' : msg.isError ? 'bg-red-900/20 border border-red-800 text-gray-300 rounded-tl-sm' : 'bg-gray-800 text-gray-200 border border-gray-700 rounded-tl-sm'}`}>
@@ -936,10 +1026,16 @@ const UserDashboard = () => {
             </div>
           )}
           {/* Chat Input */}
-          <div className={`bg-gray-900 border border-gray-700 ${aiChatMessages.length > 0 ? 'rounded-b-2xl border-t-0' : 'rounded-2xl'} overflow-hidden focus-within:border-purple-500/50 transition-colors shadow-xl shadow-black/30`}>
+          <div className={`bg-gray-900 border border-gray-700 ${isChatOpen && aiChatMessages.length > 0 ? 'rounded-b-2xl border-t-0' : 'rounded-2xl'} overflow-hidden focus-within:border-purple-500/50 transition-colors shadow-xl shadow-black/30`}>
             <div className="flex items-center">
               <Brain className="w-5 h-5 text-purple-400 ml-4 flex-shrink-0" />
-              <input value={aiChatInput} onChange={(e) => setAiChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleDashboardChat(); }} placeholder="Ask anything about your data..." className="flex-1 bg-transparent text-white px-3 py-3.5 outline-none placeholder-gray-500 text-sm" data-testid="dashboard-ai-input" />
+              <input value={aiChatInput} onChange={(e) => setAiChatInput(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleDashboardChat(); }} onFocus={() => { if (aiChatMessages.length > 0) setIsChatOpen(true); }} placeholder="Ask anything about your data..." className="flex-1 bg-transparent text-white px-3 py-3.5 outline-none placeholder-gray-500 text-sm" data-testid="dashboard-ai-input" />
+              {aiChatMessages.length > 0 && !isChatOpen && (
+                <button onClick={() => setIsChatOpen(true)} className="text-xs text-purple-400 mr-2 whitespace-nowrap" data-testid="chat-expand-btn">{aiChatMessages.length} messages</button>
+              )}
+              {aiChatMessages.length > 0 && isChatOpen && (
+                <button onClick={() => { setAiChatMessages([]); setIsChatOpen(false); setChatSessionId(null); }} className="text-xs text-gray-500 hover:text-red-400 mr-2" data-testid="chat-clear-btn">Clear</button>
+              )}
               <Button onClick={handleDashboardChat} disabled={isChatSending || !aiChatInput.trim()} className="m-1.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl h-8 w-8 p-0" data-testid="dashboard-ai-send">
                 {isChatSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </Button>
