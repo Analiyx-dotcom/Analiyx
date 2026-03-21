@@ -1,78 +1,91 @@
 # Analiyx - Product Requirements Document
 
 ## Original Problem Statement
-Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with user/admin dashboards, 14-day trial, plan-based restrictions, and AI-powered data analysis.
+Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with user/admin dashboards, 14-day free trial system, plan-based restrictions, and AI-powered data analysis.
 
 ## Tech Stack
-- **Frontend**: React, Tailwind CSS, Shadcn/ui, react-joyride, recharts, react-markdown
-- **Backend**: FastAPI, Motor (async MongoDB)
-- **AI**: GPT-5.2 via emergentintegrations (multi-turn chat)
-- **Payments**: Cashfree PG SDK v3 (Production)
+- **Frontend**: React, Tailwind CSS, Shadcn/ui, Recharts, react-markdown, react-joyride
+- **Backend**: FastAPI, Motor (async MongoDB), Pydantic
+- **AI**: GPT-5.2 via emergentintegrations (Emergent LLM Key)
+- **Payments**: Razorpay (Live keys)
 - **Database**: MongoDB
 
 ## Implemented Features
 
-### User Dashboard (Fully Redesigned)
-- [x] **Tab Navigation**: Dashboard | Notes | Reports | Data Sources | AI Visibility
-- [x] **Stats Overview**: 4 dynamic cards (Workspaces, Files, AI Queries, Plan) with badges
-- [x] **Auto-Generated Charts** (on file upload): KPI cards, Bar, Line, Donut charts, Data Tables
-- [x] **AI Search Bar**: Persistent bottom chat bar, ChatGPT-like multi-turn conversation, minimize/expand
-- [x] **Notes**: Full CRUD with modal editor
-- [x] **Reports**: Lists uploaded files as reports with view/export
-- [x] **Data Sources**: Grid of available integrations
-- [x] **AI Visibility**: URL analysis for SEO and AI discoverability scores
-- [x] **Clickable Workspace Cards** -> WorkspaceView with interactive AI chat
+### Authentication & User Management
+- [x] JWT auth with role-based access (user/admin)
+- [x] 7-day free trial for new users (Trial plan, 50 credits)
+- [x] Trial expired popup forcing plan selection
+- [x] Disabled/spam users strictly blocked from login (403)
+- [x] Subscription duration tracking (subscription_end_date field)
 
-### WorkspaceView
-- [x] Interactive multi-turn AI chat (GPT-5.2, session persistence)
-- [x] Tabs: AI Chat | Files | Sources
-- [x] File upload scoped to workspace, file analytics, integrations
+### Payments (Razorpay)
+- [x] Razorpay checkout SDK integration (replaced Cashfree)
+- [x] Plans: Starter (₹500/mo, 100 credits), Business Pro (₹800/mo, 1000 credits)
+- [x] Order creation, payment verification, webhook handling
+- [x] 1-year subscription duration per payment
 
 ### Admin Dashboard
-- [x] 5 tabs: Dashboard, Users, Data Sources, Revenue, Slack
+- [x] Dashboard overview with stats (Users, Subscriptions, Revenue, Data Sources)
+- [x] User Management: Activate/Disable/Block as Spam, Extend Trial (+7d), Extend Subscription (+1Y/+2Y), Manage Credits (+Cr)
+- [x] Support Tickets: View all tickets, reply, close
+- [x] User Export: Download users as Excel (.xlsx) or PDF
+- [x] Data Sources: Overview of connected sources across users
+- [x] Revenue: Revenue breakdown and trends
+- [x] Slack Integration: Connect workspace for admin notifications
 
-### Authentication & Trial
-- [x] JWT + RBAC, 14-day trial, trial badge, expired popup
+### User Dashboard
+- [x] Tab navigation: Dashboard | Notes | Reports | Data Sources | AI Visibility
+- [x] Auto-generated charts from uploaded data (KPI, Bar, Line, Donut)
+- [x] AI Chat Bar (persistent bottom bar, minimize/expand, multi-turn GPT-5.2)
+- [x] Notes CRUD with modal editor
+- [x] Reports listing
+- [x] AI Visibility URL analysis (SEO/AI scores)
+- [x] Subscription info display (plan, credits, expiry date, trial end)
+- [x] Workspace management with detail views
 
-### Payments
-- [x] Cashfree PG SDK v3 (Production mode)
-- [x] Plans: Starter (500 INR/mo, 100 credits), Business Pro (800 INR/mo, 1000 credits)
-- [x] Order creation, status check, webhook handling
-
-### Other
-- [x] Slack integration, Landing page, Contact form, Legal pages, App tour
+### Workspace Detail View
+- [x] Interactive multi-turn AI chat (GPT-5.2, session persistence)
+- [x] File upload scoped to workspace
+- [x] Connected data sources
 
 ## Key API Endpoints
-- `POST /api/payments/create-order` - Create Cashfree payment order
-- `GET /api/payments/order-status/{order_id}` - Check payment status
-- `POST /api/ai-visibility/analyze` - Analyze URL for SEO/AI visibility
+- `POST /api/auth/register` - Register (creates Trial plan, 7-day trial)
+- `POST /api/auth/login` - Login (blocks disabled/spam users)
+- `POST /api/payments/create-order` - Create Razorpay order
+- `POST /api/payments/verify-payment` - Verify Razorpay signature
+- `PUT /api/admin/manage/users/{id}/status` - Activate/Disable/Spam
+- `PUT /api/admin/manage/users/{id}/subscription` - Extend subscription
+- `POST /api/admin/manage/users/{id}/extend-trial` - Extend trial
+- `GET /api/admin/manage/tickets` - Admin view all tickets
+- `POST /api/admin/manage/tickets/{id}/reply` - Admin reply to ticket
+- `GET /api/admin/manage/users/export/excel` - Export users xlsx
+- `GET /api/admin/manage/users/export/pdf` - Export users pdf
+- `POST /api/ai-visibility/analyze` - AI URL analysis
 - `POST /api/ai/chat` - Multi-turn AI chat
-- `GET /api/dashboard/summary` - Dashboard stats + activity
-- `GET /api/charts/generate/{file_id}` - Auto-generate chart configs
-- `POST/GET/PUT/DELETE /api/charts/notes` - Notes CRUD
-- `GET /api/charts/reports` - Reports listing
 
 ## Credentials
 - Admin: admin@papermap.com / admin123
 - Test: testuser@test.com / test1234
 
-## Testing Status (Iteration 10 - March 2026)
-- Backend: 91% (20/22 passed)
-- Frontend: 100% (10/10 features verified)
-- All P0 issues resolved
+## Razorpay Keys
+- Key ID: rzp_live_STOut8Uckvo5mM
+- Secret: axQBMcKBsdh23B2hVn62VHX1
+
+## Testing Status (Iteration 11 - March 2026)
+- Backend: 100% (14/14 passed)
+- Frontend: 100% (16/16 features verified)
 
 ## Backlog
 
-### P1
-- [ ] Admin Dashboard "Data Sources" and "Revenue" tabs with real data
-
 ### P2
 - [ ] Social Logins (Google & Microsoft OAuth)
-- [ ] Editable Dashboard Layout (drag-and-drop)
+- [ ] Editable Dashboard Layout (drag-and-drop charts)
 - [ ] Google/Meta Ads frontend wiring
+- [ ] Support ticket email notifications
 
 ### P3
 - [ ] Email Verification on Login (2FA)
-- [ ] Admin Slack Integration panel
+- [ ] Admin Slack Integration panel enhancements
 - [ ] Forgot Password backend (token gen, email sending)
-- [ ] Refactor UserDashboard.jsx into smaller components (~1300 lines)
+- [ ] Refactor UserDashboard.jsx into smaller components (~1400 lines)
