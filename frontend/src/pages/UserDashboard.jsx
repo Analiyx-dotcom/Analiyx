@@ -292,16 +292,16 @@ const UserDashboard = () => {
   const handleIntegrationClick = async (integration) => {
     if (integration.name === 'Excel' || integration.name === 'CSV') {
       setShowFileUpload(true);
-    } else if (integration.name === 'Google Ads' || integration.name === 'Meta Ads') {
+    } else if (['Google Ads', 'Meta Ads', 'Google Analytics'].includes(integration.name)) {
       try {
-        const integrationKey = integration.name === 'Google Ads' ? 'google_ads' : 'meta_ads';
-        const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/integrations/oauth/authorize/${integrationKey}`, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const data = await response.json();
-        if (data.authorization_url) window.location.href = data.authorization_url;
-      } catch {
-        toast({ title: 'Connection failed', description: 'Failed to start OAuth flow.', variant: 'destructive' });
+        const serviceMap = { 'Google Ads': 'google_ads', 'Meta Ads': 'meta_ads', 'Google Analytics': 'google_analytics' };
+        const serviceKey = serviceMap[integration.name];
+        const response = await api.get(`/integrations/connect/${serviceKey}`);
+        if (response.data.auth_url) {
+          window.open(response.data.auth_url, '_blank', 'width=600,height=700');
+        }
+      } catch (error) {
+        toast({ title: 'Connection failed', description: error.response?.data?.detail || 'Failed to start OAuth flow.', variant: 'destructive' });
       }
     } else {
       toast({ title: 'Coming Soon', description: `${integration.name} integration will be available soon!` });

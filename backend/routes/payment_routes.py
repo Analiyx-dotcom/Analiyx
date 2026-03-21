@@ -17,8 +17,8 @@ router = APIRouter(prefix="/api/payments", tags=["Payments"])
 db = None
 
 PLANS = {
-    "Starter": {"amount": 500, "credits": 100, "name": "Starter", "duration_months": 12},
-    "Business Pro": {"amount": 800, "credits": 1000, "name": "Business Pro", "duration_months": 12},
+    "Starter": {"amount": 6000, "credits": 100, "name": "Starter", "duration_months": 12},
+    "Business Pro": {"amount": 9000, "credits": 1000, "name": "Business Pro", "duration_months": 12},
 }
 
 def set_database(database):

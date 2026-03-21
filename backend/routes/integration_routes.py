@@ -1,387 +1,268 @@
-from fastapi import APIRouter, HTTPException, Depends
+"""
+OAuth integrations for Google Ads, Google Analytics, and Meta Ads.
+Simple connect/disconnect flow for clients.
+"""
+
+from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi.responses import RedirectResponse
 from auth import get_current_user_id
-from integrations.base import INTEGRATION_METADATA, IntegrationType
-from pydantic import BaseModel
-from typing import Dict, Any, Optional, List
 from datetime import datetime
 from bson import ObjectId
 import os
+import httpx
+import logging
+import urllib.parse
 
 router = APIRouter(prefix="/api/integrations", tags=["Integrations"])
 
-# Database will be injected
 db = None
 
 def set_database(database):
     global db
     db = database
 
-class IntegrationConnectionRequest(BaseModel):
-    integration_name: str
-    credentials: Dict[str, Any]
-    config: Optional[Dict[str, Any]] = {}
+# ==================== AUTH URLs ====================
 
-class IntegrationResponse(BaseModel):
-    id: str
-    integration_name: str
-    status: str
-    connected_at: str
-    last_sync: Optional[str] = None
-    metrics_count: int = 0
+@router.get("/connect/google_ads")
+async def connect_google_ads(user_id: str = Depends(get_current_user_id)):
+    """Generate Google Ads OAuth URL for client to connect"""
+    client_id = os.environ.get("GOOGLE_ADS_CLIENT_ID")
+    redirect_uri = os.environ.get("GOOGLE_ADS_REDIRECT_URI")
+    if not client_id or not redirect_uri:
+        raise HTTPException(status_code=500, detail="Google Ads not configured")
 
-@router.get("/available")
-async def get_available_integrations():
-    """Get list of all available integrations"""
-    integrations = []
-    for key, metadata in INTEGRATION_METADATA.items():
-        integrations.append({
-            "id": key,
-            "name": metadata["name"],
-            "type": metadata["type"],
-            "icon": metadata["icon"],
-            "color": metadata["color"],
-            "description": metadata["description"],
-            "metrics": metadata["metrics"],
-            "requires_oauth": metadata["type"] == IntegrationType.OAUTH,
-            "required_fields": metadata.get("required_fields", [])
-        })
-    return {"integrations": integrations}
+    scope = "https://www.googleapis.com/auth/adwords"
+    state = f"google_ads_{user_id}"
 
-@router.get("/connected")
-async def get_connected_integrations(user_id: str = Depends(get_current_user_id)):
-    """Get user's connected integrations"""
-    connections = await db.integrations.find({
-        "user_id": ObjectId(user_id),
-        "status": {"$in": ["connected", "active"]}
-    }).to_list(100)
-    
-    formatted = []
-    for conn in connections:
-        formatted.append({
-            "id": str(conn["_id"]),
-            "integration_name": conn["integration_name"],
-            "status": conn["status"],
-            "connected_at": conn["connected_at"].isoformat(),
-            "last_sync": conn.get("last_sync", {}).get("timestamp", None),
-            "metrics_count": conn.get("metrics_count", 0)
-        })
-    
-    return {"connections": formatted}
-
-@router.post("/connect/{integration_name}")
-async def connect_integration(
-    integration_name: str,
-    request: IntegrationConnectionRequest,
-    user_id: str = Depends(get_current_user_id)
-):
-    """Connect a new integration"""
-    
-    if integration_name not in INTEGRATION_METADATA:
-        raise HTTPException(status_code=404, detail="Integration not found")
-    
-    metadata = INTEGRATION_METADATA[integration_name]
-    
-    # Validate required fields for API_KEY and DATABASE types
-    if metadata["type"] in [IntegrationType.API_KEY, IntegrationType.DATABASE]:
-        required_fields = metadata.get("required_fields", [])
-        missing_fields = [f for f in required_fields if f not in request.credentials]
-        if missing_fields:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Missing required fields: {', '.join(missing_fields)}"
-            )
-    
-    # Store connection
-    connection_doc = {
-        "user_id": ObjectId(user_id),
-        "integration_name": integration_name,
-        "integration_type": metadata["type"],
-        "credentials": request.credentials,  # Should be encrypted in production
-        "config": request.config,
-        "status": "pending",
-        "connected_at": datetime.utcnow(),
-        "last_sync": None,
-        "metrics_count": 0
-    }
-    
-    result = await db.integrations.insert_one(connection_doc)
-    
-    # Test connection based on integration type
-    try:
-        if integration_name == "postgresql":
-            await test_postgresql_connection(request.credentials)
-        elif integration_name == "mysql":
-            await test_mysql_connection(request.credentials)
-        elif integration_name == "mongodb":
-            await test_mongodb_connection(request.credentials)
-        elif integration_name in ["shopify", "zoho_books", "hubspot"]:
-            await test_api_key_integration(integration_name, request.credentials)
-        
-        # Update status to connected
-        await db.integrations.update_one(
-            {"_id": result.inserted_id},
-            {"$set": {"status": "connected"}}
-        )
-        status = "connected"
-    except Exception as e:
-        await db.integrations.update_one(
-            {"_id": result.inserted_id},
-            {"$set": {"status": "error", "error_message": str(e)}}
-        )
-        raise HTTPException(status_code=400, detail=f"Connection failed: {str(e)}")
-    
-    return {
-        "success": True,
-        "connection_id": str(result.inserted_id),
-        "status": status,
-        "message": f"Successfully connected to {metadata['name']}"
-    }
-
-@router.delete("/disconnect/{connection_id}")
-async def disconnect_integration(
-    connection_id: str,
-    user_id: str = Depends(get_current_user_id)
-):
-    """Disconnect an integration"""
-    result = await db.integrations.delete_one({
-        "_id": ObjectId(connection_id),
-        "user_id": ObjectId(user_id)
-    })
-    
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Connection not found")
-    
-    return {"success": True, "message": "Integration disconnected"}
-
-@router.get("/oauth/authorize/{integration_name}")
-async def get_oauth_authorization_url(
-    integration_name: str,
-    user_id: str = Depends(get_current_user_id)
-):
-    """Get OAuth authorization URL for integrations that require it"""
-    
-    if integration_name not in INTEGRATION_METADATA:
-        raise HTTPException(status_code=404, detail="Integration not found")
-    
-    metadata = INTEGRATION_METADATA[integration_name]
-    
-    if metadata["type"] != IntegrationType.OAUTH:
-        raise HTTPException(
-            status_code=400,
-            detail="This integration does not use OAuth"
-        )
-    
-    # Generate OAuth URLs using integration classes
-    auth_url = ""
-    
-    if integration_name == "google_ads":
-        from integrations.google_ads import GoogleAdsIntegration
-        auth_url = GoogleAdsIntegration.get_oauth_url(state=user_id)
-    
-    elif integration_name == "meta_ads":
-        from integrations.meta_ads import MetaAdsIntegration
-        auth_url = MetaAdsIntegration.get_oauth_url(state=user_id)
-    
-    elif integration_name in ["google_analytics", "google_sheets"]:
-        # Similar to Google Ads OAuth
-        scopes = "+".join(metadata['scopes'])
-        base_url = "https://accounts.google.com/o/oauth2/v2/auth"
-        auth_url = f"{base_url}?client_id={os.getenv('GOOGLE_ADS_CLIENT_ID')}&redirect_uri={os.getenv('GOOGLE_ADS_REDIRECT_URI')}&scope={scopes}&response_type=code&access_type=offline&prompt=consent&state={user_id}"
-    
-    elif integration_name == "salesforce":
-        client_id = os.getenv("SALESFORCE_CLIENT_ID", "YOUR_CLIENT_ID")
-        redirect_uri = os.getenv("SALESFORCE_REDIRECT_URI", "YOUR_REDIRECT_URI")
-        auth_url = f"https://login.salesforce.com/services/oauth2/authorize?response_type=code&client_id={client_id}&redirect_uri={redirect_uri}&scope=api%20refresh_token&state={user_id}"
-    
-    return {
-        "authorization_url": auth_url,
-        "state": user_id,
-        "integration_name": integration_name
-    }
-
-# Helper functions for testing connections
-async def test_postgresql_connection(credentials: Dict[str, Any]):
-    """Test PostgreSQL connection"""
-    import asyncpg
-    conn = await asyncpg.connect(
-        host=credentials.get("host"),
-        port=credentials.get("port", 5432),
-        database=credentials.get("database"),
-        user=credentials.get("username"),
-        password=credentials.get("password")
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"client_id={client_id}"
+        f"&redirect_uri={urllib.parse.quote(redirect_uri, safe='')}"
+        f"&response_type=code"
+        f"&scope={urllib.parse.quote(scope, safe='')}"
+        f"&access_type=offline"
+        f"&state={state}"
+        f"&prompt=consent"
     )
-    await conn.close()
 
-async def test_mysql_connection(credentials: Dict[str, Any]):
-    """Test MySQL connection"""
-    import aiomysql
-    conn = await aiomysql.connect(
-        host=credentials.get("host"),
-        port=credentials.get("port", 3306),
-        db=credentials.get("database"),
-        user=credentials.get("username"),
-        password=credentials.get("password")
+    return {"auth_url": auth_url, "service": "Google Ads"}
+
+@router.get("/connect/google_analytics")
+async def connect_google_analytics(user_id: str = Depends(get_current_user_id)):
+    """Generate Google Analytics OAuth URL for client to connect"""
+    client_id = os.environ.get("GOOGLE_ADS_CLIENT_ID")
+    redirect_uri = os.environ.get("GOOGLE_ANALYTICS_REDIRECT_URI")
+    if not client_id or not redirect_uri:
+        raise HTTPException(status_code=500, detail="Google Analytics not configured")
+
+    scope = "https://www.googleapis.com/auth/analytics.readonly"
+    state = f"google_analytics_{user_id}"
+
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"client_id={client_id}"
+        f"&redirect_uri={urllib.parse.quote(redirect_uri, safe='')}"
+        f"&response_type=code"
+        f"&scope={urllib.parse.quote(scope, safe='')}"
+        f"&access_type=offline"
+        f"&state={state}"
+        f"&prompt=consent"
     )
-    conn.close()
 
-async def test_mongodb_connection(credentials: Dict[str, Any]):
-    """Test MongoDB connection"""
-    from motor.motor_asyncio import AsyncIOMotorClient
-    client = AsyncIOMotorClient(credentials.get("connection_string"))
-    await client.server_info()
-    client.close()
+    return {"auth_url": auth_url, "service": "Google Analytics"}
+
+@router.get("/connect/meta_ads")
+async def connect_meta_ads(user_id: str = Depends(get_current_user_id)):
+    """Generate Meta Ads OAuth URL for client to connect"""
+    app_id = os.environ.get("META_APP_ID")
+    redirect_uri = os.environ.get("META_REDIRECT_URI")
+    if not app_id or not redirect_uri:
+        raise HTTPException(status_code=500, detail="Meta Ads not configured")
+
+    scope = "ads_management,ads_read,read_insights"
+    state = f"meta_ads_{user_id}"
+
+    auth_url = (
+        f"https://www.facebook.com/v19.0/dialog/oauth?"
+        f"client_id={app_id}"
+        f"&redirect_uri={urllib.parse.quote(redirect_uri, safe='')}"
+        f"&response_type=code"
+        f"&scope={urllib.parse.quote(scope, safe='')}"
+        f"&state={state}"
+    )
+
+    return {"auth_url": auth_url, "service": "Meta Ads"}
+
+# ==================== OAUTH CALLBACKS ====================
 
 @router.get("/oauth/callback/google_ads")
-async def google_ads_oauth_callback(code: str, state: str):
+async def google_ads_callback(code: str = None, state: str = None, error: str = None):
     """Handle Google Ads OAuth callback"""
-    from integrations.google_ads import GoogleAdsIntegration
-    
+    if error:
+        return RedirectResponse(url=f"/dashboard?integration=google_ads&status=error&message={error}")
+
+    if not code or not state:
+        return RedirectResponse(url="/dashboard?integration=google_ads&status=error&message=missing_params")
+
     try:
-        # Exchange code for tokens
-        tokens = await GoogleAdsIntegration.exchange_code_for_token(code)
-        
-        # Store tokens in database for the user
-        user_id = state  # state parameter contains user_id
-        
-        connection_doc = {
-            "user_id": ObjectId(user_id),
-            "integration_name": "google_ads",
-            "integration_type": "oauth",
-            "credentials": {
+        user_id = state.replace("google_ads_", "")
+        tokens = await exchange_google_code(code, os.environ.get("GOOGLE_ADS_REDIRECT_URI"))
+
+        await db.integrations.update_one(
+            {"user_id": ObjectId(user_id), "service": "google_ads"},
+            {"$set": {
+                "user_id": ObjectId(user_id),
+                "service": "google_ads",
+                "service_name": "Google Ads",
                 "access_token": tokens.get("access_token"),
                 "refresh_token": tokens.get("refresh_token"),
-                "expires_in": tokens.get("expires_in")
-            },
-            "status": "connected",
-            "connected_at": datetime.utcnow()
-        }
-        
-        await db.integrations.insert_one(connection_doc)
-        
-        # Redirect to success page
-        return {
-            "success": True,
-            "message": "Google Ads connected successfully!",
-            "redirect_url": "/dashboard?integration=google_ads&status=success"
-        }
-        
+                "token_expiry": tokens.get("expires_in"),
+                "status": "connected",
+                "connected_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+
+        return RedirectResponse(url="/dashboard?integration=google_ads&status=success")
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "redirect_url": "/dashboard?integration=google_ads&status=error"
-        }
+        logging.error(f"Google Ads callback error: {str(e)}")
+        return RedirectResponse(url=f"/dashboard?integration=google_ads&status=error&message={str(e)}")
+
+@router.get("/oauth/callback/google_analytics")
+async def google_analytics_callback(code: str = None, state: str = None, error: str = None):
+    """Handle Google Analytics OAuth callback"""
+    if error:
+        return RedirectResponse(url=f"/dashboard?integration=google_analytics&status=error&message={error}")
+
+    if not code or not state:
+        return RedirectResponse(url="/dashboard?integration=google_analytics&status=error&message=missing_params")
+
+    try:
+        user_id = state.replace("google_analytics_", "")
+        tokens = await exchange_google_code(code, os.environ.get("GOOGLE_ANALYTICS_REDIRECT_URI"))
+
+        await db.integrations.update_one(
+            {"user_id": ObjectId(user_id), "service": "google_analytics"},
+            {"$set": {
+                "user_id": ObjectId(user_id),
+                "service": "google_analytics",
+                "service_name": "Google Analytics",
+                "access_token": tokens.get("access_token"),
+                "refresh_token": tokens.get("refresh_token"),
+                "token_expiry": tokens.get("expires_in"),
+                "status": "connected",
+                "connected_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+
+        return RedirectResponse(url="/dashboard?integration=google_analytics&status=success")
+    except Exception as e:
+        logging.error(f"Google Analytics callback error: {str(e)}")
+        return RedirectResponse(url=f"/dashboard?integration=google_analytics&status=error&message={str(e)}")
 
 @router.get("/oauth/callback/meta_ads")
-async def meta_ads_oauth_callback(code: str, state: str):
+async def meta_ads_callback(code: str = None, state: str = None, error: str = None):
     """Handle Meta Ads OAuth callback"""
-    from integrations.meta_ads import MetaAdsIntegration
-    
+    if error:
+        return RedirectResponse(url=f"/dashboard?integration=meta_ads&status=error&message={error}")
+
+    if not code or not state:
+        return RedirectResponse(url="/dashboard?integration=meta_ads&status=error&message=missing_params")
+
     try:
-        # Exchange code for tokens
-        tokens = await MetaAdsIntegration.exchange_code_for_token(code)
-        
-        # Store tokens in database for the user
-        user_id = state
-        
-        connection_doc = {
-            "user_id": ObjectId(user_id),
-            "integration_name": "meta_ads",
-            "integration_type": "oauth",
-            "credentials": {
+        user_id = state.replace("meta_ads_", "")
+        tokens = await exchange_meta_code(code)
+
+        await db.integrations.update_one(
+            {"user_id": ObjectId(user_id), "service": "meta_ads"},
+            {"$set": {
+                "user_id": ObjectId(user_id),
+                "service": "meta_ads",
+                "service_name": "Meta Ads",
                 "access_token": tokens.get("access_token"),
-                "expires_in": tokens.get("expires_in")
-            },
-            "status": "connected",
-            "connected_at": datetime.utcnow()
-        }
-        
-        await db.integrations.insert_one(connection_doc)
-        
-        return {
-            "success": True,
-            "message": "Meta Ads connected successfully!",
-            "redirect_url": "/dashboard?integration=meta_ads&status=success"
-        }
-        
+                "token_expiry": tokens.get("expires_in"),
+                "status": "connected",
+                "connected_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+
+        return RedirectResponse(url="/dashboard?integration=meta_ads&status=success")
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e),
-            "redirect_url": "/dashboard?integration=meta_ads&status=error"
+        logging.error(f"Meta Ads callback error: {str(e)}")
+        return RedirectResponse(url=f"/dashboard?integration=meta_ads&status=error&message={str(e)}")
+
+# ==================== TOKEN EXCHANGE ====================
+
+async def exchange_google_code(code: str, redirect_uri: str) -> dict:
+    """Exchange Google OAuth authorization code for tokens"""
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": os.environ.get("GOOGLE_ADS_CLIENT_ID"),
+                "client_secret": os.environ.get("GOOGLE_ADS_CLIENT_SECRET"),
+                "redirect_uri": redirect_uri,
+                "grant_type": "authorization_code"
+            }
+        )
+        if resp.status_code != 200:
+            raise Exception(f"Token exchange failed: {resp.text}")
+        return resp.json()
+
+async def exchange_meta_code(code: str) -> dict:
+    """Exchange Meta OAuth authorization code for access token"""
+    async with httpx.AsyncClient() as client:
+        resp = await client.get(
+            "https://graph.facebook.com/v19.0/oauth/access_token",
+            params={
+                "client_id": os.environ.get("META_APP_ID"),
+                "client_secret": os.environ.get("META_APP_SECRET"),
+                "redirect_uri": os.environ.get("META_REDIRECT_URI"),
+                "code": code
+            }
+        )
+        if resp.status_code != 200:
+            raise Exception(f"Token exchange failed: {resp.text}")
+        return resp.json()
+
+# ==================== STATUS & DISCONNECT ====================
+
+@router.get("/status")
+async def get_integration_status(user_id: str = Depends(get_current_user_id)):
+    """Get all integration statuses for the current user"""
+    integrations = await db.integrations.find(
+        {"user_id": ObjectId(user_id)},
+        {"_id": 0, "access_token": 0, "refresh_token": 0, "token_expiry": 0}
+    ).to_list(20)
+
+    status = {}
+    for i in integrations:
+        status[i["service"]] = {
+            "connected": i.get("status") == "connected",
+            "service_name": i.get("service_name", i["service"]),
+            "connected_at": i.get("connected_at").isoformat() if i.get("connected_at") else None
         }
 
-@router.post("/fetch-data/{integration_name}")
-async def fetch_integration_data(
-    integration_name: str,
-    user_id: str = Depends(get_current_user_id)
-):
-    """Fetch data from connected integration"""
-    
-    # Get user's connection
-    connection = await db.integrations.find_one({
-        "user_id": ObjectId(user_id),
-        "integration_name": integration_name,
-        "status": "connected"
-    })
-    
-    if not connection:
-        raise HTTPException(status_code=404, detail="Integration not connected")
-    
-    try:
-        if integration_name == "google_ads":
-            from integrations.google_ads import GoogleAdsIntegration
-            
-            integration = GoogleAdsIntegration(connection["credentials"])
-            
-            # Get customer ID from user input or stored config
-            customer_id = connection.get("config", {}).get("customer_id")
-            if not customer_id:
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Google Ads Customer ID not configured"
-                )
-            
-            data = await integration.fetch_campaign_metrics(customer_id)
-            
-        elif integration_name == "meta_ads":
-            from integrations.meta_ads import MetaAdsIntegration
-            
-            integration = MetaAdsIntegration(connection["credentials"])
-            
-            # Get ad account ID
-            ad_account_id = connection.get("config", {}).get("ad_account_id")
-            if not ad_account_id:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Meta Ads Account ID not configured"
-                )
-            
-            data = await integration.fetch_campaign_metrics(ad_account_id)
-        
-        else:
-            raise HTTPException(status_code=400, detail="Integration not supported yet")
-        
-        # Store fetched data
-        await db.integration_data.insert_one({
-            "user_id": ObjectId(user_id),
-            "integration_name": integration_name,
-            "data": data,
-            "fetched_at": datetime.utcnow()
-        })
-        
-        # Update last sync
-        await db.integrations.update_one(
-            {"_id": connection["_id"]},
-            {"$set": {"last_sync": {"timestamp": datetime.utcnow(), "status": "success"}}}
-        )
-        
-        return data
-        
-    except Exception as e:
-        # Update last sync with error
-        await db.integrations.update_one(
-            {"_id": connection["_id"]},
-            {"$set": {"last_sync": {"timestamp": datetime.utcnow(), "status": "error", "error": str(e)}}}
-        )
-        raise HTTPException(status_code=500, detail=f"Failed to fetch data: {str(e)}")
+    return {"integrations": status}
+
+@router.delete("/disconnect/{service}")
+async def disconnect_integration(service: str, user_id: str = Depends(get_current_user_id)):
+    """Disconnect an integration"""
+    valid_services = ["google_ads", "google_analytics", "meta_ads"]
+    if service not in valid_services:
+        raise HTTPException(status_code=400, detail=f"Invalid service. Use: {valid_services}")
+
+    result = await db.integrations.delete_one(
+        {"user_id": ObjectId(user_id), "service": service}
+    )
+
+    return {
+        "success": True,
+        "message": f"{service.replace('_', ' ').title()} disconnected" if result.deleted_count > 0 else "Integration not found"
+    }
