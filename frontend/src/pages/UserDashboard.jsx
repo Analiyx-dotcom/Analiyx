@@ -1368,8 +1368,8 @@ const UserDashboard = () => {
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((f, i) => <li key={i} className="text-gray-300 text-sm flex items-center"><CheckCircle className="w-3 h-3 text-purple-400 mr-2" />{f}</li>)}
                 </ul>
-                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleUpgrade(plan.name)} disabled={isProcessingPayment || user?.plan === plan.name} data-testid={`upgrade-${plan.name.toLowerCase().replace(' ','-')}`}>
-                  {isProcessingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : user?.plan === plan.name ? 'Current Plan' : 'Upgrade'}
+                <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleUpgrade(plan.name)} disabled={isProcessingPayment || (user?.plan === plan.name && user?.plan !== 'Trial')} data-testid={`upgrade-${plan.name.toLowerCase().replace(' ','-')}`}>
+                  {isProcessingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : (user?.plan === plan.name && user?.plan !== 'Trial') ? 'Current Plan' : 'Upgrade'}
                 </Button>
               </div>
             ))}
