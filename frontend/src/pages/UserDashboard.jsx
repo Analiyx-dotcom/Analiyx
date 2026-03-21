@@ -932,60 +932,21 @@ const UserDashboard = () => {
 
         {/* ===== DATA SOURCES TAB ===== */}
         {activeTab === 'sources' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-bold text-white">Data Sources</h2>
-                <p className="text-gray-500 text-sm">Connect your data sources to start analyzing</p>
-              </div>
-              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setShowFileUpload(true)}><Plus className="w-4 h-4 mr-1" /> Upload File</Button>
+              <h2 className="text-xl font-bold text-white">Data Sources</h2>
+              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setIsDataSourceModalOpen(true)}><Plus className="w-4 h-4 mr-1" /> Connect Source</Button>
             </div>
-
-            {/* Main Integrations - Google Ads, Google Analytics, Meta Ads */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {[
-                { key: 'google_ads', name: 'Google Ads', desc: 'Connect your Google Ads account to analyze campaign performance', color: '#4285F4', icon: 'G' },
-                { key: 'google_analytics', name: 'Google Analytics', desc: 'Connect Google Analytics to track website traffic and conversions', color: '#F9AB00', icon: 'GA' },
-                { key: 'meta_ads', name: 'Meta Ads', desc: 'Connect Facebook & Instagram Ads to analyze ad spend and ROI', color: '#1877F2', icon: 'M' },
-              ].map((svc) => {
-                const isConnected = integrationStatus[svc.key]?.connected;
-                return (
-                  <Card key={svc.key} className={`bg-gray-900 border-gray-800 ${isConnected ? 'border-green-700/50' : 'hover:border-purple-500/50'} transition-all`}>
-                    <CardContent className="p-5">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white text-sm" style={{ backgroundColor: svc.color }}>{svc.icon}</div>
-                        <div className="flex-1">
-                          <p className="text-white font-medium">{svc.name}</p>
-                          {isConnected && <p className="text-green-400 text-xs">Connected</p>}
-                        </div>
-                      </div>
-                      <p className="text-gray-500 text-xs mb-4">{svc.desc}</p>
-                      {isConnected ? (
-                        <Button size="sm" variant="outline" className="w-full border-red-500/50 text-red-400 hover:bg-red-900/20" onClick={async () => {
-                          try { await api.delete(`/integrations/disconnect/${svc.key}`); fetchIntegrationStatus(); toast({ title: 'Disconnected', description: `${svc.name} disconnected.` }); } catch { toast({ title: 'Error', variant: 'destructive' }); }
-                        }} data-testid={`disconnect-${svc.key}`}>Disconnect</Button>
-                      ) : (
-                        <Button size="sm" className="w-full bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => handleIntegrationClick({ name: svc.name })} data-testid={`connect-${svc.key}`}>Connect</Button>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {/* Other Integrations */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-400 mb-3">File Upload & Other Sources</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {integrations.filter(i => !['Google Ads', 'Meta Ads', 'Google Analytics'].includes(i.name)).map((intg, i) => (
-                  <Card key={i} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => handleIntegrationClick(intg)}>
-                    <CardContent className="p-3 flex items-center space-x-2">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${intg.color}15` }}><Database className="w-4 h-4" style={{ color: intg.color }} /></div>
-                      <p className="text-white text-xs font-medium">{intg.name}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {integrations.map((intg, i) => (
+                <Card key={i} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => handleIntegrationClick(intg)}>
+                  <CardContent className="p-4 flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${intg.color}15` }}><Database className="w-5 h-5" style={{ color: intg.color }} /></div>
+                    <div className="flex-1"><p className="text-white text-sm font-medium">{intg.name}</p><p className="text-gray-500 text-xs">{intg.type || 'Integration'}</p></div>
+                    <ChevronRight className="w-4 h-4 text-gray-600" />
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         )}
