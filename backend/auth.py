@@ -52,6 +52,31 @@ def get_current_user_id(credentials: HTTPAuthorizationCredentials = Security(sec
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     return user_id
 
+async def get_verified_user_id(credentials: HTTPAuthorizationCredentials = Security(security)) -> str:
+    """Get current user ID and verify account is not disabled/spam"""
+    from bson import ObjectId
+    
+    token = credentials.credentials
+    payload = decode_token(token)
+    user_id = payload.get("user_id")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+    
+    if _db is None:
+        return user_id
+    
+    user = await _db.users.find_one({"_id": ObjectId(user_id)}, {"status": 1})
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    user_status = user.get("status", "active")
+    if user_status in ("disabled", "inactive", "spam"):
+        if user_status == "spam":
+            raise HTTPException(status_code=403, detail="Your account has been blocked for spam. Contact support.")
+        raise HTTPException(status_code=403, detail="Your account has been disabled. Contact support.")
+    
+    return user_id
+
 _db = None
 
 def set_auth_database(database):
@@ -60,7 +85,7 @@ def set_auth_database(database):
     _db = database
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)) -> dict:
-    """Get current user with role information"""
+    """Get current user with role information - blocks disabled/spam users"""
     from bson import ObjectId
     
     token = credentials.credentials
@@ -77,6 +102,13 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
+    
+    # Block disabled/spam users even with valid token
+    user_status = user.get("status", "active")
+    if user_status in ("disabled", "inactive", "spam"):
+        if user_status == "spam":
+            raise HTTPException(status_code=403, detail="Your account has been blocked for spam. Contact support.")
+        raise HTTPException(status_code=403, detail="Your account has been disabled. Contact support.")
     
     return {
         "id": str(user["_id"]),

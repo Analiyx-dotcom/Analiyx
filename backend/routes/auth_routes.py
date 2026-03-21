@@ -102,10 +102,17 @@ async def login(credentials: UserLogin):
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user(user_id: str = Depends(get_current_user_id)):
-    """Get current authenticated user"""
+    """Get current authenticated user - blocks disabled/spam users"""
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Block disabled/spam users even with valid token
+    user_status = user.get("status", "active")
+    if user_status in ("disabled", "inactive", "spam"):
+        if user_status == "spam":
+            raise HTTPException(status_code=403, detail="Your account has been blocked for spam. Contact support.")
+        raise HTTPException(status_code=403, detail="Your account has been disabled. Contact support.")
     
     return UserResponse(
         id=str(user["_id"]),

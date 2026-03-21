@@ -1,19 +1,30 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, ShieldAlert } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [disabledMessage, setDisabledMessage] = useState('');
+
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'disabled') {
+      setDisabledMessage('Your account has been disabled or blocked. Please contact support.');
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     setFormData({
@@ -80,6 +91,12 @@ const Login = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {disabledMessage && (
+            <div className="mb-4 p-3 bg-red-900/30 border border-red-700 rounded-lg flex items-center space-x-2" data-testid="disabled-account-banner">
+              <ShieldAlert className="w-5 h-5 text-red-400 flex-shrink-0" />
+              <p className="text-red-300 text-sm">{disabledMessage}</p>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-gray-300">Email</Label>

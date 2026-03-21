@@ -20,6 +20,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Handle 403 (disabled/spam account) - force logout
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 403 && error.response?.data?.detail) {
+      const detail = error.response.data.detail;
+      if (detail.includes('disabled') || detail.includes('spam') || detail.includes('blocked')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login?reason=disabled';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth API
 export const authAPI = {
   register: async (userData) => {
