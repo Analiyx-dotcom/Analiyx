@@ -32,7 +32,7 @@ const AdminDashboard = () => {
     if (!userData || !token) { navigate('/login'); return; }
     try {
       const parsed = JSON.parse(userData);
-      const isAdmin = parsed.role === 'admin' || parsed.email === 'admin@papermap.com' || parsed.email === 'admin@analiyx.com';
+      const isAdmin = parsed.role === 'admin' || parsed.email === 'Admin@analiyx.com' || parsed.email === 'admin@analiyx.com';
       if (!isAdmin) { navigate('/dashboard'); return; }
       fetchDashboardData();
     } catch { navigate('/login'); }
