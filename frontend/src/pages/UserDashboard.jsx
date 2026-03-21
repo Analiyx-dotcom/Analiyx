@@ -427,16 +427,16 @@ const UserDashboard = () => {
     } finally { setIsAnalyzing(false); }
   };
 
-  const loadCashfreeSDK = useCallback(() => {
+  const loadRazorpaySDK = useCallback(() => {
     return new Promise((resolve, reject) => {
-      if (window.Cashfree) { resolve(); return; }
-      const existing = document.querySelector('script[src*="sdk.cashfree.com"]');
+      if (window.Razorpay) { resolve(); return; }
+      const existing = document.querySelector('script[src*="checkout.razorpay.com"]');
       if (existing) { existing.onload = () => resolve(); return; }
       const script = document.createElement('script');
-      script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
       script.async = true;
       script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Cashfree SDK'));
+      script.onerror = () => reject(new Error('Failed to load Razorpay SDK'));
       document.body.appendChild(script);
     });
   }, []);
@@ -444,14 +444,37 @@ const UserDashboard = () => {
   const handleUpgrade = async (planName) => {
     setIsProcessingPayment(true);
     try {
-      const response = await api.post('/payments/create-order', { plan: planName, return_url: window.location.origin });
-      const { payment_session_id, order_id } = response.data;
-      await loadCashfreeSDK();
-      const cashfree = window.Cashfree({ mode: 'production' });
-      await cashfree.checkout({
-        paymentSessionId: payment_session_id,
-        returnUrl: `${window.location.origin}/dashboard?payment_status=success&order_id=${order_id}`
-      });
+      const response = await api.post('/payments/create-order', { plan: planName });
+      const { order_id, amount, currency, key_id, user_name, user_email } = response.data;
+      await loadRazorpaySDK();
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: 'Analiyx',
+        description: `${planName} Plan Subscription`,
+        order_id: order_id,
+        handler: async (resp) => {
+          try {
+            await api.post('/payments/verify-payment', {
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature: resp.razorpay_signature
+            });
+            toast({ title: 'Payment Successful!', description: `Your plan has been upgraded to ${planName}.` });
+            refreshUser();
+            setShowUpgradeModal(false);
+            setTrialExpired(false);
+          } catch {
+            toast({ title: 'Verification Failed', description: 'Payment received but verification failed. Contact support.', variant: 'destructive' });
+          }
+        },
+        prefill: { name: user_name, email: user_email },
+        theme: { color: '#7c3aed' },
+        modal: { ondismiss: () => setIsProcessingPayment(false) }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
       toast({ title: 'Payment Error', description: error.response?.data?.detail || 'Failed to initiate payment. Please try again.', variant: 'destructive' });
     } finally { setIsProcessingPayment(false); }
@@ -582,12 +605,12 @@ const UserDashboard = () => {
               <div className="text-center mb-6">
                 <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
                 <h2 className="text-2xl font-bold text-white mb-2">Trial Period Ended</h2>
-                <p className="text-gray-400">Your 14-day free trial has expired. Select a plan to continue using Analiyx.</p>
+                <p className="text-gray-400">Your 7-day free trial has expired. Select a plan to continue using Analiyx.</p>
               </div>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 {[
-                  { name: 'Starter', price: '500', features: ['4 Data Sources', 'AI Visibility (1/month)', '100 Credits', '1 Workspace'] },
-                  { name: 'Business Pro', price: '800', features: ['Unlimited Sources', 'Unlimited AI Visibility', '1,000 Credits', '10 Workspaces', 'Slack Integration'] }
+                  { name: 'Starter', price: '500', features: ['4 Data Sources', 'AI Visibility (1/month)', '100 Credits', '1 Workspace', '1 Year Subscription'] },
+                  { name: 'Business Pro', price: '800', features: ['Unlimited Sources', 'Unlimited AI Visibility', '1,000 Credits', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
                 ].map((plan) => (
                   <div key={plan.name} className={`bg-gray-800 rounded-xl p-5 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
                     {plan.name === 'Business Pro' && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">Recommended</span>}
@@ -812,6 +835,12 @@ const UserDashboard = () => {
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm"><span className="text-gray-400">Credits</span><span className="text-white">{user.credits}</span></div>
                     <div className="flex justify-between text-sm"><span className="text-gray-400">Status</span><span className="text-emerald-400 capitalize">{user.status}</span></div>
+                    {user.subscription_end_date && (
+                      <div className="flex justify-between text-sm"><span className="text-gray-400">Expires</span><span className="text-white">{new Date(user.subscription_end_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</span></div>
+                    )}
+                    {user.trial_ends_at && user.plan === 'Trial' && (
+                      <div className="flex justify-between text-sm"><span className="text-gray-400">Trial Ends</span><span className="text-yellow-400">{new Date(user.trial_ends_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</span></div>
+                    )}
                   </div>
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-sm" onClick={() => setShowUpgradeModal(true)} data-testid="upgrade-plan-button"><ArrowUp className="w-3.5 h-3.5 mr-1" /> Upgrade</Button>
                 </CardContent>
@@ -1320,8 +1349,8 @@ const UserDashboard = () => {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             {[
-              { name: 'Starter', price: '500', credits: '100', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace'] },
-              { name: 'Business Pro', price: '800', credits: '1,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration'] }
+              { name: 'Starter', price: '500', credits: '100', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace', '1 Year Subscription'] },
+              { name: 'Business Pro', price: '800', credits: '1,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
             ].map((plan) => (
               <div key={plan.name} className={`bg-gray-800 rounded-xl p-6 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
                 <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>

@@ -58,6 +58,7 @@ async def get_my_tickets(user_id: str = Depends(get_current_user_id)):
             "message": t["message"],
             "priority": t["priority"],
             "status": t["status"],
+            "replies": t.get("replies", []),
             "created_at": t["created_at"].isoformat()
         } for t in tickets]
     }

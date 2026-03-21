@@ -24,16 +24,17 @@ async def register(user_data: UserCreate):
     # Hash password
     hashed_password = hash_password(user_data.password)
     
-    # Create user document
+    # Create user document - 7 day trial with Trial plan
     user_doc = {
         "name": user_data.name,
         "email": user_data.email,
         "password": hashed_password,
-        "plan": "Starter",
+        "plan": "Trial",
         "status": "active",
-        "credits": 100,
+        "credits": 50,
         "role": "user",
-        "trial_ends_at": datetime.utcnow() + timedelta(days=14),
+        "trial_ends_at": datetime.utcnow() + timedelta(days=7),
+        "subscription_end_date": None,
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
@@ -55,6 +56,7 @@ async def register(user_data: UserCreate):
         credits=user_doc["credits"],
         role=user_doc["role"],
         trial_ends_at=user_doc.get("trial_ends_at"),
+        subscription_end_date=user_doc.get("subscription_end_date"),
         created_at=user_doc["created_at"]
     )
     
@@ -72,6 +74,13 @@ async def login(credentials: UserLogin):
     if not verify_password(credentials.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
+    # STRICTLY block disabled, inactive, or spam accounts
+    user_status = user.get("status", "active")
+    if user_status in ("disabled", "inactive", "spam"):
+        if user_status == "spam":
+            raise HTTPException(status_code=403, detail="Your account has been blocked for spam. Contact support at techmeliora@gmail.com")
+        raise HTTPException(status_code=403, detail="Your account has been disabled. Contact support at techmeliora@gmail.com")
+    
     # Create access token
     token = create_access_token({"user_id": str(user["_id"])})
     
@@ -85,6 +94,7 @@ async def login(credentials: UserLogin):
         credits=user["credits"],
         role=user.get("role", "user"),
         trial_ends_at=user.get("trial_ends_at"),
+        subscription_end_date=user.get("subscription_end_date"),
         created_at=user["created_at"]
     )
     
@@ -106,5 +116,6 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         credits=user["credits"],
         role=user.get("role", "user"),
         trial_ends_at=user.get("trial_ends_at"),
+        subscription_end_date=user.get("subscription_end_date"),
         created_at=user["created_at"]
     )

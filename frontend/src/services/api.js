@@ -76,6 +76,11 @@ export const adminAPI = {
     return response.data;
   },
   
+  updateSubscription: async (userId, durationMonths) => {
+    const response = await api.put(`/admin/manage/users/${userId}/subscription`, { duration_months: durationMonths });
+    return response.data;
+  },
+  
   manageCredits: async (userId, credits, action) => {
     const response = await api.put(`/admin/manage/users/${userId}/credits`, { credits, action });
     return response.data;
@@ -85,6 +90,26 @@ export const adminAPI = {
     const response = await api.get(`/admin/manage/users/${userId}/activity`);
     return response.data;
   },
+
+  // Tickets
+  getAllTickets: async () => {
+    const response = await api.get('/admin/manage/tickets');
+    return response.data;
+  },
+
+  replyToTicket: async (ticketId, reply) => {
+    const response = await api.post(`/admin/manage/tickets/${ticketId}/reply`, { reply });
+    return response.data;
+  },
+
+  closeTicket: async (ticketId) => {
+    const response = await api.put(`/admin/manage/tickets/${ticketId}/status`);
+    return response.data;
+  },
+
+  // Export
+  exportUsersExcel: () => `${API}/admin/manage/users/export/excel`,
+  exportUsersPDF: () => `${API}/admin/manage/users/export/pdf`,
 };
 
 // Data Source API
