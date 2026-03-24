@@ -301,9 +301,9 @@ const UserDashboard = () => {
   const handleIntegrationClick = async (integration) => {
     if (integration.name === 'Excel' || integration.name === 'CSV') {
       setShowFileUpload(true);
-    } else if (['Google Ads', 'Meta Ads', 'Google Analytics'].includes(integration.name)) {
+    } else if (['Google Ads', 'Meta Ads', 'Google Analytics', 'Google Sheets'].includes(integration.name)) {
       try {
-        const serviceMap = { 'Google Ads': 'google_ads', 'Meta Ads': 'meta_ads', 'Google Analytics': 'google_analytics' };
+        const serviceMap = { 'Google Ads': 'google_ads', 'Meta Ads': 'meta_ads', 'Google Analytics': 'google_analytics', 'Google Sheets': 'google_sheets' };
         const serviceKey = serviceMap[integration.name];
         const response = await api.get(`/integrations/connect/${serviceKey}`);
         if (response.data.auth_url) {
@@ -634,7 +634,7 @@ const UserDashboard = () => {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-500 text-center mb-3">Need a custom plan? <a href="mailto:techmeliora@gmail.com" className="text-purple-400">Contact us</a></p>
+              <p className="text-xs text-gray-500 text-center mb-3">Need a custom plan? <a href="mailto:analiyx26@gmail.com" className="text-purple-400">Contact us</a></p>
               <Button variant="ghost" className="w-full text-gray-500 text-sm" onClick={handleLogout}>Logout</Button>
             </CardContent>
           </Card>
@@ -1304,7 +1304,7 @@ const UserDashboard = () => {
         <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Contact Support</DialogTitle>
-            <DialogDescription className="text-gray-400">Raise a ticket or email us at techmeliora@gmail.com</DialogDescription>
+            <DialogDescription className="text-gray-400">Raise a ticket or email us at analiyx26@gmail.com</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
@@ -1325,7 +1325,7 @@ const UserDashboard = () => {
             </div>
             <div className="flex space-x-3">
               <Button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600" onClick={handleSubmitTicket} data-testid="submit-ticket-button"><Send className="w-4 h-4 mr-2" /> Submit Ticket</Button>
-              <Button variant="outline" className="border-gray-700 text-gray-300" onClick={() => window.location.href = 'mailto:techmeliora@gmail.com'}><Mail className="w-4 h-4 mr-2" /> Email Us</Button>
+              <Button variant="outline" className="border-gray-700 text-gray-300" onClick={() => window.location.href = 'mailto:analiyx26@gmail.com'}><Mail className="w-4 h-4 mr-2" /> Email Us</Button>
             </div>
 
             {/* Previous Tickets */}
@@ -1374,7 +1374,7 @@ const UserDashboard = () => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-gray-500 text-center">Need a custom plan? <a href="mailto:techmeliora@gmail.com" className="text-purple-400 hover:text-purple-300">Contact us</a></p>
+          <p className="text-xs text-gray-500 text-center">Need a custom plan? <a href="mailto:analiyx26@gmail.com" className="text-purple-400 hover:text-purple-300">Contact us</a></p>
         </DialogContent>
       </Dialog>
 

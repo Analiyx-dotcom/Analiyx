@@ -93,6 +93,30 @@ async def connect_meta_ads(user_id: str = Depends(get_current_user_id)):
 
     return {"auth_url": auth_url, "service": "Meta Ads"}
 
+@router.get("/connect/google_sheets")
+async def connect_google_sheets(user_id: str = Depends(get_current_user_id)):
+    """Generate Google Sheets OAuth URL for client to connect"""
+    client_id = os.environ.get("GOOGLE_ADS_CLIENT_ID")
+    redirect_uri = os.environ.get("GOOGLE_SHEETS_REDIRECT_URI", os.environ.get("GOOGLE_ADS_REDIRECT_URI", "").replace("google_ads", "google_sheets"))
+    if not client_id:
+        raise HTTPException(status_code=500, detail="Google Sheets not configured")
+
+    scope = "https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly"
+    state = f"google_sheets_{user_id}"
+
+    auth_url = (
+        f"https://accounts.google.com/o/oauth2/v2/auth?"
+        f"client_id={client_id}"
+        f"&redirect_uri={urllib.parse.quote(redirect_uri, safe='')}"
+        f"&response_type=code"
+        f"&scope={urllib.parse.quote(scope, safe='')}"
+        f"&access_type=offline"
+        f"&state={state}"
+        f"&prompt=consent"
+    )
+
+    return {"auth_url": auth_url, "service": "Google Sheets"}
+
 # ==================== OAUTH CALLBACKS ====================
 
 @router.get("/oauth/callback/google_ads")
@@ -196,6 +220,39 @@ async def meta_ads_callback(code: str = None, state: str = None, error: str = No
         logging.error(f"Meta Ads callback error: {str(e)}")
         return RedirectResponse(url=f"/dashboard?integration=meta_ads&status=error&message={str(e)}")
 
+@router.get("/oauth/callback/google_sheets")
+async def google_sheets_callback(code: str = None, state: str = None, error: str = None):
+    """Handle Google Sheets OAuth callback"""
+    if error:
+        return RedirectResponse(url=f"/dashboard?integration=google_sheets&status=error&message={error}")
+    if not code or not state:
+        return RedirectResponse(url="/dashboard?integration=google_sheets&status=error&message=missing_params")
+
+    try:
+        user_id = state.replace("google_sheets_", "")
+        redirect_uri = os.environ.get("GOOGLE_SHEETS_REDIRECT_URI", os.environ.get("GOOGLE_ADS_REDIRECT_URI", "").replace("google_ads", "google_sheets"))
+        tokens = await exchange_google_code(code, redirect_uri)
+
+        await db.integrations.update_one(
+            {"user_id": ObjectId(user_id), "service": "google_sheets"},
+            {"$set": {
+                "user_id": ObjectId(user_id),
+                "service": "google_sheets",
+                "service_name": "Google Sheets",
+                "access_token": tokens.get("access_token"),
+                "refresh_token": tokens.get("refresh_token"),
+                "token_expiry": tokens.get("expires_in"),
+                "status": "connected",
+                "connected_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }},
+            upsert=True
+        )
+        return RedirectResponse(url="/dashboard?integration=google_sheets&status=success")
+    except Exception as e:
+        logging.error(f"Google Sheets callback error: {str(e)}")
+        return RedirectResponse(url=f"/dashboard?integration=google_sheets&status=error&message={str(e)}")
+
 # ==================== TOKEN EXCHANGE ====================
 
 async def exchange_google_code(code: str, redirect_uri: str) -> dict:
@@ -254,7 +311,7 @@ async def get_integration_status(user_id: str = Depends(get_current_user_id)):
 @router.delete("/disconnect/{service}")
 async def disconnect_integration(service: str, user_id: str = Depends(get_current_user_id)):
     """Disconnect an integration"""
-    valid_services = ["google_ads", "google_analytics", "meta_ads"]
+    valid_services = ["google_ads", "google_analytics", "meta_ads", "google_sheets"]
     if service not in valid_services:
         raise HTTPException(status_code=400, detail=f"Invalid service. Use: {valid_services}")
 

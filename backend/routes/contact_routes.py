@@ -2,10 +2,6 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-import os
 import logging
 
 router = APIRouter(prefix="/api", tags=["Contact"])
@@ -23,16 +19,11 @@ class ContactForm(BaseModel):
     phone: str = ""
     message: str
 
-class SupportTicket(BaseModel):
-    subject: str
-    message: str
-    priority: str = "medium"
-
-NOTIFICATION_EMAIL = "techmeliora@gmail.com"
+NOTIFICATION_EMAIL = "analiyx26@gmail.com"
 
 @router.post("/contact")
 async def submit_contact_form(form: ContactForm):
-    """Submit contact form and store in DB"""
+    """Submit contact form and store in DB, send email notification"""
     contact_doc = {
         "name": form.name,
         "email": form.email,
@@ -43,42 +34,27 @@ async def submit_contact_form(form: ContactForm):
         "created_at": datetime.utcnow()
     }
     await db.contact_submissions.insert_one(contact_doc)
-    
-    # Try to send email notification
+
+    # Send email notification
     try:
-        _send_notification_email(form)
+        from email_service import send_email
+        html = f"""
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#1a1a2e;color:#fff;padding:30px;border-radius:12px;">
+            <h2 style="color:#a855f7;">New Contact Form Submission</h2>
+            <div style="background:#16213e;padding:15px;border-radius:8px;margin:15px 0;">
+                <p><strong>Name:</strong> {form.name}</p>
+                <p><strong>Email:</strong> {form.email}</p>
+                <p><strong>Company:</strong> {form.company or 'N/A'}</p>
+                <p><strong>Phone:</strong> {form.phone or 'N/A'}</p>
+            </div>
+            <div style="background:#16213e;padding:15px;border-radius:8px;">
+                <p><strong>Message:</strong></p>
+                <p style="color:#e2e8f0;">{form.message}</p>
+            </div>
+        </div>
+        """
+        send_email(NOTIFICATION_EMAIL, f"[Analiyx Contact] {form.name} - {form.company or 'N/A'}", html)
     except Exception as e:
         logging.warning(f"Email notification failed: {e}")
-    
+
     return {"success": True, "message": "Your message has been received. We will contact you soon."}
-
-def _send_notification_email(form: ContactForm):
-    """Send email notification about new contact form submission"""
-    smtp_user = os.environ.get("SMTP_USER")
-    smtp_pass = os.environ.get("SMTP_PASSWORD")
-    if not smtp_user or not smtp_pass:
-        logging.info("SMTP not configured - skipping email notification")
-        return
-    
-    msg = MIMEMultipart()
-    msg["From"] = smtp_user
-    msg["To"] = NOTIFICATION_EMAIL
-    msg["Subject"] = f"New Contact Form: {form.name} - {form.company or 'N/A'}"
-    
-    body = f"""
-New contact form submission on Analiyx:
-
-Name: {form.name}
-Email: {form.email}
-Company: {form.company or 'N/A'}
-Phone: {form.phone or 'N/A'}
-
-Message:
-{form.message}
-    """
-    msg.attach(MIMEText(body, "plain"))
-    
-    with smtplib.SMTP("smtp.gmail.com", 587) as server:
-        server.starttls()
-        server.login(smtp_user, smtp_pass)
-        server.send_message(msg)

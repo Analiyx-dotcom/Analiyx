@@ -44,9 +44,9 @@ const Footer = () => {
               Big Data for Small Teams. No-code data platform powered by AI.
             </p>
             {/* Email */}
-            <a href="mailto:techmeliora@gmail.com" className="flex items-center space-x-2 text-gray-400 hover:text-purple-400 transition-colors mb-4" data-testid="footer-email-link">
+            <a href="mailto:analiyx26@gmail.com" className="flex items-center space-x-2 text-gray-400 hover:text-purple-400 transition-colors mb-4" data-testid="footer-email-link">
               <Mail className="w-4 h-4" />
-              <span className="text-sm">techmeliora@gmail.com</span>
+              <span className="text-sm">analiyx26@gmail.com</span>
             </a>
             {/* Social Media Links */}
             <div className="flex space-x-3">
@@ -84,7 +84,7 @@ const Footer = () => {
             <h4 className="text-white font-semibold mb-4">Company</h4>
             <ul className="space-y-2">
               <li><Link to="/contact" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Contact Us</Link></li>
-              <li><a href="mailto:techmeliora@gmail.com" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Support</a></li>
+              <li><a href="mailto:analiyx26@gmail.com" className="text-gray-500 hover:text-white transition-colors duration-200 text-sm">Support</a></li>
             </ul>
           </div>
 
@@ -101,7 +101,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
-          <p>&copy; {new Date().getFullYear()} Analiyx. All rights reserved. | <a href="mailto:techmeliora@gmail.com" className="hover:text-purple-400">techmeliora@gmail.com</a></p>
+          <p>&copy; {new Date().getFullYear()} Analiyx. All rights reserved. | <a href="mailto:analiyx26@gmail.com" className="hover:text-purple-400">analiyx26@gmail.com</a></p>
         </div>
       </div>
     </footer>

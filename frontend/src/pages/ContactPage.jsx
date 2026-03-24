@@ -81,7 +81,7 @@ const ContactPage = () => {
                 </div>
                 <div>
                   <p className="text-white font-medium">Email</p>
-                  <a href="mailto:techmeliora@gmail.com" className="text-gray-400 hover:text-purple-400">techmeliora@gmail.com</a>
+                  <a href="mailto:analiyx26@gmail.com" className="text-gray-400 hover:text-purple-400">analiyx26@gmail.com</a>
                 </div>
               </div>
               <div className="flex items-start space-x-4">

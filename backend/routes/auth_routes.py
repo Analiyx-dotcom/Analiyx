@@ -85,8 +85,8 @@ async def login(credentials: UserLogin):
     user_status = user.get("status", "active")
     if user_status in ("disabled", "inactive", "spam"):
         if user_status == "spam":
-            raise HTTPException(status_code=403, detail="Your account has been blocked for spam. Contact support at techmeliora@gmail.com")
-        raise HTTPException(status_code=403, detail="Your account has been disabled. Contact support at techmeliora@gmail.com")
+            raise HTTPException(status_code=403, detail="Your account has been blocked for spam. Contact support at analiyx26@gmail.com")
+        raise HTTPException(status_code=403, detail="Your account has been disabled. Contact support at analiyx26@gmail.com")
     
     # Create access token
     token = create_access_token({"user_id": str(user["_id"])})

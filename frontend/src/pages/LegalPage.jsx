@@ -129,11 +129,11 @@ const LegalPage = () => {
             <p>If an account remains inactive for an extended period, we may remove or anonymize associated data unless retention is required by law.</p>
 
             <h3 className="text-lg font-semibold text-gray-200 mt-6">Access or Deletion Requests</h3>
-            <p>Users may request access to their stored data or request deletion by contacting us at: <a href="mailto:techmeliora@gmail.com" className="text-purple-400 hover:text-purple-300">techmeliora@gmail.com</a></p>
+            <p>Users may request access to their stored data or request deletion by contacting us at: <a href="mailto:analiyx26@gmail.com" className="text-purple-400 hover:text-purple-300">analiyx26@gmail.com</a></p>
             <p>We will process such requests in accordance with applicable data protection regulations.</p>
 
             <h3 className="text-lg font-semibold text-gray-200 mt-6">Account Deactivation</h3>
-            <p>If you would like to deactivate your account, please contact us at: <a href="mailto:techmeliora@gmail.com" className="text-purple-400 hover:text-purple-300">techmeliora@gmail.com</a></p>
+            <p>If you would like to deactivate your account, please contact us at: <a href="mailto:analiyx26@gmail.com" className="text-purple-400 hover:text-purple-300">analiyx26@gmail.com</a></p>
             <p>Please note that certain shared content or collaborative records may remain accessible to other authorized users within a workspace.</p>
 
             <h3 className="text-lg font-semibold text-gray-200 mt-6">Policy Updates</h3>
@@ -142,7 +142,7 @@ const LegalPage = () => {
 
             <h3 className="text-lg font-semibold text-gray-200 mt-6">Contact Information</h3>
             <p>If you have any questions regarding this Privacy Policy or our data practices, please contact us:</p>
-            <p>Email: <a href="mailto:techmeliora@gmail.com" className="text-purple-400 hover:text-purple-300">techmeliora@gmail.com</a></p>
+            <p>Email: <a href="mailto:analiyx26@gmail.com" className="text-purple-400 hover:text-purple-300">analiyx26@gmail.com</a></p>
             <p>Website: <a href="https://analiyx.com" className="text-purple-400 hover:text-purple-300">https://analiyx.com</a></p>
           </div>
         </section>
