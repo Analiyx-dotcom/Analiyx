@@ -243,11 +243,11 @@ const AdminDashboard = () => {
           <CardHeader><CardTitle className="text-white">User Growth</CardTitle></CardHeader>
           <CardContent>
             {isLoading ? <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div> : (
-              <div className="h-64 flex items-end justify-between space-x-2">
+              <div className="h-64 flex items-end justify-between space-x-2 px-2">
                 {userGrowthData.map((data, i) => {
                   const max = Math.max(...userGrowthData.map(d => d.users), 1);
-                  const h = (data.users / max) * 100;
-                  return (<div key={i} className="flex-1 flex flex-col items-center"><div className="w-full bg-gradient-to-t from-purple-600 to-pink-600 rounded-t-lg hover:from-purple-500 hover:to-pink-500 transition-all" style={{ height: `${h}%` }}></div><span className="text-xs text-gray-500 mt-2">{data.month}</span></div>);
+                  const h = Math.max((data.users / max) * 100, 4);
+                  return (<div key={i} className="flex-1 flex flex-col items-center h-full justify-end"><div className="w-full bg-gradient-to-t from-purple-600 to-pink-600 rounded-t-lg hover:from-purple-500 hover:to-pink-500 transition-all min-h-[4px]" style={{ height: `${h}%` }}></div><span className="text-xs text-gray-500 mt-2">{data.month}</span></div>);
                 })}
               </div>
             )}
@@ -257,11 +257,11 @@ const AdminDashboard = () => {
           <CardHeader><CardTitle className="text-white">Revenue Trend (INR)</CardTitle></CardHeader>
           <CardContent>
             {isLoading ? <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div> : (
-              <div className="h-64 flex items-end justify-between space-x-2">
+              <div className="h-64 flex items-end justify-between space-x-2 px-2">
                 {revenueData.map((data, i) => {
                   const max = Math.max(...revenueData.map(d => d.amount), 1);
-                  const h = (data.amount / max) * 100;
-                  return (<div key={i} className="flex-1 flex flex-col items-center"><div className="w-full bg-gradient-to-t from-green-600 to-emerald-600 rounded-t-lg hover:from-green-500 hover:to-emerald-500 transition-all" style={{ height: `${h}%` }}></div><span className="text-xs text-gray-500 mt-2">{data.month}</span></div>);
+                  const h = Math.max((data.amount / max) * 100, 4);
+                  return (<div key={i} className="flex-1 flex flex-col items-center h-full justify-end"><div className="w-full bg-gradient-to-t from-green-600 to-emerald-600 rounded-t-lg hover:from-green-500 hover:to-emerald-500 transition-all min-h-[4px]" style={{ height: `${h}%` }}></div><span className="text-xs text-gray-500 mt-2">{data.month}</span></div>);
                 })}
               </div>
             )}
@@ -462,14 +462,14 @@ const AdminDashboard = () => {
         <CardHeader><CardTitle className="text-white">Revenue Trend (INR)</CardTitle></CardHeader>
         <CardContent>
           {isLoading ? <div className="h-64 flex items-center justify-center text-gray-400">Loading...</div> : (
-            <div className="h-64 flex items-end justify-between space-x-3">
+            <div className="h-64 flex items-end justify-between space-x-3 px-2">
               {revenueData.map((data, i) => {
                 const max = Math.max(...revenueData.map(d => d.amount), 1);
-                const h = (data.amount / max) * 100;
+                const h = Math.max((data.amount / max) * 100, 4);
                 return (
-                  <div key={i} className="flex-1 flex flex-col items-center group">
+                  <div key={i} className="flex-1 flex flex-col items-center h-full justify-end group">
                     <div className="text-xs text-gray-500 mb-1 opacity-0 group-hover:opacity-100 transition-opacity">{formatINR(data.amount)}</div>
-                    <div className="w-full bg-gradient-to-t from-green-600 to-emerald-500 rounded-t-lg hover:from-green-500 hover:to-emerald-400 transition-all" style={{ height: `${h}%` }}></div>
+                    <div className="w-full bg-gradient-to-t from-green-600 to-emerald-500 rounded-t-lg hover:from-green-500 hover:to-emerald-400 transition-all min-h-[4px]" style={{ height: `${h}%` }}></div>
                     <span className="text-xs text-gray-500 mt-2">{data.month}</span>
                   </div>
                 );

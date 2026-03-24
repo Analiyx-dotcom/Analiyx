@@ -141,6 +141,19 @@ async def verify_payment(req: VerifyPaymentRequest, user_id: str = Depends(get_c
         }, "$inc": {"credits": plan.get("credits", 100)}}
     )
 
+    # Send payment confirmation email
+    try:
+        from email_service import send_payment_confirmation
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if user:
+            send_payment_confirmation(
+                user["email"], user.get("name", "User"),
+                plan_name, order.get("amount", 0),
+                subscription_end.strftime("%d %b %Y")
+            )
+    except Exception:
+        pass
+
     return {
         "success": True,
         "message": f"Payment verified. Plan upgraded to {plan_name}.",

@@ -330,6 +330,18 @@ async def reply_to_ticket(
         }
     )
 
+    # Send email notification to user
+    try:
+        from email_service import send_ticket_reply_notification
+        send_ticket_reply_notification(
+            ticket.get("user_email", ""),
+            ticket.get("user_name", "User"),
+            ticket.get("subject", ""),
+            reply.reply
+        )
+    except Exception:
+        pass
+
     return {"success": True, "message": "Reply sent successfully"}
 
 @router.put("/tickets/{ticket_id}/status")

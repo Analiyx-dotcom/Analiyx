@@ -38,6 +38,13 @@ async def create_ticket(ticket: TicketCreate, user_id: str = Depends(get_current
     }
     result = await db.support_tickets.insert_one(ticket_doc)
     
+    # Send email notification to admin
+    try:
+        from email_service import send_ticket_notification
+        send_ticket_notification(user["email"], user["name"], ticket.subject, ticket.message)
+    except Exception:
+        pass
+    
     return {
         "success": True,
         "ticket_id": str(result.inserted_id),

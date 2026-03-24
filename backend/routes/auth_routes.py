@@ -60,6 +60,13 @@ async def register(user_data: UserCreate):
         created_at=user_doc["created_at"]
     )
     
+    # Send welcome email (non-blocking)
+    try:
+        from email_service import send_welcome_email
+        send_welcome_email(user_data.email, user_data.name)
+    except Exception:
+        pass
+
     return AuthResponse(token=token, user=user_response)
 
 @router.post("/login", response_model=AuthResponse)
