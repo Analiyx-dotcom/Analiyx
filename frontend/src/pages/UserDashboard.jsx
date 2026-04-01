@@ -649,8 +649,8 @@ const UserDashboard = () => {
               </div>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 {[
-                  { name: 'Starter', price: '6,000', features: ['4 Data Sources', 'AI Visibility (1/month)', '100 Credits', '1 Workspace', '1 Year Subscription'] },
-                  { name: 'Business Pro', price: '9,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '1,000 Credits', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
+                  { name: 'Starter', price: '9,999', features: ['4 Data Sources', 'AI Visibility (1/month)', '200 Credits/month', '1 Workspace', '1 Year Subscription'] },
+                  { name: 'Business Pro', price: '14,999', features: ['Unlimited Sources', 'Unlimited AI Visibility', '500 Credits/month', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
                 ].map((plan) => (
                   <div key={plan.name} className={`bg-gray-800 rounded-xl p-5 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
                     {plan.name === 'Business Pro' && <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full">Recommended</span>}
@@ -1424,8 +1424,8 @@ const UserDashboard = () => {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             {[
-              { name: 'Starter', price: '6,000', rawPrice: 6000, credits: '100', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace', '1 Year Subscription'] },
-              { name: 'Business Pro', price: '9,000', rawPrice: 9000, credits: '1,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
+              { name: 'Starter', price: '9,999', rawPrice: 9999, credits: '200', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace', '1 Year Subscription'] },
+              { name: 'Business Pro', price: '14,999', rawPrice: 14999, credits: '500', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
             ].map((plan) => {
               const discountedPrice = couponApplied ? Math.max(plan.rawPrice - (plan.rawPrice * couponApplied.discount_percentage / 100), 1) : null;
               return (
