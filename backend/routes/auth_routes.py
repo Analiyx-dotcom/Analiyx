@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
 from models import UserCreate, UserLogin, AuthResponse, UserResponse
 from auth import hash_password, verify_password, create_access_token, get_current_user_id
 from datetime import datetime, timedelta
@@ -145,3 +146,51 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         subscription_end_date=user.get("subscription_end_date"),
         created_at=user["created_at"]
     )
+
+
+# ===== PROFILE SETTINGS =====
+
+class ProfileUpdate(BaseModel):
+    first_name: str = ""
+    last_name: str = ""
+    phone: str = ""
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.put("/profile")
+async def update_profile(data: ProfileUpdate, user_id: str = Depends(get_current_user_id)):
+    """Update user profile (name, phone)"""
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    full_name = f"{data.first_name} {data.last_name}".strip()
+    if not full_name:
+        raise HTTPException(status_code=400, detail="Name cannot be empty")
+
+    update_fields = {
+        "name": full_name,
+        "phone": data.phone,
+        "updated_at": datetime.utcnow()
+    }
+    await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_fields})
+    return {"success": True, "message": "Profile updated successfully"}
+
+@router.put("/change-password")
+async def change_password(data: PasswordChange, user_id: str = Depends(get_current_user_id)):
+    """Change user password"""
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if not verify_password(data.current_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    new_hash = hash_password(data.new_password)
+    await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": {"password": new_hash, "updated_at": datetime.utcnow()}})
+    return {"success": True, "message": "Password changed successfully"}

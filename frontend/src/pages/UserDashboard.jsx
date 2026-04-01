@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save, ChevronDown } from 'lucide-react';
+import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save, ChevronDown, Settings } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -706,6 +706,9 @@ const UserDashboard = () => {
               </Button>
               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white" onClick={() => setShowSupportModal(true)} data-testid="support-button">
                 <MessageSquare className="w-4 h-4 mr-1" /> Support
+              </Button>
+              <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white" onClick={() => navigate('/settings')} data-testid="settings-button">
+                <Settings className="w-4 h-4 mr-1" /> Settings
               </Button>
               <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={handleLogout} data-testid="logout-button">
                 <LogOut className="w-5 h-5 mr-2" /> Logout
