@@ -24,9 +24,11 @@ async def scrape_url(url: str) -> dict:
     """Scrape basic information from a URL"""
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5"
         }
-        async with httpx.AsyncClient(timeout=15, follow_redirects=True, verify=False) as client:
+        async with httpx.AsyncClient(timeout=30, follow_redirects=True, verify=False) as client:
             response = await client.get(url, headers=headers)
             response.raise_for_status()
         
@@ -70,21 +72,13 @@ async def scrape_url(url: str) -> dict:
         raise HTTPException(status_code=400, detail=f"Could not scrape URL: {str(e)}")
 
 async def analyze_with_llm(scraped_data: dict, url: str) -> str:
-    """Use GPT-5.2 via emergentintegrations to analyze the scraped data - Deep Report"""
+    """Use GPT-5.2 via emergentintegrations to analyze the scraped data - Deep Report with retry"""
     from emergentintegrations.llm.chat import LlmChat, UserMessage
+    import asyncio
     
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="LLM key not configured")
-    
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=f"ai-visibility-{datetime.utcnow().timestamp()}",
-        system_message="""You are an expert SEO strategist and AI visibility analyst with deep knowledge of search engine algorithms, AI-powered search (Google SGE, Bing Copilot, Perplexity, ChatGPT Browse), and content optimization. 
-
-You produce comprehensive, professional-grade audit reports that are data-driven, actionable, and cite real industry sources. Your reports are thorough — minimum one full page of detailed analysis covering every aspect of the website's SEO health and AI discoverability."""
-    )
-    chat.with_model("openai", "gpt-5.2")
     
     prompt = f"""Produce a COMPREHENSIVE and DETAILED AI Visibility & SEO Deep Audit Report for the following website. The report must be thorough (minimum one full page), professionally structured, and include citations to authoritative sources.
 
@@ -125,10 +119,29 @@ Return the analysis as a JSON object with these exact keys:
 }}
 
 IMPORTANT: Return ONLY valid JSON. No markdown code fences. Ensure the detailed_analysis field contains a thorough multi-paragraph report."""
+
+    max_retries = 3
+    last_error = None
+    for attempt in range(max_retries):
+        try:
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=f"ai-visibility-{datetime.utcnow().timestamp()}-{attempt}",
+                system_message="""You are an expert SEO strategist and AI visibility analyst with deep knowledge of search engine algorithms, AI-powered search (Google SGE, Bing Copilot, Perplexity, ChatGPT Browse), and content optimization. 
+
+You produce comprehensive, professional-grade audit reports that are data-driven, actionable, and cite real industry sources. Your reports are thorough — minimum one full page of detailed analysis covering every aspect of the website's SEO health and AI discoverability."""
+            )
+            chat.with_model("openai", "gpt-5.2")
+            user_message = UserMessage(text=prompt)
+            response = await chat.send_message(user_message)
+            return response
+        except Exception as e:
+            last_error = e
+            logging.warning(f"LLM attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+            if attempt < max_retries - 1:
+                await asyncio.sleep(2 * (attempt + 1))
     
-    user_message = UserMessage(text=prompt)
-    response = await chat.send_message(user_message)
-    return response
+    raise HTTPException(status_code=503, detail=f"AI analysis temporarily unavailable. Please try again in a moment.")
 
 @router.post("/analyze")
 async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_current_user_id)):
@@ -161,10 +174,22 @@ async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_cu
         url = 'https://' + url
     
     # Scrape the URL
-    scraped_data = await scrape_url(url)
+    try:
+        scraped_data = await scrape_url(url)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Scraping failed for {url}: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Could not access or scrape the URL. Please check the URL is correct and accessible.")
     
-    # Analyze with LLM
-    llm_response = await analyze_with_llm(scraped_data, url)
+    # Analyze with LLM (has built-in retry)
+    try:
+        llm_response = await analyze_with_llm(scraped_data, url)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"LLM analysis failed for {url}: {str(e)}")
+        raise HTTPException(status_code=503, detail="AI analysis temporarily unavailable. Please try again in a moment.")
     
     # Parse LLM response as JSON
     import json
