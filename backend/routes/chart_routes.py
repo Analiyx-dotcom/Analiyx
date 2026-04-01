@@ -199,3 +199,23 @@ async def get_reports(user_id: str = Depends(get_current_user_id)):
             "has_charts": True,
         })
     return {"reports": reports}
+
+
+# --- Chart Theme Preferences ---
+class ThemeUpdate(BaseModel):
+    theme: str
+
+@router.put("/theme")
+async def save_chart_theme(data: ThemeUpdate, user_id: str = Depends(get_current_user_id)):
+    """Save user's preferred chart color theme"""
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"chart_theme": data.theme, "updated_at": datetime.utcnow()}}
+    )
+    return {"success": True, "theme": data.theme}
+
+@router.get("/theme")
+async def get_chart_theme(user_id: str = Depends(get_current_user_id)):
+    """Get user's preferred chart color theme"""
+    user = await db.users.find_one({"_id": ObjectId(user_id)}, {"_id": 0, "chart_theme": 1})
+    return {"theme": user.get("chart_theme", "default") if user else "default"}
