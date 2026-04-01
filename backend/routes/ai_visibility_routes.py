@@ -72,14 +72,19 @@ async def scrape_url(url: str) -> dict:
         raise HTTPException(status_code=400, detail=f"Could not scrape URL: {str(e)}")
 
 async def analyze_with_llm(scraped_data: dict, url: str) -> str:
-    """Use GPT-5.2 via emergentintegrations to analyze the scraped data - Deep Report with retry"""
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    """Use Google Gemini 2.0 Flash to analyze the scraped data - Deep Report with retry"""
+    from google import genai
+    from google.genai import types
     import asyncio
     
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="LLM key not configured")
+        raise HTTPException(status_code=500, detail="Gemini API key not configured")
     
+    system_instruction = """You are an expert SEO strategist and AI visibility analyst with deep knowledge of search engine algorithms, AI-powered search (Google SGE, Bing Copilot, Perplexity, ChatGPT Browse), and content optimization. 
+
+You produce comprehensive, professional-grade audit reports that are data-driven, actionable, and cite real industry sources. Your reports are thorough — minimum one full page of detailed analysis covering every aspect of the website's SEO health and AI discoverability."""
+
     prompt = f"""Produce a COMPREHENSIVE and DETAILED AI Visibility & SEO Deep Audit Report for the following website. The report must be thorough (minimum one full page), professionally structured, and include citations to authoritative sources.
 
 === WEBSITE DATA ===
@@ -124,24 +129,26 @@ IMPORTANT: Return ONLY valid JSON. No markdown code fences. Ensure the detailed_
     last_error = None
     for attempt in range(max_retries):
         try:
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=f"ai-visibility-{datetime.utcnow().timestamp()}-{attempt}",
-                system_message="""You are an expert SEO strategist and AI visibility analyst with deep knowledge of search engine algorithms, AI-powered search (Google SGE, Bing Copilot, Perplexity, ChatGPT Browse), and content optimization. 
-
-You produce comprehensive, professional-grade audit reports that are data-driven, actionable, and cite real industry sources. Your reports are thorough — minimum one full page of detailed analysis covering every aspect of the website's SEO health and AI discoverability."""
+            client = genai.Client(api_key=api_key)
+            config = types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                temperature=0.7,
+                max_output_tokens=8192,
             )
-            chat.with_model("openai", "gpt-5.2")
-            user_message = UserMessage(text=prompt)
-            response = await chat.send_message(user_message)
-            return response
+            response = client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=prompt,
+                config=config,
+            )
+            return response.text
         except Exception as e:
             last_error = e
             error_msg = str(e).lower()
-            logging.warning(f"LLM attempt {attempt + 1}/{max_retries} failed: {str(e)}")
-            # Budget exceeded — don't retry, inform user immediately
-            if "budget" in error_msg and "exceeded" in error_msg:
-                raise HTTPException(status_code=402, detail="AI analysis budget exceeded. Please go to Profile > Universal Key > Add Balance to continue using AI features.")
+            logging.warning(f"Gemini attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+            if "api key" in error_msg or "permission" in error_msg or "invalid" in error_msg:
+                raise HTTPException(status_code=401, detail="Gemini API key is invalid or expired. Please check your API key.")
+            if "resource_exhausted" in error_msg or "quota" in error_msg or "429" in error_msg:
+                raise HTTPException(status_code=429, detail="Gemini API quota exceeded. Please check your Google AI Studio plan and billing details at https://ai.google.dev/gemini-api/docs/rate-limits")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 * (attempt + 1))
     
