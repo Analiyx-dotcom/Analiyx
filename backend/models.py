@@ -25,6 +25,7 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    phone: str = ""
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -48,6 +49,8 @@ class UserResponse(BaseModel):
     id: str
     name: str
     email: str
+    phone: str = ""
+    client_id: str = ""
     plan: str
     status: str
     credits: int

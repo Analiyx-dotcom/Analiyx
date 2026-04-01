@@ -52,6 +52,8 @@ async def get_all_users_details(admin_user: dict = Depends(require_admin)):
             "id": str(user_id),
             "name": user["name"],
             "email": user["email"],
+            "phone": user.get("phone", ""),
+            "client_id": user.get("client_id", ""),
             "plan": user.get("plan", "Trial"),
             "status": user.get("status", "active"),
             "role": user.get("role", "user"),
@@ -383,3 +385,67 @@ async def get_user_activity(
             for i in integrations
         ]
     }
+
+
+# ===== COUPON MANAGEMENT =====
+
+class CouponCreate(BaseModel):
+    code: str
+    discount_percentage: int  # 1-100
+
+class CouponValidateRequest(BaseModel):
+    code: str
+
+@router.post("/coupons")
+async def create_coupon(coupon: CouponCreate, admin_user: dict = Depends(require_admin)):
+    """Admin: Create a new coupon code"""
+    if coupon.discount_percentage < 1 or coupon.discount_percentage > 100:
+        raise HTTPException(status_code=400, detail="Discount must be between 1 and 100")
+
+    existing = await db.coupons.find_one({"code": coupon.code.upper()})
+    if existing:
+        raise HTTPException(status_code=400, detail="Coupon code already exists")
+
+    coupon_doc = {
+        "code": coupon.code.upper(),
+        "discount_percentage": coupon.discount_percentage,
+        "is_active": True,
+        "usage_count": 0,
+        "created_at": datetime.utcnow()
+    }
+    await db.coupons.insert_one(coupon_doc)
+    return {"success": True, "message": f"Coupon {coupon.code.upper()} created with {coupon.discount_percentage}% discount"}
+
+@router.get("/coupons")
+async def list_coupons(admin_user: dict = Depends(require_admin)):
+    """Admin: List all coupons"""
+    coupons = await db.coupons.find().sort("created_at", -1).to_list(200)
+    return {
+        "coupons": [{
+            "id": str(c["_id"]),
+            "code": c["code"],
+            "discount_percentage": c["discount_percentage"],
+            "is_active": c.get("is_active", True),
+            "usage_count": c.get("usage_count", 0),
+            "created_at": c["created_at"].isoformat()
+        } for c in coupons]
+    }
+
+@router.put("/coupons/{coupon_id}/toggle")
+async def toggle_coupon(coupon_id: str, admin_user: dict = Depends(require_admin)):
+    """Admin: Toggle coupon active/inactive"""
+    coupon = await db.coupons.find_one({"_id": ObjectId(coupon_id)})
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+
+    new_status = not coupon.get("is_active", True)
+    await db.coupons.update_one({"_id": ObjectId(coupon_id)}, {"$set": {"is_active": new_status}})
+    return {"success": True, "is_active": new_status}
+
+@router.delete("/coupons/{coupon_id}")
+async def delete_coupon(coupon_id: str, admin_user: dict = Depends(require_admin)):
+    """Admin: Delete a coupon"""
+    result = await db.coupons.delete_one({"_id": ObjectId(coupon_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    return {"success": True, "message": "Coupon deleted"}

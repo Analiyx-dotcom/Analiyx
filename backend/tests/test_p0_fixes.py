@@ -67,7 +67,7 @@ class TestCashfreePayment(TestSetup):
         """Test payment order creation for Starter plan"""
         response = api_client.post(
             f"{BASE_URL}/api/payments/create-order",
-            json={"plan": "Starter", "return_url": "https://data-analytics-dev.preview.emergentagent.com"},
+            json={"plan": "Starter", "return_url": "https://deep-report-beta.preview.emergentagent.com"},
             headers=auth_headers
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
@@ -89,7 +89,7 @@ class TestCashfreePayment(TestSetup):
         """Test payment order creation for Business Pro plan"""
         response = api_client.post(
             f"{BASE_URL}/api/payments/create-order",
-            json={"plan": "Business Pro", "return_url": "https://data-analytics-dev.preview.emergentagent.com"},
+            json={"plan": "Business Pro", "return_url": "https://deep-report-beta.preview.emergentagent.com"},
             headers=auth_headers
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
@@ -104,7 +104,7 @@ class TestCashfreePayment(TestSetup):
         """Test payment order creation with invalid plan returns 400"""
         response = api_client.post(
             f"{BASE_URL}/api/payments/create-order",
-            json={"plan": "InvalidPlan", "return_url": "https://data-analytics-dev.preview.emergentagent.com"},
+            json={"plan": "InvalidPlan", "return_url": "https://deep-report-beta.preview.emergentagent.com"},
             headers=auth_headers
         )
         assert response.status_code == 400, f"Expected 400 for invalid plan, got {response.status_code}"

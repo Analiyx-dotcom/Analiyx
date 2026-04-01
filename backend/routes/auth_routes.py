@@ -24,10 +24,16 @@ async def register(user_data: UserCreate):
     # Hash password
     hashed_password = hash_password(user_data.password)
     
+    # Generate unique client ID
+    count = await db.users.count_documents({})
+    client_id = f"ANX-{count + 1:05d}"
+    
     # Create user document - 7 day trial with Trial plan
     user_doc = {
         "name": user_data.name,
         "email": user_data.email,
+        "phone": user_data.phone,
+        "client_id": client_id,
         "password": hashed_password,
         "plan": "Trial",
         "status": "active",
@@ -51,6 +57,8 @@ async def register(user_data: UserCreate):
         id=str(user_doc["_id"]),
         name=user_doc["name"],
         email=user_doc["email"],
+        phone=user_doc.get("phone", ""),
+        client_id=user_doc.get("client_id", ""),
         plan=user_doc["plan"],
         status=user_doc["status"],
         credits=user_doc["credits"],
@@ -96,6 +104,8 @@ async def login(credentials: UserLogin):
         id=str(user["_id"]),
         name=user["name"],
         email=user["email"],
+        phone=user.get("phone", ""),
+        client_id=user.get("client_id", ""),
         plan=user["plan"],
         status=user["status"],
         credits=user["credits"],
@@ -125,6 +135,8 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         id=str(user["_id"]),
         name=user["name"],
         email=user["email"],
+        phone=user.get("phone", ""),
+        client_id=user.get("client_id", ""),
         plan=user["plan"],
         status=user["status"],
         credits=user["credits"],

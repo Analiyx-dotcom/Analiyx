@@ -12,6 +12,7 @@ const Signup = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
+    phone: '',
     password: '',
     confirmPassword: ''
   });
@@ -43,6 +44,7 @@ const Signup = () => {
       const data = await authAPI.register({
         name: formData.name,
         email: formData.email,
+        phone: formData.phone,
         password: formData.password
       });
       
@@ -118,6 +120,21 @@ const Signup = () => {
                 onChange={handleChange}
                 required
                 className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                data-testid="signup-email-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-gray-300">Phone Number</Label>
+              <Input
+                id="phone"
+                name="phone"
+                type="tel"
+                placeholder="+91 9876543210"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500"
+                data-testid="signup-phone-input"
               />
             </div>
             <div className="space-y-2">

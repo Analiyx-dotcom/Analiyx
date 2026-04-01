@@ -70,7 +70,7 @@ async def scrape_url(url: str) -> dict:
         raise HTTPException(status_code=400, detail=f"Could not scrape URL: {str(e)}")
 
 async def analyze_with_llm(scraped_data: dict, url: str) -> str:
-    """Use GPT-5.2 via emergentintegrations to analyze the scraped data"""
+    """Use GPT-5.2 via emergentintegrations to analyze the scraped data - Deep Report"""
     from emergentintegrations.llm.chat import LlmChat, UserMessage
     
     api_key = os.environ.get("EMERGENT_LLM_KEY")
@@ -80,37 +80,51 @@ async def analyze_with_llm(scraped_data: dict, url: str) -> str:
     chat = LlmChat(
         api_key=api_key,
         session_id=f"ai-visibility-{datetime.utcnow().timestamp()}",
-        system_message="""You are an expert SEO and AI visibility analyst. Analyze the provided website data and return a structured JSON analysis. Be specific, data-driven, and actionable. Return ONLY valid JSON with no markdown formatting."""
+        system_message="""You are an expert SEO strategist and AI visibility analyst with deep knowledge of search engine algorithms, AI-powered search (Google SGE, Bing Copilot, Perplexity, ChatGPT Browse), and content optimization. 
+
+You produce comprehensive, professional-grade audit reports that are data-driven, actionable, and cite real industry sources. Your reports are thorough — minimum one full page of detailed analysis covering every aspect of the website's SEO health and AI discoverability."""
     )
     chat.with_model("openai", "gpt-5.2")
     
-    prompt = f"""Analyze this website for AI visibility and SEO performance:
+    prompt = f"""Produce a COMPREHENSIVE and DETAILED AI Visibility & SEO Deep Audit Report for the following website. The report must be thorough (minimum one full page), professionally structured, and include citations to authoritative sources.
 
+=== WEBSITE DATA ===
 URL: {url}
 Title: {scraped_data['title']}
 Meta Description: {scraped_data['meta_description']}
 Keywords: {scraped_data['meta_keywords']}
-H1 Tags: {', '.join(scraped_data['h1_tags']) if scraped_data['h1_tags'] else 'None'}
-H2 Tags: {', '.join(scraped_data['h2_tags'][:5]) if scraped_data['h2_tags'] else 'None'}
-Images: {scraped_data['total_images']} (without alt: {scraped_data['images_without_alt']})
+H1 Tags: {', '.join(scraped_data['h1_tags']) if scraped_data['h1_tags'] else 'None found'}
+H2 Tags: {', '.join(scraped_data['h2_tags'][:8]) if scraped_data['h2_tags'] else 'None found'}
+Total Images: {scraped_data['total_images']} (Missing Alt Text: {scraped_data['images_without_alt']})
 Internal Links: {scraped_data['internal_links']}, External Links: {scraped_data['external_links']}
-Has Structured Data: {scraped_data['has_structured_data']}
+Has Structured Data (JSON-LD): {scraped_data['has_structured_data']}
 Word Count: {scraped_data['word_count']}
-Content Preview: {scraped_data['body_text_preview'][:500]}
+Content Preview: {scraped_data['body_text_preview'][:800]}
+=== END DATA ===
 
-Return analysis as JSON with these exact keys:
+Return the analysis as a JSON object with these exact keys:
 {{
   "overall_score": <number 0-100>,
   "seo_score": <number 0-100>,
   "ai_visibility_score": <number 0-100>,
   "content_quality_score": <number 0-100>,
   "technical_seo_score": <number 0-100>,
-  "summary": "<2 sentence summary>",
-  "strengths": ["<strength 1>", "<strength 2>", "<strength 3>"],
-  "improvements": ["<improvement 1>", "<improvement 2>", "<improvement 3>", "<improvement 4>"],
-  "ai_recommendations": ["<how to improve AI discoverability 1>", "<recommendation 2>", "<recommendation 3>"],
-  "keyword_suggestions": ["<keyword 1>", "<keyword 2>", "<keyword 3>", "<keyword 4>", "<keyword 5>"]
-}}"""
+  "summary": "<A detailed 4-5 sentence executive summary of the site's overall SEO and AI visibility health>",
+  "detailed_analysis": "<A comprehensive multi-paragraph deep analysis (minimum 800 words) covering: 1) On-Page SEO Assessment (title tags, meta descriptions, heading hierarchy, keyword usage, content depth), 2) Technical SEO Evaluation (structured data, page speed indicators, mobile-friendliness signals, internal linking structure, crawlability), 3) AI Visibility & Discoverability (how well the site is optimized for AI-powered search engines like Google SGE, Bing Copilot, Perplexity AI, and ChatGPT Browse — covering entity recognition, factual accuracy, structured data for AI, content formatting for snippet extraction), 4) Content Quality Assessment (E-E-A-T signals, content depth, uniqueness, readability), 5) Competitive Positioning (where this site likely stands vs industry benchmarks). Use paragraph breaks with double newlines for readability.>",
+  "strengths": ["<detailed strength 1>", "<detailed strength 2>", "<detailed strength 3>", "<detailed strength 4>", "<detailed strength 5>"],
+  "improvements": ["<specific actionable improvement 1>", "<improvement 2>", "<improvement 3>", "<improvement 4>", "<improvement 5>", "<improvement 6>"],
+  "ai_recommendations": ["<specific recommendation for AI search visibility 1>", "<recommendation 2>", "<recommendation 3>", "<recommendation 4>", "<recommendation 5>"],
+  "keyword_suggestions": ["<keyword 1>", "<keyword 2>", "<keyword 3>", "<keyword 4>", "<keyword 5>", "<keyword 6>", "<keyword 7>", "<keyword 8>"],
+  "citations": [
+    {{"source": "<Source name e.g. Google Search Central>", "url": "<URL>", "context": "<How this source is relevant>"}},
+    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}},
+    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}},
+    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}},
+    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}}
+  ]
+}}
+
+IMPORTANT: Return ONLY valid JSON. No markdown code fences. Ensure the detailed_analysis field contains a thorough multi-paragraph report."""
     
     user_message = UserMessage(text=prompt)
     response = await chat.send_message(user_message)

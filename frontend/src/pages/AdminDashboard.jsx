@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { adminAPI } from '../services/api';
-import { Users, DollarSign, Database, TrendingUp, ArrowUp, ArrowDown, LogOut, Sparkles, Menu, X, MessageSquare, CheckCircle, Loader2, Download, ShieldAlert, Clock, Send, FileText, Ban, Shield } from 'lucide-react';
+import { Users, DollarSign, Database, TrendingUp, ArrowUp, ArrowDown, LogOut, Sparkles, Menu, X, MessageSquare, CheckCircle, Loader2, Download, ShieldAlert, Clock, Send, FileText, Ban, Shield, Search, Tag, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -25,6 +25,10 @@ const AdminDashboard = () => {
   const [tickets, setTickets] = useState([]);
   const [replyText, setReplyText] = useState({});
   const [expandedTicket, setExpandedTicket] = useState(null);
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+  const [coupons, setCoupons] = useState([]);
+  const [newCouponCode, setNewCouponCode] = useState('');
+  const [newCouponDiscount, setNewCouponDiscount] = useState('');
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -76,7 +80,49 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (activeTab === 'tickets') fetchTickets();
+    if (activeTab === 'coupons') fetchCoupons();
   }, [activeTab]);
+
+  const fetchCoupons = async () => {
+    try {
+      const res = await api.get('/admin/manage/coupons');
+      setCoupons(res.data.coupons || []);
+    } catch {}
+  };
+
+  const handleCreateCoupon = async () => {
+    if (!newCouponCode.trim() || !newCouponDiscount) return;
+    const discount = parseInt(newCouponDiscount);
+    if (isNaN(discount) || discount < 1 || discount > 100) {
+      toast({ title: 'Error', description: 'Discount must be between 1 and 100', variant: 'destructive' });
+      return;
+    }
+    try {
+      await api.post('/admin/manage/coupons', { code: newCouponCode.trim(), discount_percentage: discount });
+      setNewCouponCode('');
+      setNewCouponDiscount('');
+      fetchCoupons();
+      toast({ title: 'Coupon Created', description: `Coupon ${newCouponCode.toUpperCase()} created.` });
+    } catch (error) {
+      toast({ title: 'Error', description: error.response?.data?.detail || 'Failed to create coupon.', variant: 'destructive' });
+    }
+  };
+
+  const handleToggleCoupon = async (couponId) => {
+    try {
+      await api.put(`/admin/manage/coupons/${couponId}/toggle`);
+      fetchCoupons();
+    } catch {}
+  };
+
+  const handleDeleteCoupon = async (couponId) => {
+    if (!window.confirm('Delete this coupon?')) return;
+    try {
+      await api.delete(`/admin/manage/coupons/${couponId}`);
+      fetchCoupons();
+      toast({ title: 'Deleted', description: 'Coupon deleted.' });
+    } catch {}
+  };
 
   const handleUpdateUserStatus = async (userId, newStatus) => {
     try {
@@ -199,6 +245,7 @@ const AdminDashboard = () => {
     { id: 'dashboard', label: 'Dashboard', icon: TrendingUp },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'tickets', label: 'Tickets', icon: MessageSquare },
+    { id: 'coupons', label: 'Coupons', icon: Tag },
     { id: 'datasources', label: 'Data Sources', icon: Database },
     { id: 'revenue', label: 'Revenue', icon: DollarSign },
     { id: 'slack', label: 'Slack', icon: MessageSquare },
@@ -271,7 +318,17 @@ const AdminDashboard = () => {
     </div>
   );
 
-  const renderUsersTab = () => (
+  const renderUsersTab = () => {
+    const filteredUsers = userSearchQuery.trim()
+      ? detailedUsers.filter(u => 
+          (u.client_id || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+          (u.phone || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+          (u.name || '').toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+          (u.email || '').toLowerCase().includes(userSearchQuery.toLowerCase())
+        )
+      : detailedUsers;
+
+    return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div><h1 className="text-3xl font-bold text-white mb-2">User Management</h1><p className="text-gray-400">Manage all registered users</p></div>
@@ -281,18 +338,30 @@ const AdminDashboard = () => {
           <Button variant="outline" size="sm" onClick={fetchDashboardData} className="border-purple-500 text-purple-400">Refresh</Button>
         </div>
       </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+        <Input
+          value={userSearchQuery}
+          onChange={(e) => setUserSearchQuery(e.target.value)}
+          placeholder="Search by Client ID, Phone, Name or Email..."
+          className="bg-gray-800 border-gray-700 text-white pl-10"
+          data-testid="admin-user-search"
+        />
+      </div>
       <Card className="bg-gray-900 border-gray-800">
         <CardContent className="p-0">
           {isLoading ? <div className="text-center py-8 text-gray-400">Loading...</div> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-gray-800">
-                  {['Name', 'Email', 'Plan', 'Credits', 'Status', 'Sub. End', 'Joined', 'Actions'].map(h => <th key={h} className="text-left py-3 px-4 text-gray-400 font-medium">{h}</th>)}
+                  {['Client ID', 'Name', 'Phone', 'Email', 'Plan', 'Credits', 'Status', 'Sub. End', 'Joined', 'Actions'].map(h => <th key={h} className="text-left py-3 px-4 text-gray-400 font-medium">{h}</th>)}
                 </tr></thead>
                 <tbody>
-                  {detailedUsers.map((u) => (
+                  {filteredUsers.map((u) => (
                     <tr key={u.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                      <td className="py-3 px-4 text-purple-400 font-mono text-xs" data-testid={`user-client-id-${u.id}`}>{u.client_id || '-'}</td>
                       <td className="py-3 px-4 text-white">{u.name}</td>
+                      <td className="py-3 px-4 text-gray-400 text-xs" data-testid={`user-phone-${u.id}`}>{u.phone || '-'}</td>
                       <td className="py-3 px-4 text-gray-400 text-xs">{u.email}</td>
                       <td className="py-3 px-4"><Badge variant="secondary" className="bg-purple-900/30 text-purple-400 border-purple-700">{u.plan}</Badge></td>
                       <td className="py-3 px-4 text-white">{u.credits}</td>
@@ -319,6 +388,7 @@ const AdminDashboard = () => {
                       </td>
                     </tr>
                   ))}
+                  {filteredUsers.length === 0 && <tr><td colSpan="10" className="text-center py-8 text-gray-500">No users found</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -326,7 +396,7 @@ const AdminDashboard = () => {
         </CardContent>
       </Card>
     </div>
-  );
+  );};
 
   const renderTicketsTab = () => (
     <div className="space-y-6">
@@ -532,10 +602,68 @@ const AdminDashboard = () => {
     </div>
   );
 
+  const renderCouponsTab = () => (
+    <div className="space-y-6">
+      <div><h1 className="text-3xl font-bold text-white mb-2">Coupon Management</h1><p className="text-gray-400">Create and manage discount coupon codes</p></div>
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader><CardTitle className="text-white flex items-center"><Tag className="w-5 h-5 mr-2" /> Create New Coupon</CardTitle></CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-3 items-end">
+            <div className="flex-1 min-w-[200px]">
+              <label className="text-gray-400 text-sm mb-1 block">Coupon Code</label>
+              <Input value={newCouponCode} onChange={(e) => setNewCouponCode(e.target.value)} placeholder="e.g. SAVE20" className="bg-gray-800 border-gray-700 text-white uppercase" data-testid="coupon-code-input" />
+            </div>
+            <div className="w-32">
+              <label className="text-gray-400 text-sm mb-1 block">Discount %</label>
+              <Input type="number" min="1" max="100" value={newCouponDiscount} onChange={(e) => setNewCouponDiscount(e.target.value)} placeholder="20" className="bg-gray-800 border-gray-700 text-white" data-testid="coupon-discount-input" />
+            </div>
+            <Button onClick={handleCreateCoupon} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" data-testid="create-coupon-btn"><Plus className="w-4 h-4 mr-1" /> Create</Button>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="bg-gray-900 border-gray-800">
+        <CardHeader><CardTitle className="text-white">Active Coupons</CardTitle></CardHeader>
+        <CardContent className="p-0">
+          {coupons.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No coupons created yet</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b border-gray-800">
+                  {['Code', 'Discount', 'Status', 'Used', 'Created', 'Actions'].map(h => <th key={h} className="text-left py-3 px-4 text-gray-400 font-medium">{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {coupons.map((c) => (
+                    <tr key={c.id} className="border-b border-gray-800 hover:bg-gray-800/50">
+                      <td className="py-3 px-4 text-white font-mono font-bold" data-testid={`coupon-row-${c.code}`}>{c.code}</td>
+                      <td className="py-3 px-4 text-green-400 font-bold">{c.discount_percentage}%</td>
+                      <td className="py-3 px-4"><Badge className={c.is_active ? 'bg-green-900/30 text-green-400 border-green-700' : 'bg-red-900/30 text-red-400 border-red-700'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></td>
+                      <td className="py-3 px-4 text-gray-400">{c.usage_count}x</td>
+                      <td className="py-3 px-4 text-gray-400 text-xs">{new Date(c.created_at).toLocaleDateString()}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => handleToggleCoupon(c.id)} className={c.is_active ? 'border-yellow-500 text-yellow-400 hover:bg-yellow-900/20' : 'border-green-500 text-green-400 hover:bg-green-900/20'} data-testid={`toggle-coupon-${c.id}`}>
+                            {c.is_active ? <><ToggleRight className="w-3 h-3 mr-1" />Disable</> : <><ToggleLeft className="w-3 h-3 mr-1" />Enable</>}
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteCoupon(c.id)} className="border-red-500 text-red-400 hover:bg-red-900/20" data-testid={`delete-coupon-${c.id}`}><Trash2 className="w-3 h-3" /></Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeTab) {
       case 'users': return renderUsersTab();
       case 'tickets': return renderTicketsTab();
+      case 'coupons': return renderCouponsTab();
       case 'datasources': return renderDataSourcesTab();
       case 'revenue': return renderRevenueTab();
       case 'slack': return renderSlackTab();

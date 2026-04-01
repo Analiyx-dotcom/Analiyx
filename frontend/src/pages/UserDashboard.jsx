@@ -39,6 +39,9 @@ const UserDashboard = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [couponApplied, setCouponApplied] = useState(null);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
   const [searchParams] = useSearchParams();
   const [integrationStatus, setIntegrationStatus] = useState({});
   const [slackConnected, setSlackConnected] = useState(false);
@@ -453,7 +456,11 @@ const UserDashboard = () => {
   const handleUpgrade = async (planName) => {
     setIsProcessingPayment(true);
     try {
-      const response = await api.post('/payments/create-order', { plan: planName });
+      const payload = { plan: planName };
+      if (couponApplied && couponApplied.code) {
+        payload.coupon_code = couponApplied.code;
+      }
+      const response = await api.post('/payments/create-order', payload);
       const { order_id, amount, currency, key_id, user_name, user_email } = response.data;
       await loadRazorpaySDK();
       const options = {
@@ -474,6 +481,8 @@ const UserDashboard = () => {
             refreshUser();
             setShowUpgradeModal(false);
             setTrialExpired(false);
+            setCouponCode('');
+            setCouponApplied(null);
           } catch {
             toast({ title: 'Verification Failed', description: 'Payment received but verification failed. Contact support.', variant: 'destructive' });
           }
@@ -487,6 +496,19 @@ const UserDashboard = () => {
     } catch (error) {
       toast({ title: 'Payment Error', description: error.response?.data?.detail || 'Failed to initiate payment. Please try again.', variant: 'destructive' });
     } finally { setIsProcessingPayment(false); }
+  };
+
+  const handleValidateCoupon = async (planName) => {
+    if (!couponCode.trim()) return;
+    setIsValidatingCoupon(true);
+    try {
+      const res = await api.post('/payments/validate-coupon', { code: couponCode.trim(), plan: planName });
+      setCouponApplied(res.data);
+      toast({ title: 'Coupon Applied!', description: `${res.data.discount_percentage}% discount applied.` });
+    } catch (error) {
+      setCouponApplied(null);
+      toast({ title: 'Invalid Coupon', description: error.response?.data?.detail || 'Coupon code is invalid.', variant: 'destructive' });
+    } finally { setIsValidatingCoupon(false); }
   };
 
   // Check payment status on return
@@ -1018,6 +1040,38 @@ const UserDashboard = () => {
                   </Card>
                 </div>
 
+                {/* Deep Analysis Report */}
+                {aiAnalysis.detailed_analysis && (
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm flex items-center"><FileBarChart className="w-4 h-4 mr-2 text-purple-400" /> Deep Analysis Report</CardTitle></CardHeader>
+                    <CardContent>
+                      <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-line" data-testid="deep-analysis-report">
+                        {aiAnalysis.detailed_analysis}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Citations */}
+                {aiAnalysis.citations && aiAnalysis.citations.length > 0 && (
+                  <Card className="bg-gray-900 border-gray-800">
+                    <CardHeader className="pb-2"><CardTitle className="text-white text-sm flex items-center"><BookOpen className="w-4 h-4 mr-2 text-cyan-400" /> References & Citations</CardTitle></CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {aiAnalysis.citations.map((cite, i) => (
+                          <div key={i} className="bg-gray-800/50 rounded-lg p-3 border border-gray-700/50">
+                            <div className="flex items-start justify-between">
+                              <p className="text-white text-sm font-medium">{cite.source}</p>
+                              {cite.url && <a href={cite.url} target="_blank" rel="noopener noreferrer" className="text-purple-400 text-xs hover:underline ml-2 shrink-0">Visit</a>}
+                            </div>
+                            <p className="text-gray-400 text-xs mt-1">{cite.context}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Technical Details */}
                 {aiAnalysis.scraped_data && (
                   <Card className="bg-gray-900 border-gray-800">
@@ -1350,7 +1404,7 @@ const UserDashboard = () => {
       </Dialog>
 
       {/* Upgrade/Payment Modal */}
-      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+      <Dialog open={showUpgradeModal} onOpenChange={(open) => { setShowUpgradeModal(open); if (!open) { setCouponCode(''); setCouponApplied(null); } }}>
         <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Upgrade Your Plan</DialogTitle>
@@ -1358,12 +1412,22 @@ const UserDashboard = () => {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4 py-4">
             {[
-              { name: 'Starter', price: '6,000', credits: '100', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace', '1 Year Subscription'] },
-              { name: 'Business Pro', price: '9,000', credits: '1,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
-            ].map((plan) => (
+              { name: 'Starter', price: '6,000', rawPrice: 6000, credits: '100', features: ['4 Data Sources', 'AI Visibility (1/month)', '1 Workspace', '1 Year Subscription'] },
+              { name: 'Business Pro', price: '9,000', rawPrice: 9000, credits: '1,000', features: ['Unlimited Sources', 'Unlimited AI Visibility', '10 Workspaces', 'Slack Integration', '1 Year Subscription'] }
+            ].map((plan) => {
+              const discountedPrice = couponApplied ? Math.max(plan.rawPrice - (plan.rawPrice * couponApplied.discount_percentage / 100), 1) : null;
+              return (
               <div key={plan.name} className={`bg-gray-800 rounded-xl p-6 border ${plan.name === 'Business Pro' ? 'border-purple-500' : 'border-gray-700'}`}>
                 <h3 className="text-lg font-bold text-white mb-1">{plan.name}</h3>
-                <p className="text-3xl font-bold text-white mb-1">₹{plan.price}<span className="text-sm text-gray-400">/year</span></p>
+                {couponApplied ? (
+                  <div className="mb-1">
+                    <span className="text-lg text-gray-500 line-through mr-2">₹{plan.price}</span>
+                    <span className="text-3xl font-bold text-green-400">₹{discountedPrice.toLocaleString('en-IN')}</span>
+                    <span className="text-sm text-gray-400">/year</span>
+                  </div>
+                ) : (
+                  <p className="text-3xl font-bold text-white mb-1">₹{plan.price}<span className="text-sm text-gray-400">/year</span></p>
+                )}
                 <p className="text-sm text-gray-400 mb-4">{plan.credits} credits/month</p>
                 <ul className="space-y-2 mb-6">
                   {plan.features.map((f, i) => <li key={i} className="text-gray-300 text-sm flex items-center"><CheckCircle className="w-3 h-3 text-purple-400 mr-2" />{f}</li>)}
@@ -1372,7 +1436,25 @@ const UserDashboard = () => {
                   {isProcessingPayment ? <Loader2 className="w-4 h-4 animate-spin" /> : (user?.plan === plan.name && user?.plan !== 'Trial') ? 'Current Plan' : 'Upgrade'}
                 </Button>
               </div>
-            ))}
+            );})}
+          </div>
+          <div className="border-t border-gray-800 pt-4">
+            <label className="text-gray-400 text-sm mb-2 block">Have a coupon code?</label>
+            <div className="flex gap-2">
+              <Input
+                value={couponCode}
+                onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); if (couponApplied) setCouponApplied(null); }}
+                placeholder="Enter coupon code"
+                className="bg-gray-800 border-gray-700 text-white uppercase"
+                data-testid="coupon-input"
+              />
+              <Button variant="outline" onClick={() => handleValidateCoupon('Starter')} disabled={!couponCode.trim() || isValidatingCoupon} className="border-purple-500 text-purple-400 hover:bg-purple-900/20 whitespace-nowrap" data-testid="apply-coupon-btn">
+                {isValidatingCoupon ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Apply'}
+              </Button>
+            </div>
+            {couponApplied && (
+              <p className="text-green-400 text-sm mt-2" data-testid="coupon-success-msg">Coupon applied: {couponApplied.discount_percentage}% off</p>
+            )}
           </div>
           <p className="text-xs text-gray-500 text-center">Need a custom plan? <a href="mailto:analiyx26@gmail.com" className="text-purple-400 hover:text-purple-300">Contact us</a></p>
         </DialogContent>

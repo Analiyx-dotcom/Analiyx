@@ -7,7 +7,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://data-analytics-dev.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://deep-report-beta.preview.emergentagent.com')
 
 # Test credentials
 TEST_USER = {"email": "testuser@test.com", "password": "test1234"}

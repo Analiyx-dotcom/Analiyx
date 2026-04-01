@@ -2,6 +2,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from typing import Optional
 from auth import get_current_user_id
 from datetime import datetime, timedelta
 from bson import ObjectId
@@ -34,6 +35,7 @@ def get_razorpay_client():
 
 class CreatePaymentRequest(BaseModel):
     plan: str
+    coupon_code: Optional[str] = None
 
 @router.post("/create-order")
 async def create_payment_order(req: CreatePaymentRequest, user_id: str = Depends(get_current_user_id)):
@@ -46,17 +48,36 @@ async def create_payment_order(req: CreatePaymentRequest, user_id: str = Depends
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    # Calculate amount with optional coupon
+    final_amount = plan["amount"]
+    discount_percentage = 0
+    coupon_code = None
+
+    if req.coupon_code:
+        coupon = await db.coupons.find_one({"code": req.coupon_code.upper(), "is_active": True})
+        if not coupon:
+            raise HTTPException(status_code=400, detail="Invalid or expired coupon code")
+        discount_percentage = coupon["discount_percentage"]
+        coupon_code = coupon["code"]
+        discount = (final_amount * discount_percentage) // 100
+        final_amount = final_amount - discount
+
+    if final_amount < 1:
+        final_amount = 1  # Razorpay requires minimum 1 INR
+
     client = get_razorpay_client()
 
     try:
         order_data = {
-            "amount": plan["amount"] * 100,  # Razorpay expects paise
+            "amount": final_amount * 100,  # Razorpay expects paise
             "currency": "INR",
             "payment_capture": 1,
             "notes": {
                 "plan": req.plan,
                 "user_id": user_id,
-                "user_email": user["email"]
+                "user_email": user["email"],
+                "coupon_code": coupon_code or "",
+                "discount_percentage": str(discount_percentage)
             }
         }
         razorpay_order = client.order.create(data=order_data)
@@ -66,7 +87,10 @@ async def create_payment_order(req: CreatePaymentRequest, user_id: str = Depends
             "order_id": razorpay_order["id"],
             "user_id": ObjectId(user_id),
             "plan": req.plan,
-            "amount": plan["amount"],
+            "original_amount": plan["amount"],
+            "discount_percentage": discount_percentage,
+            "coupon_code": coupon_code,
+            "amount": final_amount,
             "currency": "INR",
             "status": "created",
             "duration_months": plan["duration_months"],
@@ -74,10 +98,16 @@ async def create_payment_order(req: CreatePaymentRequest, user_id: str = Depends
         }
         await db.payment_orders.insert_one(order_doc)
 
+        # Increment coupon usage count
+        if coupon_code:
+            await db.coupons.update_one({"code": coupon_code}, {"$inc": {"usage_count": 1}})
+
         return {
             "success": True,
             "order_id": razorpay_order["id"],
-            "amount": plan["amount"] * 100,
+            "amount": final_amount * 100,
+            "original_amount": plan["amount"] * 100,
+            "discount_percentage": discount_percentage,
             "currency": "INR",
             "key_id": os.environ.get("RAZORPAY_KEY_ID"),
             "user_name": user.get("name", "User"),
@@ -160,6 +190,35 @@ async def verify_payment(req: VerifyPaymentRequest, user_id: str = Depends(get_c
         "plan": plan_name,
         "subscription_end_date": subscription_end.isoformat()
     }
+
+
+@router.post("/validate-coupon")
+async def validate_coupon(req: dict, user_id: str = Depends(get_current_user_id)):
+    """Validate a coupon code and return discount info"""
+    code = req.get("code", "").strip().upper()
+    plan = req.get("plan", "")
+    if not code:
+        raise HTTPException(status_code=400, detail="Coupon code is required")
+    if plan not in PLANS:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+
+    coupon = await db.coupons.find_one({"code": code, "is_active": True})
+    if not coupon:
+        raise HTTPException(status_code=400, detail="Invalid or expired coupon code")
+
+    plan_amount = PLANS[plan]["amount"]
+    discount = (plan_amount * coupon["discount_percentage"]) // 100
+    final_amount = max(plan_amount - discount, 1)
+
+    return {
+        "valid": True,
+        "code": coupon["code"],
+        "discount_percentage": coupon["discount_percentage"],
+        "original_amount": plan_amount,
+        "discount_amount": discount,
+        "final_amount": final_amount
+    }
+
 
 @router.get("/order-status/{order_id}")
 async def get_order_status(order_id: str, user_id: str = Depends(get_current_user_id)):
