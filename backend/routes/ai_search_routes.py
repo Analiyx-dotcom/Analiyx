@@ -33,8 +33,7 @@ async def ai_chat(req: ChatMessage, user_id: str = Depends(get_current_user_id))
     if not req.query.strip():
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
-    from google import genai
-    from google.genai import types
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
 
     # Build session_id for conversation continuity
     ws_part = req.workspace_id or "global"
@@ -93,54 +92,21 @@ async def ai_chat(req: ChatMessage, user_id: str = Depends(get_current_user_id))
         }
 
     system_msg = (
-        "You are Analiyx AI, an expert data analytics assistant. You are having an interactive conversation "
-        "with a user about their uploaded data. The user's data context is provided below.\n\n"
-        "RULES:\n"
-        "- Remember the full conversation history. Refer back to previous questions and answers.\n"
-        "- Be conversational, helpful, and specific to the data.\n"
-        "- When asked for analysis, provide concrete numbers, percentages, and actionable insights.\n"
-        "- If user asks follow-up questions, build on previous context.\n"
-        "- Format responses with markdown: use **bold**, bullet points, and headers for readability.\n"
-        "- Use INR (₹) for currency values.\n"
-        "- If data is insufficient for a question, say what's missing and suggest what to upload.\n\n"
-        f"USER'S DATA:\n{data_context}\n{ws_context}"
+        "You are Analiyx AI, a data analytics assistant. Analyze the user's uploaded data.\n"
+        "Rules: Be specific with numbers/percentages. Use markdown formatting. Use INR (₹). "
+        "Build on conversation history. If data is missing, say what to upload.\n\n"
+        f"DATA:\n{data_context}\n{ws_context}"
     )
 
     try:
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Gemini API key not configured")
-        
-        client = genai.Client(api_key=api_key)
-        
-        # Build conversation history for Gemini
-        history = []
-        if req.history:
-            for msg in req.history:
-                role = "model" if msg.role == "assistant" else "user"
-                history.append(types.Content(
-                    role=role,
-                    parts=[types.Part.from_text(text=msg.content)]
-                ))
-        
-        # Add the current user query
-        history.append(types.Content(
-            role="user",
-            parts=[types.Part.from_text(text=req.query)]
-        ))
-        
-        config = types.GenerateContentConfig(
-            system_instruction=system_msg,
-            temperature=0.7,
-            max_output_tokens=4096,
-        )
-        
-        result = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=history,
-            config=config,
-        )
-        response = result.text
+        api_key = os.environ.get("EMERGENT_LLM_KEY")
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=session_id,
+            system_message=system_msg
+        ).with_model("openai", "gpt-5.2")
+
+        response = await chat.send_message(UserMessage(text=req.query))
 
         # Log the chat message
         await db.ai_searches.insert_one({
@@ -157,10 +123,8 @@ async def ai_chat(req: ChatMessage, user_id: str = Depends(get_current_user_id))
     except Exception as e:
         error_msg = str(e).lower()
         logging.error(f"AI Chat error: {str(e)}")
-        if "api key" in error_msg or "permission" in error_msg:
-            raise HTTPException(status_code=401, detail="Gemini API key is invalid or expired.")
-        if "resource_exhausted" in error_msg or "quota" in error_msg or "429" in error_msg:
-            raise HTTPException(status_code=429, detail="Gemini API quota exceeded. Please check your Google AI Studio plan and billing at https://ai.google.dev/gemini-api/docs/rate-limits")
+        if "budget" in error_msg and "exceeded" in error_msg:
+            raise HTTPException(status_code=402, detail="AI budget exceeded. Please add balance (Profile > Universal Key > Add Balance).")
         raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
 
 

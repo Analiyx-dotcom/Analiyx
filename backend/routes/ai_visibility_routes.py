@@ -72,83 +72,67 @@ async def scrape_url(url: str) -> dict:
         raise HTTPException(status_code=400, detail=f"Could not scrape URL: {str(e)}")
 
 async def analyze_with_llm(scraped_data: dict, url: str) -> str:
-    """Use Google Gemini 2.0 Flash to analyze the scraped data - Deep Report with retry"""
-    from google import genai
-    from google.genai import types
+    """Use GPT-5.2 via emergentintegrations - Token-optimized deep report with retry"""
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
     import asyncio
     
-    api_key = os.environ.get("GEMINI_API_KEY")
+    api_key = os.environ.get("EMERGENT_LLM_KEY")
     if not api_key:
-        raise HTTPException(status_code=500, detail="Gemini API key not configured")
+        raise HTTPException(status_code=500, detail="LLM key not configured")
     
-    system_instruction = """You are an expert SEO strategist and AI visibility analyst with deep knowledge of search engine algorithms, AI-powered search (Google SGE, Bing Copilot, Perplexity, ChatGPT Browse), and content optimization. 
+    prompt = f"""Analyze this website for SEO & AI visibility. Return ONLY valid JSON (no markdown fences).
 
-You produce comprehensive, professional-grade audit reports that are data-driven, actionable, and cite real industry sources. Your reports are thorough — minimum one full page of detailed analysis covering every aspect of the website's SEO health and AI discoverability."""
-
-    prompt = f"""Produce a COMPREHENSIVE and DETAILED AI Visibility & SEO Deep Audit Report for the following website. The report must be thorough (minimum one full page), professionally structured, and include citations to authoritative sources.
-
-=== WEBSITE DATA ===
 URL: {url}
 Title: {scraped_data['title']}
-Meta Description: {scraped_data['meta_description']}
-Keywords: {scraped_data['meta_keywords']}
-H1 Tags: {', '.join(scraped_data['h1_tags']) if scraped_data['h1_tags'] else 'None found'}
-H2 Tags: {', '.join(scraped_data['h2_tags'][:8]) if scraped_data['h2_tags'] else 'None found'}
-Total Images: {scraped_data['total_images']} (Missing Alt Text: {scraped_data['images_without_alt']})
-Internal Links: {scraped_data['internal_links']}, External Links: {scraped_data['external_links']}
-Has Structured Data (JSON-LD): {scraped_data['has_structured_data']}
-Word Count: {scraped_data['word_count']}
-Content Preview: {scraped_data['body_text_preview'][:800]}
-=== END DATA ===
+Meta Desc: {scraped_data['meta_description'][:200]}
+Keywords: {scraped_data['meta_keywords'][:150]}
+H1: {', '.join(scraped_data['h1_tags'][:3]) if scraped_data['h1_tags'] else 'None'}
+H2: {', '.join(scraped_data['h2_tags'][:5]) if scraped_data['h2_tags'] else 'None'}
+Images: {scraped_data['total_images']} (no alt: {scraped_data['images_without_alt']})
+Links: {scraped_data['internal_links']} internal, {scraped_data['external_links']} external
+Structured Data: {scraped_data['has_structured_data']}
+Words: {scraped_data['word_count']}
+Preview: {scraped_data['body_text_preview'][:400]}
 
-Return the analysis as a JSON object with these exact keys:
+JSON format:
 {{
-  "overall_score": <number 0-100>,
-  "seo_score": <number 0-100>,
-  "ai_visibility_score": <number 0-100>,
-  "content_quality_score": <number 0-100>,
-  "technical_seo_score": <number 0-100>,
-  "summary": "<A detailed 4-5 sentence executive summary of the site's overall SEO and AI visibility health>",
-  "detailed_analysis": "<A comprehensive multi-paragraph deep analysis (minimum 800 words) covering: 1) On-Page SEO Assessment (title tags, meta descriptions, heading hierarchy, keyword usage, content depth), 2) Technical SEO Evaluation (structured data, page speed indicators, mobile-friendliness signals, internal linking structure, crawlability), 3) AI Visibility & Discoverability (how well the site is optimized for AI-powered search engines like Google SGE, Bing Copilot, Perplexity AI, and ChatGPT Browse — covering entity recognition, factual accuracy, structured data for AI, content formatting for snippet extraction), 4) Content Quality Assessment (E-E-A-T signals, content depth, uniqueness, readability), 5) Competitive Positioning (where this site likely stands vs industry benchmarks). Use paragraph breaks with double newlines for readability.>",
-  "strengths": ["<detailed strength 1>", "<detailed strength 2>", "<detailed strength 3>", "<detailed strength 4>", "<detailed strength 5>"],
-  "improvements": ["<specific actionable improvement 1>", "<improvement 2>", "<improvement 3>", "<improvement 4>", "<improvement 5>", "<improvement 6>"],
-  "ai_recommendations": ["<specific recommendation for AI search visibility 1>", "<recommendation 2>", "<recommendation 3>", "<recommendation 4>", "<recommendation 5>"],
-  "keyword_suggestions": ["<keyword 1>", "<keyword 2>", "<keyword 3>", "<keyword 4>", "<keyword 5>", "<keyword 6>", "<keyword 7>", "<keyword 8>"],
+  "overall_score": <0-100>,
+  "seo_score": <0-100>,
+  "ai_visibility_score": <0-100>,
+  "content_quality_score": <0-100>,
+  "technical_seo_score": <0-100>,
+  "summary": "<3-4 sentence executive summary>",
+  "detailed_analysis": "<Multi-paragraph report (500+ words) covering: On-Page SEO, Technical SEO, AI Discoverability (Google SGE, Perplexity, ChatGPT Browse), Content Quality (E-E-A-T), Competitive Positioning. Use double newlines between sections.>",
+  "strengths": ["<str1>","<str2>","<str3>","<str4>"],
+  "improvements": ["<imp1>","<imp2>","<imp3>","<imp4>","<imp5>"],
+  "ai_recommendations": ["<rec1>","<rec2>","<rec3>","<rec4>"],
+  "keyword_suggestions": ["<kw1>","<kw2>","<kw3>","<kw4>","<kw5>","<kw6>"],
   "citations": [
-    {{"source": "<Source name e.g. Google Search Central>", "url": "<URL>", "context": "<How this source is relevant>"}},
-    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}},
-    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}},
-    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}},
-    {{"source": "<Source name>", "url": "<URL>", "context": "<Relevance>"}}
+    {{"source":"<name>","url":"<url>","context":"<why relevant>"}},
+    {{"source":"<name>","url":"<url>","context":"<why relevant>"}},
+    {{"source":"<name>","url":"<url>","context":"<why relevant>"}}
   ]
-}}
-
-IMPORTANT: Return ONLY valid JSON. No markdown code fences. Ensure the detailed_analysis field contains a thorough multi-paragraph report."""
+}}"""
 
     max_retries = 3
     last_error = None
     for attempt in range(max_retries):
         try:
-            client = genai.Client(api_key=api_key)
-            config = types.GenerateContentConfig(
-                system_instruction=system_instruction,
-                temperature=0.7,
-                max_output_tokens=8192,
+            chat = LlmChat(
+                api_key=api_key,
+                session_id=f"ai-vis-{datetime.utcnow().timestamp()}-{attempt}",
+                system_message="You are an expert SEO & AI visibility analyst. Produce data-driven, actionable audit reports with citations. Return only valid JSON."
             )
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt,
-                config=config,
-            )
-            return response.text
+            chat.with_model("openai", "gpt-5.2")
+            user_message = UserMessage(text=prompt)
+            response = await chat.send_message(user_message)
+            return response
         except Exception as e:
             last_error = e
             error_msg = str(e).lower()
-            logging.warning(f"Gemini attempt {attempt + 1}/{max_retries} failed: {str(e)}")
-            if "api key" in error_msg or "permission" in error_msg or "invalid" in error_msg:
-                raise HTTPException(status_code=401, detail="Gemini API key is invalid or expired. Please check your API key.")
-            if "resource_exhausted" in error_msg or "quota" in error_msg or "429" in error_msg:
-                raise HTTPException(status_code=429, detail="Gemini API quota exceeded. Please check your Google AI Studio plan and billing details at https://ai.google.dev/gemini-api/docs/rate-limits")
+            logging.warning(f"LLM attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+            if "budget" in error_msg and "exceeded" in error_msg:
+                raise HTTPException(status_code=402, detail="AI budget exceeded. Please add balance to your Universal Key (Profile > Universal Key > Add Balance).")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 * (attempt + 1))
     
