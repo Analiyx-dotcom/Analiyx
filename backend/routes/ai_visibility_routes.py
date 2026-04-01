@@ -137,11 +137,15 @@ You produce comprehensive, professional-grade audit reports that are data-driven
             return response
         except Exception as e:
             last_error = e
+            error_msg = str(e).lower()
             logging.warning(f"LLM attempt {attempt + 1}/{max_retries} failed: {str(e)}")
+            # Budget exceeded — don't retry, inform user immediately
+            if "budget" in error_msg and "exceeded" in error_msg:
+                raise HTTPException(status_code=402, detail="AI analysis budget exceeded. Please go to Profile > Universal Key > Add Balance to continue using AI features.")
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 * (attempt + 1))
     
-    raise HTTPException(status_code=503, detail=f"AI analysis temporarily unavailable. Please try again in a moment.")
+    raise HTTPException(status_code=503, detail="AI analysis temporarily unavailable. Please try again in a moment.")
 
 @router.post("/analyze")
 async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_current_user_id)):

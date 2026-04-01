@@ -128,7 +128,10 @@ async def ai_chat(req: ChatMessage, user_id: str = Depends(get_current_user_id))
         sources = [f["filename"] for f in files]
         return {"answer": response, "sources": sources, "session_id": session_id}
     except Exception as e:
+        error_msg = str(e).lower()
         logging.error(f"AI Chat error: {str(e)}")
+        if "budget" in error_msg and "exceeded" in error_msg:
+            raise HTTPException(status_code=402, detail="AI budget exceeded. Please go to Profile > Universal Key > Add Balance to continue using AI features.")
         raise HTTPException(status_code=500, detail=f"AI chat failed: {str(e)}")
 
 
