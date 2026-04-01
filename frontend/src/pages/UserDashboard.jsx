@@ -178,8 +178,14 @@ const UserDashboard = () => {
       const res = await api.post('/ai/chat', { query: msg, session_id: chatSessionId });
       if (res.data.session_id) setChatSessionId(res.data.session_id);
       setAiChatMessages(prev => [...prev, { role: 'assistant', content: res.data.answer, sources: res.data.sources }]);
-    } catch {
-      setAiChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', isError: true }]);
+      refreshUser();
+    } catch (err) {
+      const detail = err.response?.data?.detail || '';
+      if (detail.includes('Insufficient credits')) {
+        setAiChatMessages(prev => [...prev, { role: 'assistant', content: `You've run out of credits. ${detail}`, isError: true }]);
+      } else {
+        setAiChatMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', isError: true }]);
+      }
     } finally { setIsChatSending(false); }
   };
 
@@ -427,12 +433,15 @@ const UserDashboard = () => {
     try {
       const response = await api.post('/ai-visibility/analyze', { url: aiUrl });
       setAiAnalysis(response.data.analysis);
+      refreshUser();
       toast({ title: 'Analysis Complete!', description: `Analyzed ${aiUrl}` });
     } catch (error) {
       const detail = error.response?.data?.detail || '';
       if (detail.includes('AI_VISIBILITY_LIMIT_REACHED')) {
         setShowUpgradeModal(true);
         toast({ title: 'Monthly Limit Reached', description: 'Starter plan allows 1 AI Visibility analysis per month. Upgrade to Business Pro for unlimited.', variant: 'destructive' });
+      } else if (detail.includes('Insufficient credits')) {
+        toast({ title: 'No Credits Left', description: detail, variant: 'destructive' });
       } else {
         toast({ title: 'Analysis Failed', description: detail || 'Could not analyze URL', variant: 'destructive' });
       }

@@ -38,7 +38,7 @@ async def register(user_data: UserCreate):
         "password": hashed_password,
         "plan": "Trial",
         "status": "active",
-        "credits": 50,
+        "credits": 100,
         "role": "user",
         "trial_ends_at": datetime.utcnow() + timedelta(days=7),
         "subscription_end_date": None,

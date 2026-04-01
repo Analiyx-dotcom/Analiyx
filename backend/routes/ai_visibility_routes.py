@@ -141,6 +141,7 @@ JSON format:
 @router.post("/analyze")
 async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_current_user_id)):
     """Analyze a URL for AI visibility and SEO insights"""
+    from credits import check_and_deduct_credits
     
     # Check plan limits for AI Visibility
     user = await db.users.find_one({"_id": ObjectId(user_id)})
@@ -152,7 +153,6 @@ async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_cu
     
     if plan == "Starter" and not trial_active:
         # Starter plan (post-trial): 1 analysis per month
-        from datetime import timedelta
         month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         usage_count = await db.ai_visibility_analyses.count_documents({
             "user_id": ObjectId(user_id),
@@ -163,6 +163,9 @@ async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_cu
                 status_code=403,
                 detail="AI_VISIBILITY_LIMIT_REACHED: Starter plan allows 1 AI Visibility analysis per month. Upgrade to Business Pro for unlimited analyses."
             )
+    
+    # Check and deduct credits (5 credits per AI Visibility analysis)
+    credit_result = await check_and_deduct_credits(db, user_id, "ai_visibility")
     
     url = request.url.strip()
     if not url.startswith('http'):
@@ -230,7 +233,7 @@ async def analyze_url(request: UrlAnalysisRequest, user_id: str = Depends(get_cu
     }
     await db.ai_visibility_analyses.insert_one(analysis_doc)
     
-    return {"success": True, "url": url, "analysis": analysis}
+    return {"success": True, "url": url, "analysis": analysis, "credits_remaining": credit_result["remaining_credits"]}
 
 @router.get("/history")
 async def get_analysis_history(user_id: str = Depends(get_current_user_id)):

@@ -160,15 +160,16 @@ async def verify_payment(req: VerifyPaymentRequest, user_id: str = Depends(get_c
         }}
     )
 
-    # Upgrade user plan
+    # Upgrade user plan - set monthly credits for the new plan
     await db.users.update_one(
         {"_id": ObjectId(user_id)},
         {"$set": {
             "plan": plan_name,
             "status": "active",
+            "credits": plan.get("credits", 100),
             "subscription_end_date": subscription_end,
             "updated_at": datetime.utcnow()
-        }, "$inc": {"credits": plan.get("credits", 100)}}
+        }}
     )
 
     # Send payment confirmation email

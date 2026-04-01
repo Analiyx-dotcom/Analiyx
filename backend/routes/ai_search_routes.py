@@ -34,6 +34,10 @@ async def ai_chat(req: ChatMessage, user_id: str = Depends(get_current_user_id))
         raise HTTPException(status_code=400, detail="Query cannot be empty")
 
     from emergentintegrations.llm.chat import LlmChat, UserMessage
+    from credits import check_and_deduct_credits
+
+    # Check and deduct credits (1 credit per chat query)
+    credit_result = await check_and_deduct_credits(db, user_id, "ai_chat")
 
     # Build session_id for conversation continuity
     ws_part = req.workspace_id or "global"
@@ -119,7 +123,7 @@ async def ai_chat(req: ChatMessage, user_id: str = Depends(get_current_user_id))
         })
 
         sources = [f["filename"] for f in files]
-        return {"answer": response, "sources": sources, "session_id": session_id}
+        return {"answer": response, "sources": sources, "session_id": session_id, "credits_remaining": credit_result["remaining_credits"]}
     except Exception as e:
         error_msg = str(e).lower()
         logging.error(f"AI Chat error: {str(e)}")

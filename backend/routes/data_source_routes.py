@@ -62,6 +62,10 @@ async def upload_file(
     workspace_id: str = None
 ):
     """Upload and analyze CSV/Excel file"""
+    from credits import check_and_deduct_credits
+    
+    # Check and deduct credits (2 credits per file upload)
+    credit_result = await check_and_deduct_credits(db, user_id, "file_upload")
     
     # Check data source limit — skip during trial
     trial_active = await _is_trial_active(db, user_id)
