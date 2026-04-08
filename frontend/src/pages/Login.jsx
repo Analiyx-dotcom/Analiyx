@@ -57,7 +57,12 @@ const Login = () => {
       if (data.user.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/dashboard'); // Regular user dashboard (to be created)
+        // Check if user completed onboarding
+        if (!data.user.onboarding_completed) {
+          navigate('/onboarding');
+        } else {
+          navigate('/dashboard');
+        }
       }
     } catch (error) {
       toast({

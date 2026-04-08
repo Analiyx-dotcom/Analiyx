@@ -58,6 +58,8 @@ async def get_all_users_details(admin_user: dict = Depends(require_admin)):
             "status": user.get("status", "active"),
             "role": user.get("role", "user"),
             "credits": user.get("credits", 0),
+            "onboarding_completed": user.get("onboarding_completed", False),
+            "onboarding_data": user.get("onboarding_data"),
             "created_at": user["created_at"].isoformat(),
             "trial_ends_at": user.get("trial_ends_at").isoformat() if user.get("trial_ends_at") else None,
             "subscription_end_date": user.get("subscription_end_date").isoformat() if user.get("subscription_end_date") else (subscription.get("end_date").isoformat() if subscription and subscription.get("end_date") else None),

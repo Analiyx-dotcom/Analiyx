@@ -354,7 +354,7 @@ const AdminDashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead><tr className="border-b border-gray-800">
-                  {['Client ID', 'Name', 'Phone', 'Email', 'Plan', 'Credits', 'Status', 'Sub. End', 'Joined', 'Actions'].map(h => <th key={h} className="text-left py-3 px-4 text-gray-400 font-medium">{h}</th>)}
+                  {['Client ID', 'Name', 'Phone', 'Email', 'Plan', 'Credits', 'Status', 'Company', 'Industry', 'Sub. End', 'Joined', 'Actions'].map(h => <th key={h} className="text-left py-3 px-4 text-gray-400 font-medium">{h}</th>)}
                 </tr></thead>
                 <tbody>
                   {filteredUsers.map((u) => (
@@ -366,6 +366,8 @@ const AdminDashboard = () => {
                       <td className="py-3 px-4"><Badge variant="secondary" className="bg-purple-900/30 text-purple-400 border-purple-700">{u.plan}</Badge></td>
                       <td className="py-3 px-4 text-white">{u.credits}</td>
                       <td className="py-3 px-4"><Badge className={statusColor(u.status)}>{u.status}</Badge></td>
+                      <td className="py-3 px-4 text-gray-400 text-xs" title={u.onboarding_data?.company_description || ''}>{u.onboarding_data?.company_name || '-'}</td>
+                      <td className="py-3 px-4 text-gray-400 text-xs">{u.onboarding_data?.industry || '-'}</td>
                       <td className="py-3 px-4 text-gray-400 text-xs">{u.subscription_end_date ? new Date(u.subscription_end_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : u.trial_ends_at ? `Trial: ${new Date(u.trial_ends_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}` : '-'}</td>
                       <td className="py-3 px-4 text-gray-400 text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
                       <td className="py-3 px-4">

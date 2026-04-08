@@ -57,11 +57,11 @@ const Signup = () => {
         description: 'Welcome to Analiyx.',
       });
       
-      // Regular users go to dashboard, admins go to admin panel
+      // Regular users go to onboarding, admins go to admin panel
       if (data.user.role === 'admin') {
         navigate('/admin');
       } else {
-        navigate('/dashboard');
+        navigate('/onboarding');
       }
     } catch (error) {
       toast({

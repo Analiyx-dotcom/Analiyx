@@ -55,6 +55,7 @@ class UserResponse(BaseModel):
     status: str
     credits: int
     role: str
+    onboarding_completed: bool = False
     trial_ends_at: Optional[datetime] = None
     subscription_end_date: Optional[datetime] = None
     created_at: datetime

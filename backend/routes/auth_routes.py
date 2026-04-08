@@ -64,6 +64,7 @@ async def register(user_data: UserCreate):
         status=user_doc["status"],
         credits=user_doc["credits"],
         role=user_doc["role"],
+        onboarding_completed=False,
         trial_ends_at=user_doc.get("trial_ends_at"),
         subscription_end_date=user_doc.get("subscription_end_date"),
         created_at=user_doc["created_at"]
@@ -111,6 +112,7 @@ async def login(credentials: UserLogin):
         status=user["status"],
         credits=user["credits"],
         role=user.get("role", "user"),
+        onboarding_completed=user.get("onboarding_completed", False),
         trial_ends_at=user.get("trial_ends_at"),
         subscription_end_date=user.get("subscription_end_date"),
         created_at=user["created_at"]
@@ -142,6 +144,7 @@ async def get_current_user(user_id: str = Depends(get_current_user_id)):
         status=user["status"],
         credits=user["credits"],
         role=user.get("role", "user"),
+        onboarding_completed=user.get("onboarding_completed", False),
         trial_ends_at=user.get("trial_ends_at"),
         subscription_end_date=user.get("subscription_end_date"),
         created_at=user["created_at"]
