@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save, ChevronDown, Settings } from 'lucide-react';
+import NangoConnect from '../components/NangoConnect';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -966,21 +967,32 @@ const UserDashboard = () => {
 
         {/* ===== DATA SOURCES TAB ===== */}
         {activeTab === 'sources' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Data Sources</h2>
               <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setIsDataSourceModalOpen(true)}><Plus className="w-4 h-4 mr-1" /> Connect Source</Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {integrations.map((intg, i) => (
-                <Card key={i} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => handleIntegrationClick(intg)}>
-                  <CardContent className="p-4 flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${intg.color}15` }}><Database className="w-5 h-5" style={{ color: intg.color }} /></div>
-                    <div className="flex-1"><p className="text-white text-sm font-medium">{intg.name}</p><p className="text-gray-500 text-xs">{intg.type || 'Integration'}</p></div>
-                    <ChevronRight className="w-4 h-4 text-gray-600" />
-                  </CardContent>
-                </Card>
-              ))}
+
+            {/* Nango OAuth Integrations */}
+            <div>
+              <h3 className="text-base font-semibold text-gray-300 mb-3">OAuth Integrations (via Nango)</h3>
+              <NangoConnect />
+            </div>
+
+            {/* Uploaded Files / Manual Integrations */}
+            <div>
+              <h3 className="text-base font-semibold text-gray-300 mb-3">Uploaded Data Files</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {integrations.map((intg, i) => (
+                  <Card key={i} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => handleIntegrationClick(intg)}>
+                    <CardContent className="p-4 flex items-center space-x-3">
+                      <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${intg.color}15` }}><Database className="w-5 h-5" style={{ color: intg.color }} /></div>
+                      <div className="flex-1"><p className="text-white text-sm font-medium">{intg.name}</p><p className="text-gray-500 text-xs">{intg.type || 'Integration'}</p></div>
+                      <ChevronRight className="w-4 h-4 text-gray-600" />
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           </div>
         )}

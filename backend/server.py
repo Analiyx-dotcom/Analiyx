@@ -25,6 +25,7 @@ from routes.slack_routes import router as slack_router
 from routes.ai_search_routes import router as ai_search_router
 from routes.dashboard_routes import router as dashboard_router
 from routes.chart_routes import router as chart_router
+from routes.nango_routes import router as nango_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -100,9 +101,10 @@ app.include_router(slack_router)
 app.include_router(ai_search_router)
 app.include_router(dashboard_router)
 app.include_router(chart_router)
+app.include_router(nango_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes
+from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes
 from auth import set_auth_database
 set_auth_database(db)
 auth_routes.set_database(db)
@@ -119,6 +121,7 @@ slack_routes.set_database(db)
 ai_search_routes.set_database(db)
 dashboard_routes.set_database(db)
 chart_routes.set_database(db)
+nango_routes.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,
