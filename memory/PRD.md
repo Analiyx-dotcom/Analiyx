@@ -4,7 +4,7 @@
 Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with user/admin dashboards, trial system, plan-based restrictions, and AI-powered data analysis.
 
 ## Tech Stack
-- **Frontend**: React, Tailwind CSS, Shadcn/ui, Recharts, react-markdown, react-joyride, @nangohq/frontend
+- **Frontend**: React, Tailwind CSS, Shadcn/ui, Recharts, @nangohq/frontend
 - **Backend**: FastAPI, Motor (async MongoDB), Pydantic, Nango SDK
 - **AI**: GPT-5.2 via emergentintegrations (Emergent LLM Key)
 - **Payments**: Razorpay (Live keys)
@@ -13,86 +13,58 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 
 ## Pricing Plans
 - **Trial**: Free 7 days, 100 credits (one-time)
-- **Starter**: ₹9,999/year, 200 credits/month, 4 data sources, 1 workspace
-- **Business Pro**: ₹14,999/year, 500 credits/month, unlimited sources, 10 workspaces
-
-## Credit Costs
-- AI Chat: 1 credit/query
-- AI Visibility: 5 credits/analysis
-- File Upload: 2 credits/file
+- **Starter**: ₹9,999/year, 200 credits/month
+- **Business Pro**: ₹14,999/year, 500 credits/month
 
 ## Implemented Features
 
-### Authentication & User Management
-- [x] JWT auth with role-based access (user/admin)
-- [x] 7-day free trial for new users (Trial plan, 100 credits)
-- [x] Trial expired popup forcing plan selection
-- [x] Disabled/spam users strictly blocked (login + existing sessions)
-- [x] Subscription duration tracking
-- [x] Phone number collected on signup
-- [x] Unique Client ID (ANX-XXXXX) generated per registration
-- [x] Settings page (profile update: name, phone; change password)
-
-### Payments (Razorpay Live)
-- [x] Razorpay checkout SDK integration
-- [x] Order creation, payment verification, webhook handling
-- [x] 1-year subscription per payment
-- [x] Coupon code system (admin-created coupons with % discount)
-- [x] Coupon validation endpoint for client-side verification
-
-### Credit System
-- [x] Credits deducted per action (AI Chat=1, AI Visibility=5, File Upload=2)
-- [x] Insufficient credits check blocks action with clear error
-- [x] Credit usage logging in `credit_usage` collection
-- [x] Credits set on plan purchase (not accumulated)
+### Google Ads Integration (via Nango)
+- [x] Connect Google Ads button via Nango OAuth
+- [x] Backend: GET /api/google-ads/customers (list accessible customer IDs)
+- [x] Backend: GET /api/google-ads/campaigns (GAQL query for campaigns with metrics)
+- [x] Frontend: GoogleAdsDashboard component with 4 summary cards (Spend, Clicks, Impressions, Conversions)
+- [x] Frontend: CampaignsTable showing name, status, type, budget, impressions, clicks, CTR, CPC, cost, conversions
+- [x] Not-connected state with clear message and Retry button
 
 ### Nango OAuth Integrations
-- [x] NangoService utility (create_connect_session, save/get/delete connections, proxy_get/post)
-- [x] Nango routes: POST /connect-session, POST /save-connection, GET /connections, DELETE /connections/{id}, POST /proxy
-- [x] NangoConnect frontend component with 4 integrations: Google Ads, Google Analytics, Google Sheets, Meta Ads
-- [x] Connect/Disconnect UI with status badges and connection dates
+- [x] NangoService utility (connect sessions, save/get/delete connections, proxy)
+- [x] 5 API endpoints: connect-session, save-connection, connections, disconnect, proxy
+- [x] NangoConnect component: Google Ads, Google Analytics, Google Sheets, Meta Ads
+
+### Authentication & User Management
+- [x] JWT auth, RBAC, 7-day trial, phone + Client ID on signup
+- [x] Settings page (profile update, change password)
+
+### Credit System
+- [x] AI Chat: 1 credit, AI Visibility: 5 credits, File Upload: 2 credits
+- [x] Insufficient credits check, usage logging
+
+### Payments & Coupons
+- [x] Razorpay checkout, coupon codes, validation
 
 ### Admin Dashboard
-- [x] Dashboard overview with stats
-- [x] User Management: Activate/Disable/Block, Extend Trial/Sub, Manage Credits
-- [x] Users table shows Client ID, Phone, Name, Email, Plan, Credits, Status
-- [x] Search bar to filter users by Client ID, Phone, Name or Email
-- [x] Support Tickets: View, reply, close
-- [x] Coupon Management: Create, list, toggle active/inactive, delete
-- [x] User Export: Excel (.xlsx) and PDF
+- [x] User management, search, coupon CRUD, tickets, exports
 
-### User Dashboard
-- [x] Tab navigation: Dashboard | Notes | Reports | Data Sources | AI Visibility
-- [x] Auto-generated charts, AI Chat Bar, Notes CRUD
-- [x] AI Visibility Deep Report (detailed analysis + citations)
-- [x] Subscription info display
-- [x] Workspace management
-
-### Google Analytics & SEO
-- [x] Google Analytics (gtag.js) tags in index.html
-- [x] Google Webmaster site verification meta tag
+### AI Features
+- [x] AI Visibility Deep Report with citations
+- [x] AI Chat (GPT-5.2, token-optimized)
 
 ## Credentials
 - Admin: Admin@analiyx.com / 1234
 - Test: testuser@test.com / test1234
-- Test with phone: phoneuser@test.com / test1234
+- Nango Secret: ae6ff9d5-8289-4a48-baa3-b80e9e1f6c0f
 
 ## Known Issues
-- Gmail SMTP authentication failing (Google blocking app passwords) - BLOCKED
-- Email notifications not working due to SMTP
+- Gmail SMTP BLOCKED (Google rejecting app passwords)
 
 ## Backlog
-
 ### P1
-- [ ] Chart color theme selector (6 themes: Default, Forest, Azure, Mint, Violet, Ocean)
-- [ ] Bookmark chat messages to Notes section
-- [ ] Monthly credit reset cron job for paid plans
+- [ ] Chart color theme selector (6 themes)
+- [ ] Bookmark chat messages to Notes
+- [ ] Monthly credit reset cron
 
 ### P2
-- [ ] Social Logins (Google & Microsoft OAuth)
-- [ ] Editable Dashboard Layout (drag-and-drop)
+- [ ] Social Logins, Editable Dashboard
 
 ### P3
-- [ ] Email Verification on Login (2FA)
-- [ ] Forgot Password backend
-- [ ] Refactor UserDashboard.jsx (~1400 lines)
+- [ ] Email Verification, Forgot Password backend, Refactor UserDashboard.jsx
