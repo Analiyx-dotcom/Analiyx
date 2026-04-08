@@ -51,7 +51,14 @@ async def _proxy_gaql(connection_id: str, customer_id: str, query: str):
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, headers=headers, json={"query": query})
         if resp.status_code != 200:
-            logging.error(f"Google Ads GAQL failed ({resp.status_code}): {resp.text[:500]}")
+            error_text = resp.text[:500]
+            logging.error(f"Google Ads GAQL failed ({resp.status_code}): {error_text}")
+            # Check for specific errors
+            if "DEVELOPER_TOKEN_NOT_APPROVED" in error_text:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Your Google Ads developer token is not approved. Please apply for Basic or Standard Access at Google Ads API Center (ads.google.com/aw/apicenter) to use production data."
+                )
             return None
         return resp.json()
 
@@ -125,7 +132,13 @@ async def get_campaigns(customer_id: Optional[str] = None, user_id: str = Depend
             AND segments.date DURING LAST_30_DAYS
     """
 
-    raw = await _proxy_gaql(connection_id, customer_id, query)
+    try:
+        raw = await _proxy_gaql(connection_id, customer_id, query)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Google Ads campaigns error: {e}")
+        raise HTTPException(status_code=502, detail="Failed to fetch campaign data from Google Ads.")
 
     if raw is None:
         raise HTTPException(status_code=502, detail="Failed to fetch campaign data from Google Ads.")
