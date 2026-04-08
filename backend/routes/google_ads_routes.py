@@ -35,15 +35,18 @@ async def _proxy_gaql(connection_id: str, customer_id: str, query: str):
     """Execute a GAQL query via Nango proxy to Google Ads API"""
     secret = os.environ.get("NANGO_SECRET_KEY")
     host = os.environ.get("NANGO_HOST", "https://api.nango.dev")
+    dev_token = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN", "")
 
     headers = {
         "Authorization": f"Bearer {secret}",
         "Connection-Id": connection_id,
         "Provider-Config-Key": "google-ads",
         "Content-Type": "application/json",
+        "Base-Url-Override": "https://googleads.googleapis.com",
+        "nango-proxy-developer-token": dev_token,
     }
 
-    url = f"{host}/proxy/v18/customers/{customer_id}/googleAds:searchStream"
+    url = f"{host}/proxy/v20/customers/{customer_id}/googleAds:searchStream"
 
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(url, headers=headers, json={"query": query})
@@ -57,14 +60,17 @@ async def _get_accessible_customers(connection_id: str):
     """List accessible customer IDs for the connected Google Ads account"""
     secret = os.environ.get("NANGO_SECRET_KEY")
     host = os.environ.get("NANGO_HOST", "https://api.nango.dev")
+    dev_token = os.environ.get("GOOGLE_ADS_DEVELOPER_TOKEN", "")
 
     headers = {
         "Authorization": f"Bearer {secret}",
         "Connection-Id": connection_id,
         "Provider-Config-Key": "google-ads",
+        "Base-Url-Override": "https://googleads.googleapis.com",
+        "nango-proxy-developer-token": dev_token,
     }
 
-    url = f"{host}/proxy/v18/customers:listAccessibleCustomers"
+    url = f"{host}/proxy/v20/customers:listAccessibleCustomers"
 
     async with httpx.AsyncClient(timeout=15) as client:
         resp = await client.get(url, headers=headers)

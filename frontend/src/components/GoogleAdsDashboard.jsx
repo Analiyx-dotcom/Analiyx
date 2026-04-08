@@ -32,12 +32,26 @@ const GoogleAdsDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [customers, setCustomers] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
-  const fetchCampaigns = useCallback(async () => {
+  const fetchCustomers = useCallback(async () => {
+    try {
+      const res = await api.get('/google-ads/customers');
+      const list = res.data.customers || [];
+      setCustomers(list);
+      if (list.length > 0) {
+        setSelectedCustomer(list[0]);
+      }
+    } catch { /* handled by fetchCampaigns */ }
+  }, []);
+
+  const fetchCampaigns = useCallback(async (customerId) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get('/google-ads/campaigns');
+      const params = customerId ? `?customer_id=${customerId}` : '';
+      const res = await api.get(`/google-ads/campaigns${params}`);
       setData(res.data);
     } catch (err) {
       const detail = err.response?.data?.detail || 'Failed to fetch Google Ads data.';
@@ -48,16 +62,24 @@ const GoogleAdsDashboard = () => {
     } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { fetchCampaigns(); }, [fetchCampaigns]);
+  useEffect(() => { fetchCustomers(); }, [fetchCustomers]);
+
+  useEffect(() => {
+    if (selectedCustomer) {
+      fetchCampaigns(selectedCustomer);
+    } else {
+      fetchCampaigns();
+    }
+  }, [selectedCustomer, fetchCampaigns]);
 
   if (loading) return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-purple-400" /><span className="ml-2 text-gray-400 text-sm">Loading Google Ads data...</span></div>;
 
   if (error) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12" data-testid="google-ads-error">
         <BarChart3 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400 mb-1">{error}</p>
-        <Button size="sm" variant="outline" className="mt-3 border-purple-600 text-purple-400" onClick={fetchCampaigns}>
+        <p className="text-gray-400 mb-1 text-sm">{error}</p>
+        <Button size="sm" variant="outline" className="mt-3 border-purple-600 text-purple-400" onClick={() => fetchCampaigns(selectedCustomer)} data-testid="google-ads-retry">
           <RefreshCw className="w-3 h-3 mr-1" /> Retry
         </Button>
       </div>
@@ -80,9 +102,21 @@ const GoogleAdsDashboard = () => {
           </h3>
           <p className="text-gray-500 text-xs">Last 30 days &middot; Customer ID: {data.customer_id}</p>
         </div>
-        <Button size="sm" variant="ghost" onClick={fetchCampaigns} className="text-gray-500 hover:text-white" data-testid="google-ads-refresh">
-          <RefreshCw className="w-4 h-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          {customers.length > 1 && (
+            <select
+              value={selectedCustomer || ''}
+              onChange={(e) => setSelectedCustomer(e.target.value)}
+              className="bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-300 outline-none focus:border-purple-500"
+              data-testid="google-ads-customer-select"
+            >
+              {customers.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+          <Button size="sm" variant="ghost" onClick={() => fetchCampaigns(selectedCustomer)} className="text-gray-500 hover:text-white" data-testid="google-ads-refresh">
+            <RefreshCw className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}

@@ -40,14 +40,18 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 - [x] NangoService utility (connect sessions, save/get/delete connections, proxy)
 - [x] 5 API endpoints: connect-session, save-connection, connections, disconnect, proxy
 - [x] NangoConnect component: Google Ads, Google Analytics, Google Sheets, Meta Ads
+- [x] Connect session uses connection_config.scopes for proper OAuth scope handling
 
-### Google Ads Integration (via Nango)
+### Google Ads Integration (via Nango) — FIXED April 8, 2026
 - [x] Connect Google Ads button via Nango OAuth
-- [x] Backend: GET /api/google-ads/customers, GET /api/google-ads/campaigns
-- [x] Frontend: GoogleAdsDashboard with summary cards and campaigns table
+- [x] Backend uses `Base-Url-Override: https://googleads.googleapis.com` + `nango-proxy-developer-token` headers
+- [x] API version updated from v18 (deprecated) to v20
+- [x] GET /api/google-ads/customers returns list of accessible customer IDs
+- [x] GET /api/google-ads/campaigns with customer_id selector
+- [x] Frontend: GoogleAdsDashboard with customer account dropdown, summary cards, campaigns table
 
-### Google Analytics Integration (via Nango)
-- [x] GA4 Nango scope fix: connection_config.scopes with analytics.readonly (April 8, 2026)
+### Google Analytics Integration (via Nango) — FIXED April 8, 2026
+- [x] GA4 Nango scope fix: connection_config.scopes with analytics.readonly
 - [x] Backend: GET /api/google-analytics/properties, /report, POST /set-property
 - [x] Frontend: GoogleAnalyticsDashboard with charts, tables, traffic sources
 - [x] Enhanced error handling for 403 scope errors with reconnect guidance
@@ -57,13 +61,11 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 - [x] Backend: PUT /api/charts/theme, GET /api/charts/theme
 - [x] Frontend: ChartThemeSelector component with dropdown
 - [x] Theme colors applied to AnalyticsDashboard charts (bar, line, donut)
-- [x] Theme persisted per user in MongoDB
 
 ### Bookmark AI Chat to Notes (April 8, 2026)
 - [x] Bookmark icon on assistant chat messages (hover to reveal)
 - [x] Saves message content as a Note via POST /api/charts/notes
 - [x] Toast confirmation on bookmark
-- [x] Notes accessible in Notes tab
 
 ## Credentials
 - Admin: Admin@analiyx.com / 1234
@@ -72,7 +74,6 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 
 ## Known Issues
 - Gmail SMTP BLOCKED (Google rejecting app passwords)
-- GA4 data fetch requires user to disconnect and reconnect after scope fix
 
 ## Backlog
 ### P1
