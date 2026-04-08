@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDown, Minus, Brain, Facebook, Megaphone, BarChart, BookOpen, Upload, FileSpreadsheet, CheckCircle, Loader2, Download, Clock, AlertTriangle, Plus, Folder, MessageSquare, Send, Mail, Globe, Search, Zap, Hash, Trash2, Activity, Layers, Eye, ChevronRight, StickyNote, FileBarChart, LayoutDashboard, Pencil, Save, ChevronDown, Settings } from 'lucide-react';
 import NangoConnect from '../components/NangoConnect';
 import GoogleAdsDashboard from '../components/GoogleAdsDashboard';
+import GoogleAnalyticsDashboard from '../components/GoogleAnalyticsDashboard';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -982,6 +983,9 @@ const UserDashboard = () => {
 
             {/* Google Ads Performance Dashboard */}
             <GoogleAdsDashboard />
+
+            {/* Google Analytics Dashboard */}
+            <GoogleAnalyticsDashboard />
 
             {/* Uploaded Files / Manual Integrations */}
             <div>
