@@ -43,14 +43,15 @@ const NangoConnect = () => {
       const token = sessionRes.data?.data?.token || sessionRes.data?.token;
       if (!token) throw new Error('Failed to get session token');
 
-      // 2. Use Nango frontend SDK to open OAuth
+      // 2. Use Nango frontend SDK to open OAuth popup
       const nango = new Nango({ connectSessionToken: token });
-      const result = await nango.auth(integrationId, `${integrationId}-${Date.now()}`);
+      const result = await nango.auth(integrationId);
 
       // 3. Save the connection ID in our backend
+      const connectionId = result.connectionId || result.connection_id || `${integrationId}-conn`;
       await api.post('/nango/save-connection', {
         integration_id: integrationId,
-        connection_id: result.connectionId,
+        connection_id: connectionId,
       });
 
       toast({ title: 'Connected!', description: `${integrationId} connected successfully.` });
