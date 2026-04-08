@@ -46,8 +46,12 @@ async def create_connect_session(req: ConnectSessionRequest, user_id: str = Depe
         result = await nango.create_connect_session(user_id, req.allowed_integrations)
         return result
     except Exception as e:
-        logging.error(f"Nango connect session error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_msg = str(e)
+        logging.error(f"Nango connect session error: {error_msg}")
+        # Surface Nango-specific errors clearly
+        if "resource_capped" in error_msg or "connection limits" in error_msg.lower():
+            raise HTTPException(status_code=429, detail="Nango connection limit reached. Please delete unused connections from your Nango Dashboard or upgrade your Nango plan.")
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @router.post("/save-connection")

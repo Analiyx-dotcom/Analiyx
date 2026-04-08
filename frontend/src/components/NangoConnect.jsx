@@ -60,7 +60,8 @@ const NangoConnect = () => {
       if (err?.type === 'authorization_cancelled') {
         toast({ title: 'Cancelled', description: 'Authorization was cancelled.', variant: 'destructive' });
       } else {
-        toast({ title: 'Connection Failed', description: err?.message || 'Failed to connect.', variant: 'destructive' });
+        const detail = err?.response?.data?.detail || err?.message || 'Failed to connect.';
+        toast({ title: 'Connection Failed', description: detail, variant: 'destructive' });
       }
     } finally { setConnectingId(null); }
   };
