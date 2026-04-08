@@ -149,7 +149,7 @@ class TestCashfreePaymentAPI:
             f"{BASE_URL}/api/payments/create-order",
             json={
                 "plan": "Starter",
-                "return_url": "https://deep-report-beta.preview.emergentagent.com"
+                "return_url": "https://nango-proxy.preview.emergentagent.com"
             },
             headers={"Authorization": f"Bearer {user_token}"},
             timeout=15
@@ -180,7 +180,7 @@ class TestCashfreePaymentAPI:
             f"{BASE_URL}/api/payments/create-order",
             json={
                 "plan": "Business Pro",
-                "return_url": "https://deep-report-beta.preview.emergentagent.com"
+                "return_url": "https://nango-proxy.preview.emergentagent.com"
             },
             headers={"Authorization": f"Bearer {user_token}"},
             timeout=15

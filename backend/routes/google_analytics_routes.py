@@ -54,6 +54,16 @@ async def _nango_proxy(connection_id: str, method: str, path: str, data: dict = 
         else:
             resp = await client.post(url, headers=headers, json=data)
 
+        if resp.status_code == 403:
+            error_body = resp.text[:500]
+            logging.error(f"GA proxy {method} {path} 403: {error_body}")
+            if "insufficient" in error_body.lower() or "permission" in error_body.lower() or "scope" in error_body.lower():
+                raise HTTPException(
+                    status_code=403,
+                    detail="Google Analytics requires the 'analytics.readonly' scope. Please go to your Nango Dashboard > google-analytics integration > update OAuth scopes to include 'https://www.googleapis.com/auth/analytics.readonly', then reconnect your Google Analytics account."
+                )
+            raise HTTPException(status_code=403, detail="Access denied by Google Analytics API. Please check permissions.")
+
         if resp.status_code != 200:
             logging.error(f"GA proxy {method} {path} failed ({resp.status_code}): {resp.text[:500]}")
             return None

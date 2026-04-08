@@ -9,7 +9,7 @@ import sys
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://deep-report-beta.preview.emergentagent.com/api"
+BASE_URL = "https://nango-proxy.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@papermap.com"
 ADMIN_PASSWORD = "admin123"
 

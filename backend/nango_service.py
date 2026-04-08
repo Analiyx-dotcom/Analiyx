@@ -29,11 +29,25 @@ class NangoService:
         """
         Create a Nango Connect session token for the frontend SDK.
         The end_user is mapped to our internal user_id.
+        Includes OAuth scope overrides for integrations that need them.
         """
         payload = {
             "end_user": {
                 "id": user_id,
                 "display_name": None,
+            },
+            "integrations_config_defaults": {
+                "google-analytics": {
+                    "oauth_scopes_override": [
+                        "https://www.googleapis.com/auth/analytics.readonly",
+                        "https://www.googleapis.com/auth/analytics",
+                    ]
+                },
+                "google-ads": {
+                    "oauth_scopes_override": [
+                        "https://www.googleapis.com/auth/adwords",
+                    ]
+                },
             },
         }
         if allowed_integrations:
