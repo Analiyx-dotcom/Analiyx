@@ -17,3 +17,7 @@
 - Code: SAVE20
 - Discount: 20%
 - Status: Active
+
+## Nango
+- Secret Key: ae6ff9d5-8289-4a48-baa3-b80e9e1f6c0f
+- Host: https://api.nango.dev
