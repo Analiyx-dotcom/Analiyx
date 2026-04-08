@@ -100,11 +100,17 @@ const GoogleAnalyticsDashboard = () => {
   }
 
   if (error) {
+    const isScopeError = error.toLowerCase().includes('scope') || error.toLowerCase().includes('insufficient') || error.toLowerCase().includes('permission');
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12" data-testid="ga-error-state">
         <BarChart3 className="w-10 h-10 text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400 mb-1">{error}</p>
-        <Button size="sm" variant="outline" className="mt-3 border-purple-600 text-purple-400" onClick={fetchReport}>
+        <p className="text-gray-400 mb-1 max-w-md mx-auto text-sm">{error}</p>
+        {isScopeError && (
+          <p className="text-yellow-500/80 text-xs mt-2 max-w-sm mx-auto">
+            Please go to <strong>Data Sources</strong>, disconnect Google Analytics, and reconnect it to grant the required permissions.
+          </p>
+        )}
+        <Button size="sm" variant="outline" className="mt-3 border-purple-600 text-purple-400" onClick={() => fetchReport()} data-testid="ga-retry-btn">
           <RefreshCw className="w-3 h-3 mr-1" /> Retry
         </Button>
       </div>

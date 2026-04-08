@@ -5,7 +5,9 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { Maximize2, Pencil, Trash2, X, TrendingUp, Hash, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../components/ui/dialog';
 
-const COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'];
+import { getTheme } from '../constants/chartThemes';
+
+const DEFAULT_COLORS = ['#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#6366f1', '#14b8a6'];
 
 const KPICards = ({ data }) => (
   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -22,41 +24,44 @@ const KPICards = ({ data }) => (
   </div>
 );
 
-const BarChartWidget = ({ chart }) => (
+const BarChartWidget = ({ chart, themeColors }) => (
   <ResponsiveContainer width="100%" height={280}>
     <BarChart data={chart.data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
       <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
       <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
       <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8, color: '#fff' }} />
-      <Bar dataKey="value" fill={chart.color || '#8b5cf6'} radius={[4, 4, 0, 0]} />
+      <Bar dataKey="value" fill={themeColors?.[0] || chart.color || '#8b5cf6'} radius={[4, 4, 0, 0]} />
     </BarChart>
   </ResponsiveContainer>
 );
 
-const LineChartWidget = ({ chart }) => (
+const LineChartWidget = ({ chart, themeColors }) => (
   <ResponsiveContainer width="100%" height={280}>
     <LineChart data={chart.data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
       <XAxis dataKey="name" tick={{ fill: '#9ca3af', fontSize: 11 }} angle={-30} textAnchor="end" height={60} />
       <YAxis tick={{ fill: '#9ca3af', fontSize: 11 }} />
       <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8, color: '#fff' }} />
-      <Line type="monotone" dataKey="value" stroke={chart.color || '#06b6d4'} strokeWidth={2} dot={{ fill: chart.color || '#06b6d4', r: 3 }} activeDot={{ r: 5 }} />
+      <Line type="monotone" dataKey="value" stroke={themeColors?.[1] || chart.color || '#06b6d4'} strokeWidth={2} dot={{ fill: themeColors?.[1] || chart.color || '#06b6d4', r: 3 }} activeDot={{ r: 5 }} />
     </LineChart>
   </ResponsiveContainer>
 );
 
-const DonutChartWidget = ({ chart }) => (
-  <ResponsiveContainer width="100%" height={280}>
-    <PieChart>
-      <Pie data={chart.data} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ stroke: '#6b7280' }}>
-        {chart.data.map((_, i) => <Cell key={i} fill={(chart.colors || COLORS)[i % (chart.colors || COLORS).length]} />)}
-      </Pie>
-      <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8, color: '#fff' }} />
-      <Legend wrapperStyle={{ color: '#9ca3af', fontSize: 12 }} />
-    </PieChart>
-  </ResponsiveContainer>
-);
+const DonutChartWidget = ({ chart, themeColors }) => {
+  const colors = themeColors || chart.colors || DEFAULT_COLORS;
+  return (
+    <ResponsiveContainer width="100%" height={280}>
+      <PieChart>
+        <Pie data={chart.data} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={{ stroke: '#6b7280' }}>
+          {chart.data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+        </Pie>
+        <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: 8, color: '#fff' }} />
+        <Legend wrapperStyle={{ color: '#9ca3af', fontSize: 12 }} />
+      </PieChart>
+    </ResponsiveContainer>
+  );
+};
 
 const TableWidget = ({ chart }) => (
   <div className="overflow-x-auto max-h-[300px] overflow-y-auto">
@@ -75,7 +80,7 @@ const TableWidget = ({ chart }) => (
   </div>
 );
 
-const ChartWidget = ({ chart, onDelete, onExpand }) => {
+const ChartWidget = ({ chart, onDelete, onExpand, themeColors }) => {
   if (chart.type === 'kpi') return <KPICards data={chart.data} />;
 
   return (
@@ -96,17 +101,19 @@ const ChartWidget = ({ chart, onDelete, onExpand }) => {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        {chart.type === 'bar' && <BarChartWidget chart={chart} />}
-        {chart.type === 'line' && <LineChartWidget chart={chart} />}
-        {chart.type === 'donut' && <DonutChartWidget chart={chart} />}
+        {chart.type === 'bar' && <BarChartWidget chart={chart} themeColors={themeColors} />}
+        {chart.type === 'line' && <LineChartWidget chart={chart} themeColors={themeColors} />}
+        {chart.type === 'donut' && <DonutChartWidget chart={chart} themeColors={themeColors} />}
         {chart.type === 'table' && <TableWidget chart={chart} />}
       </CardContent>
     </Card>
   );
 };
 
-const AnalyticsDashboard = ({ charts, filename, onDeleteChart }) => {
+const AnalyticsDashboard = ({ charts, filename, onDeleteChart, themeKey }) => {
   const [expandedChart, setExpandedChart] = useState(null);
+  const theme = getTheme(themeKey);
+  const themeColors = theme.colors;
 
   if (!charts || charts.length === 0) return null;
 
@@ -121,7 +128,7 @@ const AnalyticsDashboard = ({ charts, filename, onDeleteChart }) => {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {visualCharts.map((chart, i) => (
-          <ChartWidget key={i} chart={chart} onDelete={onDeleteChart || (() => {})} onExpand={setExpandedChart} />
+          <ChartWidget key={i} chart={chart} onDelete={onDeleteChart || (() => {})} onExpand={setExpandedChart} themeColors={themeColors} />
         ))}
       </div>
 
@@ -132,9 +139,9 @@ const AnalyticsDashboard = ({ charts, filename, onDeleteChart }) => {
             <DialogTitle>{expandedChart?.title}</DialogTitle>
           </DialogHeader>
           <div className="py-4" style={{ height: 450 }}>
-            {expandedChart?.type === 'bar' && <BarChartWidget chart={expandedChart} />}
-            {expandedChart?.type === 'line' && <LineChartWidget chart={expandedChart} />}
-            {expandedChart?.type === 'donut' && <DonutChartWidget chart={expandedChart} />}
+            {expandedChart?.type === 'bar' && <BarChartWidget chart={expandedChart} themeColors={themeColors} />}
+            {expandedChart?.type === 'line' && <LineChartWidget chart={expandedChart} themeColors={themeColors} />}
+            {expandedChart?.type === 'donut' && <DonutChartWidget chart={expandedChart} themeColors={themeColors} />}
             {expandedChart?.type === 'table' && <TableWidget chart={expandedChart} />}
           </div>
         </DialogContent>

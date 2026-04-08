@@ -31,32 +31,35 @@ class NangoService:
         The end_user is mapped to our internal user_id.
         Includes OAuth scope overrides for integrations that need them.
         """
+        # Build tags for the session (end_user is deprecated, use tags)
+        user = await self.db.users.find_one({"_id": ObjectId(user_id)}, {"name": 1, "email": 1})
+        display_name = user.get("name", user_id) if user else user_id
+        user_email = user.get("email", "") if user else ""
+
         payload = {
+            "tags": {
+                "end_user_id": user_id,
+                "end_user_email": user_email,
+            },
             "end_user": {
                 "id": user_id,
-                "display_name": None,
+                "display_name": display_name,
             },
             "integrations_config_defaults": {
                 "google-analytics": {
-                    "oauth_scopes_override": [
-                        "https://www.googleapis.com/auth/analytics.readonly",
-                        "https://www.googleapis.com/auth/analytics",
-                    ]
+                    "connection_config": {
+                        "scopes": "https://www.googleapis.com/auth/analytics.readonly https://www.googleapis.com/auth/analytics",
+                    }
                 },
                 "google-ads": {
-                    "oauth_scopes_override": [
-                        "https://www.googleapis.com/auth/adwords",
-                    ]
+                    "connection_config": {
+                        "scopes": "https://www.googleapis.com/auth/adwords",
+                    }
                 },
             },
         }
         if allowed_integrations:
             payload["allowed_integrations"] = allowed_integrations
-
-        # Optionally enrich display_name from DB
-        user = await self.db.users.find_one({"_id": ObjectId(user_id)}, {"name": 1})
-        if user:
-            payload["end_user"]["display_name"] = user.get("name", user_id)
 
         async with httpx.AsyncClient(timeout=15) as client:
             resp = await client.post(
