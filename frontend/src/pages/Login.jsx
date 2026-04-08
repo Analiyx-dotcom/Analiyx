@@ -4,7 +4,8 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Sparkles, ShieldAlert } from 'lucide-react';
+import Logo from '../components/Logo';
+import { ShieldAlert } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 const Login = () => {
@@ -84,11 +85,8 @@ const Login = () => {
 
       <Card className="w-full max-w-md bg-gray-900/50 border-gray-800 backdrop-blur-sm relative z-10">
         <CardHeader className="space-y-1 text-center">
-          <Link to="/" className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-2xl font-bold text-white">Analiyx</span>
+          <Link to="/" className="flex items-center justify-center mb-4">
+            <Logo size="lg" />
           </Link>
           <CardTitle className="text-2xl text-white">Welcome back</CardTitle>
           <CardDescription className="text-gray-400">

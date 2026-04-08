@@ -683,8 +683,8 @@ const AdminDashboard = () => {
                 {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center"><Sparkles className="w-5 h-5 text-white" /></div>
-                <span className="text-xl font-bold text-white">Analiyx Admin</span>
+                <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-8 object-contain" />
+                <span className="text-sm font-medium text-gray-400">Admin</span>
               </div>
             </div>
             <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={handleLogout} data-testid="admin-logout-button"><LogOut className="w-5 h-5 mr-2" /> Logout</Button>

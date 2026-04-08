@@ -237,13 +237,7 @@ const Onboarding = () => {
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg">Analiyx</h1>
-            <p className="text-gray-500 text-xs">Getting to know you</p>
-          </div>
+          <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-9 object-contain" />
         </div>
       </header>
 
