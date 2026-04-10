@@ -150,3 +150,10 @@ logger = logging.getLogger(__name__)
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Production entry point
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8001))
+    host = os.environ.get("ALLOWED_HOST", "0.0.0.0")
+    uvicorn.run("server:app", host=host, port=port, reload=False)

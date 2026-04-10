@@ -1,108 +1,72 @@
-# Analiyx - Big Data for Small Teams
+# Analiyx — Turn Data Into Decisions
 
-AI-powered no-code data analytics platform for lean teams.
+Analytics platform with AI-powered insights, OAuth integrations, and subscription management.
 
-## 🚀 Features
+## Tech Stack
 
-- **Dark Theme UI** - Modern, sleek interface
-- **JWT Authentication** - Secure role-based access control
-- **Admin Dashboard** - Analytics, user management, revenue tracking
-- **User Dashboard** - Personal analytics workspace
-- **Indian Localization** - Ready for Indian market
-- **Role-Based Access** - Separate admin and user experiences
+- **Frontend**: React 18, Tailwind CSS, Shadcn/ui, Recharts
+- **Backend**: FastAPI (Python 3.10+), Motor (async MongoDB)
+- **Database**: MongoDB 6.0+
+- **AI**: GPT-5.2 via Emergent LLM Key
+- **Payments**: Razorpay
+- **OAuth**: Nango (Google Ads, GA4, Sheets, Meta Ads)
 
-## 🛠️ Tech Stack
+## System Dependencies
 
-### Frontend
-- React 19
-- Shadcn UI Components
-- Tailwind CSS
-- Axios for API calls
-- React Router DOM
-
-### Backend
-- FastAPI (Python)
-- MongoDB (Motor async driver)
-- JWT Authentication with bcrypt
-- Role-based authorization
-
-## 📦 Installation
-
-### Prerequisites
-- Node.js 18+
-- Python 3.11+
+- Node.js 18+ & Yarn
+- Python 3.10+ & pip
 - MongoDB 6.0+
-- Yarn package manager
+- Nginx (for production)
+- PM2 (for production process management)
+- Certbot (for SSL certificates)
 
-### Frontend Setup
+## Quick Start (Development)
+
 ```bash
+# Backend
+cd backend
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # Edit with your values
+python3 server.py
+
+# Frontend (new terminal)
 cd frontend
 yarn install
+cp .env.example .env  # Edit if needed
 yarn start
 ```
 
-### Backend Setup
-```bash
-cd backend
-pip install -r requirements.txt
-python seed_database.py  # Seed initial data
-uvicorn server:app --reload --host 0.0.0.0 --port 8001
-```
+## Production Deployment
 
-## 🔐 Default Admin Credentials
-- Email: admin@papermap.com
-- Password: admin123
+See **[DEPLOY.md](./DEPLOY.md)** for complete VPS deployment instructions (Hostinger KVM1).
 
-## 🌍 Environment Variables
-
-### Frontend (.env)
-```
-REACT_APP_BACKEND_URL=http://localhost:8001
-```
-
-### Backend (.env)
-```
-MONGO_URL=mongodb://localhost:27017
-DB_NAME=analiyx_db
-JWT_SECRET_KEY=your-secret-key-here
-```
-
-## 📱 Routes
-
-- `/` - Landing page
-- `/login` - User/Admin login
-- `/signup` - User registration
-- `/dashboard` - User dashboard
-- `/admin` - Admin panel (restricted)
-
-## 🏗️ Project Structure
+## Project Structure
 
 ```
-/app
-├── frontend/          # React application
+analiyx/
+├── backend/
+│   ├── routes/          # API route modules
+│   ├── server.py        # FastAPI app entry point
+│   ├── auth.py          # JWT authentication
+│   ├── models.py        # Pydantic models
+│   ├── credits.py       # Credit deduction engine
+│   ├── nango_service.py # Nango OAuth proxy
+│   ├── requirements.txt
+│   ├── .env.example
+│   └── .env             # (not committed)
+├── frontend/
 │   ├── src/
+│   │   ├── pages/       # Login, Signup, Dashboard, Onboarding, Settings
 │   │   ├── components/  # Reusable UI components
-│   │   ├── pages/       # Page components
-│   │   ├── services/    # API services
-│   │   └── mock/        # Mock data
-│   └── public/
-├── backend/           # FastAPI application
-│   ├── routes/        # API routes
-│   ├── models.py      # Pydantic models
-│   ├── auth.py        # Authentication logic
-│   ├── server.py      # Main FastAPI app
-│   └── seed_database.py
-└── contracts.md       # API contracts
+│   │   ├── services/    # API client (axios)
+│   │   └── constants/   # Chart themes, etc.
+│   ├── public/
+│   ├── .env.example
+│   └── .env             # (not committed)
+├── nginx.conf           # Production nginx config
+├── ecosystem.config.js  # PM2 config
+├── deploy.sh            # Auto-deploy script
+├── DEPLOY.md            # Full deployment guide
+└── README.md
 ```
-
-## 🚀 Deployment
-
-See deployment guide in repository for production setup instructions.
-
-## 📄 License
-
-MIT License
-
----
-
-Built with ❤️ for the Indian market
