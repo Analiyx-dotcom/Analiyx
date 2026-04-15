@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Logo = ({ size = 'md', showText = true, className = '' }) => {
+const Logo = ({ size = 'md', className = '' }) => {
   const sizes = {
     xs: 'h-6',
     sm: 'h-8',
@@ -10,13 +10,12 @@ const Logo = ({ size = 'md', showText = true, className = '' }) => {
   };
 
   return (
-    <div className={`flex items-center gap-2 ${className}`} data-testid="analiyx-logo">
-      <img
-        src="/analiyx-logo.jpg"
-        alt="Analiyx"
-        className={`${sizes[size]} object-contain`}
-      />
-    </div>
+    <img
+      src="/analiyx-logo.jpg"
+      alt="Analiyx"
+      className={`${sizes[size]} object-contain mix-blend-lighten ${className}`}
+      data-testid="analiyx-logo"
+    />
   );
 };
 

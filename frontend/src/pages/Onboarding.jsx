@@ -239,7 +239,7 @@ const Onboarding = () => {
   if (!ready) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-12 object-contain animate-pulse" />
+        <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-12 object-contain mix-blend-lighten animate-pulse" />
       </div>
     );
   }
@@ -249,7 +249,7 @@ const Onboarding = () => {
       {/* Header */}
       <header className="border-b border-gray-800 bg-gray-950/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-3">
-          <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-9 object-contain" />
+          <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-9 object-contain mix-blend-lighten" />
         </div>
       </header>
 

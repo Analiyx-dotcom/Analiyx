@@ -83,7 +83,7 @@ const Signup = () => {
 
       <Card className="w-full max-w-md bg-gray-900/50 border-gray-800 backdrop-blur-sm relative z-10">
         <CardHeader className="space-y-1 text-center">
-          <Link to="/" className="flex items-center justify-center mb-4">
+          <Link to="/" className="flex items-center justify-center mb-4 bg-black rounded-lg p-2 w-fit mx-auto">
             <Logo size="lg" />
           </Link>
           <CardTitle className="text-2xl text-white">Create an account</CardTitle>

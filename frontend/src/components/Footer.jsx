@@ -35,7 +35,7 @@ const Footer = () => {
           {/* Brand */}
           <div className="col-span-1">
             <Link to="/" className="flex items-center mb-4">
-              <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-9 object-contain" />
+              <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-9 object-contain mix-blend-lighten" />
             </Link>
             <p className="text-gray-500 text-sm mb-4">
               Big Data for Small Teams. No-code data platform powered by AI.

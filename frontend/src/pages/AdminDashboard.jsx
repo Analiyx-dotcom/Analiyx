@@ -683,7 +683,7 @@ const AdminDashboard = () => {
                 {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
               <div className="flex items-center space-x-2">
-                <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-8 object-contain" />
+                <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-8 object-contain mix-blend-lighten" />
                 <span className="text-sm font-medium text-gray-400">Admin</span>
               </div>
             </div>

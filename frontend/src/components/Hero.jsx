@@ -20,7 +20,7 @@ const Hero = () => {
         </div>
 
         <div className="flex justify-center mb-6">
-          <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-16 object-contain" />
+          <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-16 object-contain mix-blend-lighten" />
         </div>
 
         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
@@ -58,7 +58,7 @@ const Hero = () => {
               {/* Fake dashboard header */}
               <div className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-6 object-contain" />
+                  <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-6 object-contain mix-blend-lighten" />
                   <span className="text-sm font-semibold text-white">Dashboard</span>
                 </div>
                 <div className="flex space-x-2">
