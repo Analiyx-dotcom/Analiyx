@@ -42,6 +42,15 @@ db = client[os.environ['DB_NAME']]
 # Create the main app without a prefix
 app = FastAPI()
 
+# CORS must be added BEFORE routes
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
@@ -132,14 +141,6 @@ google_ads_routes.set_database(db)
 google_analytics_routes.set_database(db)
 onboarding_routes.set_database(db)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
@@ -147,9 +148,51 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_seed():
+    """Create default admin account if no admin exists"""
+    try:
+        admin_exists = await db.users.find_one({"role": "admin"})
+        if not admin_exists:
+            from auth import hash_password
+            from datetime import timedelta
+            admin_doc = {
+                "name": "Admin",
+                "email": "Admin@analiyx.com",
+                "password": hash_password("1234"),
+                "phone": "",
+                "client_id": "ADMIN001",
+                "plan": "Business Pro",
+                "status": "active",
+                "credits": 99999,
+                "role": "admin",
+                "onboarding_completed": True,
+                "created_at": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+                "trial_ends_at": datetime.now(timezone.utc) + timedelta(days=365),
+                "subscription_end_date": None,
+            }
+            await db.users.insert_one(admin_doc)
+            logger.info("Default admin account created: Admin@analiyx.com / 1234")
+        else:
+            logger.info("Admin account already exists, skipping seed")
+    except Exception as e:
+        logger.error(f"Failed to seed admin: {e}")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
+
+# Health check endpoint (no /api prefix — accessible directly)
+@app.get("/api/health")
+async def health_check():
+    """Health check — verifies backend and MongoDB are running"""
+    try:
+        await db.command("ping")
+        user_count = await db.users.count_documents({})
+        return {"status": "ok", "db": "connected", "users": user_count}
+    except Exception as e:
+        return {"status": "error", "db": "disconnected", "error": str(e)}
 
 # Production entry point
 if __name__ == "__main__":
