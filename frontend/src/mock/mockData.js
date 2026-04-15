@@ -37,8 +37,6 @@ export const integrations = [
   { name: 'Zoho Books', icon: 'book-open', color: '#E42527' },
   { name: 'Zoho CRM', icon: 'users', color: '#D0342C' },
   { name: 'Notion API', icon: 'layout', color: '#000000' },
-  { name: 'Practo API', icon: 'heart-pulse', color: '#FF6B6B' },
-  { name: 'MongoDB', icon: 'database', color: '#47A248' },
   { name: 'Shopify', icon: 'shopping-bag', color: '#96BF48' },
   { name: 'HubSpot', icon: 'users', color: '#FF7A59' },
   { name: 'AI Visibility', icon: 'brain', color: '#8B5CF6' }

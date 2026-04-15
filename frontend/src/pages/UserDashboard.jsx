@@ -1402,7 +1402,7 @@ const UserDashboard = () => {
             <div className="space-y-2">
               <Label className="text-gray-300">Select Data Sources</Label>
               <div className="grid grid-cols-3 gap-2">
-                {['Excel', 'CSV', 'Google Ads', 'Meta Ads', 'Google Sheets', 'Zoho Books', 'Google Analytics', 'Zoho CRM', 'Notion API', 'Practo API', 'Shopify'].map(ds => (
+                {['Excel', 'CSV', 'Google Ads', 'Meta Ads', 'Google Sheets', 'Zoho Books', 'Google Analytics', 'Zoho CRM', 'Notion API', 'Shopify'].map(ds => (
                   <button key={ds} onClick={() => toggleDataSource(ds)} className={`px-3 py-2 rounded-lg text-xs border transition-all ${newWorkspace.dataSources.includes(ds) ? 'bg-purple-900/40 border-purple-500 text-purple-300' : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'}`}>
                     {ds}
                   </button>

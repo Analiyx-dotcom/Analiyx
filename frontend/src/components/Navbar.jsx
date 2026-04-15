@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X, Sparkles } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -22,11 +22,8 @@ const Navbar = () => {
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center transform group-hover:scale-110 transition-transform duration-200">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-xl font-bold text-white">Analiyx</span>
+          <Link to="/" className="flex items-center group">
+            <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-9 object-contain" />
           </Link>
 
           {/* Desktop Navigation */}

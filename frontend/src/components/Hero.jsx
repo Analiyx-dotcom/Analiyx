@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from './ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Play, BarChart3, TrendingUp, PieChart, Activity } from 'lucide-react';
+import { Play, BarChart3, TrendingUp, PieChart, Activity } from 'lucide-react';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -19,11 +19,8 @@ const Hero = () => {
           <span className="text-sm text-gray-300">Watch Analiyx in action on YouTube!</span>
         </div>
 
-        <div className="flex justify-center space-x-4 mb-6">
-          <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
-          <Sparkles className="w-5 h-5 text-pink-400 animate-pulse" style={{ animationDelay: '0.3s' }} />
-          <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" style={{ animationDelay: '0.6s' }} />
-          <Sparkles className="w-5 h-5 text-pink-400 animate-pulse" style={{ animationDelay: '0.9s' }} />
+        <div className="flex justify-center mb-6">
+          <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-16 object-contain" />
         </div>
 
         <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
@@ -61,10 +58,8 @@ const Hero = () => {
               {/* Fake dashboard header */}
               <div className="bg-gray-900 border-b border-gray-800 px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-500 rounded flex items-center justify-center">
-                    <Sparkles className="w-3 h-3 text-white" />
-                  </div>
-                  <span className="text-sm font-semibold text-white">Analiyx Dashboard</span>
+                  <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-6 object-contain" />
+                  <span className="text-sm font-semibold text-white">Dashboard</span>
                 </div>
                 <div className="flex space-x-2">
                   <div className="w-3 h-3 rounded-full bg-red-500/60"></div>

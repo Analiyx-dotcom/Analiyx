@@ -116,34 +116,38 @@ const Onboarding = () => {
   const [isTyping, setIsTyping] = useState(true);
   const [userName, setUserName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [ready, setReady] = useState(false);
   const chatEndRef = useRef(null);
 
   const advancedSteps = useRef(new Set());
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) { navigate('/login'); return; }
+    if (!token) { navigate('/login', { replace: true }); return; }
 
+    let cancelled = false;
     const checkOnboarding = async () => {
       try {
         const res = await api.get('/onboarding/status');
+        if (cancelled) return;
         if (res.data.completed) {
-          navigate('/dashboard');
+          navigate('/dashboard', { replace: true });
           return;
         }
         setUserName(res.data.name || 'there');
-        // Show welcome message after short delay
+        setReady(true);
         setTimeout(() => {
+          if (cancelled) return;
           setIsTyping(false);
           setMessages([{ type: 'bot', content: `Hi ${res.data.name || 'there'}, glad to have you here!\n\nI'm Analiyx AI and I will help you turn your data into easy to understand insights and actions. First, I want to learn more about you to be more useful.` }]);
-          // Move to first question after another delay
-          setTimeout(() => advanceToStep(1), 1200);
+          setTimeout(() => { if (!cancelled) advanceToStep(1); }, 1200);
         }, 1500);
       } catch {
-        navigate('/login');
+        if (!cancelled) navigate('/login', { replace: true });
       }
     };
     checkOnboarding();
+    return () => { cancelled = true; };
   }, [navigate]);
 
   useEffect(() => {
@@ -231,6 +235,14 @@ const Onboarding = () => {
   const isChipStep = currentStepData?.type === 'chips';
   const isTextStep = currentStepData?.type === 'text';
   const stepAnswered = answers[currentStepData?.id] !== undefined;
+
+  if (!ready) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <img src="/analiyx-logo.jpg" alt="Analiyx" className="h-12 object-contain animate-pulse" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 flex flex-col" data-testid="onboarding-page">
