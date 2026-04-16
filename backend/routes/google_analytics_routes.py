@@ -24,8 +24,65 @@ def set_database(database):
     nango = NangoService(database)
 
 
+import random
+
+def _get_sample_ga_report(days=30):
+    """Sample GA4 data shown when not connected. Developer: replace with real API."""
+    daily = []
+    for i in range(days, 0, -1):
+        d = datetime.utcnow() - timedelta(days=i)
+        sessions = random.randint(250, 800)
+        users = int(sessions * random.uniform(0.7, 0.9))
+        pageviews = int(sessions * random.uniform(1.5, 3.0))
+        new_users = int(users * random.uniform(0.3, 0.6))
+        daily.append({
+            "date": d.strftime("%b %d"),
+            "sessions": sessions,
+            "users": users,
+            "pageviews": pageviews,
+            "bounce_rate": round(random.uniform(35, 65), 1),
+            "avg_duration": round(random.uniform(60, 240), 0),
+            "new_users": new_users,
+        })
+    top_pages = [
+        {"page": "/", "pageviews": 4520, "avg_time": "2m 15s"},
+        {"page": "/pricing", "pageviews": 2180, "avg_time": "3m 42s"},
+        {"page": "/features", "pageviews": 1890, "avg_time": "2m 58s"},
+        {"page": "/blog/analytics-guide", "pageviews": 1540, "avg_time": "4m 20s"},
+        {"page": "/contact", "pageviews": 980, "avg_time": "1m 30s"},
+    ]
+    traffic_sources = [
+        {"source": "Google / organic", "sessions": 5200, "percentage": 42},
+        {"source": "Direct", "sessions": 2800, "percentage": 23},
+        {"source": "Facebook / social", "sessions": 1900, "percentage": 15},
+        {"source": "Email / newsletter", "sessions": 1200, "percentage": 10},
+        {"source": "Twitter / social", "sessions": 750, "percentage": 6},
+        {"source": "Other", "sessions": 500, "percentage": 4},
+    ]
+    total_sessions = sum(d["sessions"] for d in daily)
+    total_users = sum(d["users"] for d in daily)
+    total_pageviews = sum(d["pageviews"] for d in daily)
+    return {
+        "is_sample_data": True,
+        "property_id": "SAMPLE",
+        "summary": {
+            "total_sessions": total_sessions,
+            "total_users": total_users,
+            "total_pageviews": total_pageviews,
+            "avg_bounce_rate": round(sum(d["bounce_rate"] for d in daily) / len(daily), 1),
+            "avg_session_duration": round(sum(d["avg_duration"] for d in daily) / len(daily), 0),
+        },
+        "daily_metrics": daily,
+        "top_pages": top_pages,
+        "traffic_sources": traffic_sources,
+    }
+
+
+
 async def _get_connection(user_id: str):
     """Get the user's google-analytics Nango connection"""
+    if not nango:
+        raise HTTPException(status_code=400, detail="Google Analytics not connected. Please connect via Data Sources.")
     conn = await nango.get_connection(user_id, "google-analytics")
     if not conn or not conn.get("connection_id"):
         raise HTTPException(status_code=400, detail="Google Analytics not connected. Please connect via Data Sources.")
@@ -123,7 +180,12 @@ async def set_property(data: dict, user_id: str = Depends(get_current_user_id)):
 @router.get("/report")
 async def get_report(property_id: Optional[str] = None, days: int = 30, user_id: str = Depends(get_current_user_id)):
     """Fetch GA4 daily metrics report for charts"""
-    conn = await _get_connection(user_id)
+    try:
+        conn = await _get_connection(user_id)
+    except HTTPException:
+        # Not connected — return sample data
+        return _get_sample_ga_report(days)
+
     cid = conn["connection_id"]
 
     # If no property_id, try user's saved one or auto-discover

@@ -1,161 +1,26 @@
-<analysis><handoff summary>
-**original_problem_statement:**
-The user is building a dark-themed analytics platform named Analiyx with user/admin roles, a 7-day free trial, Razorpay subscriptions, and AI/OAuth integrations. 
-Recent PRODUCT REQUIREMENTS:
-1. Nango OAuth Integration for managing data source connections (Google Ads, Analytics, Meta Ads, Google Sheets).
-2. Google Ads and Google Analytics Dashboard fetching real data via Nango Proxy.
-3. User Settings Page matching papermap.ai style (Personal Info & Password Change).
-4. Credit Deduction System: Deduct credits per action (AI Chat=1, AI Visibility=5, File Upload=2). Trial gets 100 credits. Starter gets 200/month (₹9,999/yr), Business Pro gets 500/month (₹14,999/yr).
-5. Chart color theme selector (6 themes) and Bookmark AI Chat messages to Notes.
-6. Token-optimized AI prompts for Deep AI Visibility Report to avoid LLM budget constraints.
-
-**User's preferred language**: English
-*(INSTRUCT: Respond in English only.)*
-
-**what currently exists?** 
-A functional React/FastAPI app with JWT auth, Razorpay payments, and coupon support. It has a fully working credit-deduction engine for AI/upload actions. The AI Visibility and Chat tools run on optimized GPT-5.2 prompts via the Emergent LLM Key. Nango is successfully implemented for frontend OAuth connection handling. The Google Ads integration fetches data via Nango. Google Analytics UI is built but backend reporting is currently failing due to scope permissions.
-
-**Last working item**:
-    - Last item agent was working: Fixing a  error when fetching Google Analytics Data via Nango proxy. The agent realized the Nango  provider lacks the required  OAuth scope, and was attempting to programmatically inject this scope into Nango's config/session using Bash scripts, but API calls to Nango were failing (, ).
-    - Status: IN PROGRESS
-    - Agent Testing Done: N
-    - Which testing method agent to use? backend testing agent / manual curl
-    - User Testing Done: N
-
-**All Pending/In progress Issue list**:
-  Issue 1: Google Analytics 403 Permission Denied via Nango (P0)
-     - Attempted fixes: Agent tried to pass  into Nango's  endpoint and tried to hit Nango's  API to add the  scope, but both failed with validation errors.
-     - Next debug checklist: Check Nango docs for the exact JSON structure to update provider configs, OR instruct the user to log into their Nango Dashboard to manually add  to the Google Analytics provider scopes. Once the scope is fixed, re-authenticate GA4 and test the  data fetch.
-     - Why fix this issue and what will be achieved with the fix? It will allow the GA4 dashboard to actually render traffic and session data instead of showing errors/zeros.
-     - Status: IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Backend (curl)
-
-  Issue 2: Gmail SMTP Authentication Failing (P1)
-     - Attempted fixes: Legacy issue. Google continuously blocks the provided App Passwords with .
-     - Next debug checklist: Recommend the user switch to Resend, SendGrid, or ensure strict 2FA without spaces in the password.
-     - Why fix this issue and what will be achieved with the fix? Restores email notifications.
-     - Status: BLOCKED
-     - Is recurring issue? Y
-     - Should Test frontend/backend/both after fix? Backend
-
-**In progress Task List**:
-  Task 1: Chart Color Theme Selector (P1)
-     - Where to resume: Agent started modifying  to save themes (Default, Forest, Azure, Mint, Violet, Ocean) but paused when the user requested Nango integration. Needs frontend UI in the Dashboard and applying selected colors to Recharts.
-     - What will be achieved with this? Customization of the data visuals.
-     - Status: NOT STARTED
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on something: GA4 bug (Issue 1)
-
-  Task 2: Bookmark Chat to Notes (P1)
-     - Where to resume: Add a bookmark icon to messages in the AI Chat component inside . When clicked, it should call  to save the chat content.
-     - What will be achieved with this? Easy saving of AI insights.
-     - Status: NOT STARTED
-     - Should Test frontend/backend/both after fix? Both
-     - Blocked on something: GA4 bug (Issue 1)
-
-**Upcoming and Future Tasks**
-    Upcoming Tasks:
-    - (P1) Monthly credit reset cron job (Reset credits based on active plan at the start of billing cycle).
-    - (P2) Social Logins: Implement Google & Microsoft OAuth for App Registration/Login.
-    
-    Future Tasks:
-    - (P3) Editable Dashboard Layout (drag-and-drop).
-    - (P3) Email Verification on Login (2FA).
-    - (P3) Forgot Password Backend.
-    - (P3) Refactor  (Extract components to reduce its ~1500 line size).
-
-**Completed work in this session**
-- Complete User/Admin Phone Number & Client ID workflow (DONE)
-- Admin user search, Admin Coupon generation, and Razorpay Coupon validation (DONE)
-- Deep AI Visibility Report with citations & Token Optimization (DONE)
-- Settings Page () for profile/password updates (DONE)
-- Action-based Credit Deduction (AI Chat=1, AI Vis=5, Upload=2) & Pricing logic update (DONE)
-- Nango OAuth Proxy integration (, ) (DONE)
-- Google Ads integration & Dashboard UI fetching real Nango proxy data (DONE)
-- Google Analytics UI setup & routing (Data fetching pending scope fix) (DONE)
-
-**Earlier issues found/mentioned but not fixed**
-   - Issue 1: Emergent LLM Key budget exceeded (400 Error).
-   - Debug checklist: Agent switched to Gemini temporarily (which hit a 429 quota error), then reverted to Emergent LLM Key but *heavily optimized* the system prompts to use fewer tokens. If it happens again, prompt the user to top up their Universal Key.
-   - Why to solve this issue and what will be achieved with this: Ensures AI features remain usable.
-   - Should Test frontend/backend/both after fix: Backend
-   - Is recurring issue? Y
-
-**Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: None
-  - Recurrence count: 0
-  - Status: RESOLVED
-
-**Code Architecture**
-
-
-**Key Technical Concepts**
-- **Frontend:** React, Tailwind CSS, Shadcn/ui, Recharts, .
-- **Backend:** FastAPI, Motor (MongoDB), Nango REST API.
-- **Integrations:** Nango Proxy for Google Ads & Analytics. Emergent LLM Key (GPT-5.2). Razorpay.
-
-**key DB schema**
-  - : { user_id, service (e.g., 'google-analytics'), connection_id, connected_at }
-  - : { ..., phone, client_id, credits (int) }
-  - : { code, discount_percentage, is_active }
-
-**changes in tech stack**
-  - Added  to package.json.
-  - Added  REST proxy mechanism instead of raw Google SDKs for data integrations.
-
-**All files of reference**
-- : Core utility managing Nango connections and API proxies.
-- : Failing due to missing Nango  scope.
-- : Connects UI to Nango session tokens.
-
-**Areas that need refactoring**:
--  (Extremely large file)
-
-**key api endpoints**
-- : Generates Nango connect session token.
-- : Fetches GA4 data via Nango (Currently failing with 403).
-
-**Critical Info for New Agent**
-- **Nango Scope Issue**: The user successfully connected GA via Nango, but the data fetch fails with 403. You MUST resolve the Nango provider scope issue first. Stop trying to guess the Nango API config payload—either find the correct payload for overriding scopes in Nango's  or  via web search, OR ask the user to manually update their Google Analytics provider in the Nango Cloud UI to include .
-- **Credits**: Be aware that any AI chat, AI visibility report, or file upload deducts credits from the user model via . Do not break this.
-- Do not inject  into  on the frontend. The agent already fixed this bug, but keep it in mind if rewriting auth logic.
-
-**documents and test reports created in this job**
-  -  (Updated)
-  - 
-  - 
-  - 
-
-**Last 10 User Messages and any pending HUMAN messages** 
- 1. User asked to revert AI keys from Gemini back to original and optimize prompt. (DONE)
- 2. User requested a Settings page mimicking papermap.ai. (DONE)
- 3. User reported credits not deducting properly and requested pricing/credit adjustments. (DONE)
- 4. User requested Chart color theme selector and Bookmark chat to notes. (IN PROGRESS/PAUSED)
- 5. User asked to install and configure Nango with specific keys. (DONE)
- 6. User requested Google Ads integration via Nango. (DONE)
- 7. User reported connection_id is forbidden error on Google Ads Nango connect. (DONE)
- 8. User reported Google Analytics connected successfully but data shows zero / not graphical. (IN PROGRESS - GA4 403 SCOPE BUG)
-
-**Project Health Check:**
-- **Broken**: Google Analytics data fetching (403 Permission Denied - Scope issue).
-- **Mocked**: None.
-
-**3rd Party Integrations**
-  - Razorpay (Payments) — requires User API Key
-  - Nango (OAuth Manager for Google Ads, GA4, Meta Ads) — requires User Nango Secret Key
-  - Emergent LLM Key — uses Emergent LLM Key (GPT-5.2)
-
-**Testing status**
-  - Testing agent used after significant changes: YES (Iterations 12, 13, 14)
-  - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None
-  - Known regressions: None
-
-**Credentials to test flow:**
-- Admin:  / 
-- User:  / 
-
-**What agent forgot to execute**
-The agent got interrupted by the Nango request right as they were about to implement the **Chart color theme selector** (started modifying ) and **Bookmark chat messages to Notes** feature. These two features from User Message #348 are completely pending UI/UX implementation.
-</handoff summary></analysis>
+<analysis>API_CONTRACTS.mdAPI_CONTRACTS.md/api/google-ads/campaigns/api/google-analytics/report/api/meta-ads/campaigns/api/google-sheets/sheetsUserDashboard.jsxmix-blend-lighten/apiDEVELOPER_TOKEN_NOT_APPROVED
+/app
+├── backend
+│   ├── routes/
+│   │   ├── auth_routes.py (Updated with onboarding flags)
+│   │   ├── google_ads_routes.py (Now returns sample data on disconnect)
+│   │   ├── google_analytics_routes.py (Now returns sample data on disconnect)
+│   │   ├── meta_ads_routes.py (NEW)
+│   │   ├── google_sheets_routes.py (NEW)
+│   │   ├── onboarding_routes.py (NEW)
+│   ├── server.py (Fixed CORS & Health check for VPS)
+├── frontend
+│   ├── public/analiyx-logo.jpg (NEW)
+│   ├── src
+│   │   ├── components/
+│   │   │   ├── Logo.jsx (NEW)
+│   │   │   ├── MetaAdsDashboard.jsx (NEW)
+│   │   │   ├── GoogleSheetsDashboard.jsx (NEW)
+│   │   ├── pages/
+│   │   │   ├── Onboarding.jsx (NEW)
+│   │   │   ├── UserDashboard.jsx
+├── nginx.conf (NEW)
+├── ecosystem.config.js (NEW)
+├── deploy.sh (NEW)
+└── DEPLOY.md (NEW)
+mix-blend-lighten/apiusersonboarding_completedonboarding_datapm2nginx/api/app/backend/server.py/api/health/app/frontend/src/pages/Onboarding.jsx/app/frontend/src/components/Logo.jsxmix-blend-lighten/app/backend/routes/google_ads_routes.pygoogle_analytics_routes.pytry-exceptnango.get_connection/app/frontend/src/pages/UserDashboard.jsxPOST /api/onboarding/saveGET /api/google-ads/campaigns/api/google-analytics/report/api/meta-ads/campaigns/api/google-sheets/sheets.envhttp://localhost:8001/api.jpgmix-blend-lighten<img>Logo.jsx/app/memory/PRD.md/app/test_reports/iteration_15.json/app/test_reports/iteration_16.json/app/DEPLOY.mdmix-blend-lightenAPI_CONTRACTS.mdAdmin@analiyx.com1234testuser@test.comtest1234API_CONTRACTS.md</analysis>

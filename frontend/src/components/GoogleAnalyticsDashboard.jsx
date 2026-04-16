@@ -119,7 +119,8 @@ const GoogleAnalyticsDashboard = () => {
 
   if (!data) return null;
 
-  const { summary, daily_chart, top_pages, traffic_sources, period } = data;
+  const { summary, top_pages, traffic_sources, period } = data;
+  const daily_chart = data.daily_chart || data.daily_metrics || [];
   const fmt = (n) => n?.toLocaleString('en-IN') ?? '0';
 
   return (
@@ -130,7 +131,7 @@ const GoogleAnalyticsDashboard = () => {
           <h3 className="text-lg font-bold text-white flex items-center gap-2">
             <Globe className="w-5 h-5 text-orange-400" /> Google Analytics
           </h3>
-          <p className="text-gray-500 text-xs">{period} &middot; Property: {data.property_id}</p>
+          <p className="text-gray-500 text-xs">{period || 'Last 30 days'} {data.property_id && <>· Property: {data.property_id}</>} {data.is_sample_data && <Badge variant="outline" className="ml-2 text-yellow-500 border-yellow-600 text-[10px]">Sample Data</Badge>}</p>
         </div>
         <Button size="sm" variant="ghost" onClick={() => fetchReport(data?.property_id)} className="text-gray-500 hover:text-white">
           <RefreshCw className="w-4 h-4" />
@@ -142,7 +143,7 @@ const GoogleAnalyticsDashboard = () => {
         <SummaryCard icon={Users} label="Total Users" value={fmt(summary.total_users)} color="bg-purple-500/15 text-purple-400" />
         <SummaryCard icon={TrendingUp} label="Sessions" value={fmt(summary.total_sessions)} color="bg-blue-500/15 text-blue-400" />
         <SummaryCard icon={Eye} label="Page Views" value={fmt(summary.total_pageviews)} color="bg-cyan-500/15 text-cyan-400" />
-        <SummaryCard icon={UserPlus} label="New Users" value={fmt(summary.total_new_users)} color="bg-green-500/15 text-green-400" />
+        <SummaryCard icon={UserPlus} label="New Users" value={fmt(summary.total_new_users || 0)} color="bg-green-500/15 text-green-400" />
         <SummaryCard icon={Clock} label="Bounce Rate" value={`${summary.avg_bounce_rate}%`} color="bg-yellow-500/15 text-yellow-400" />
       </div>
 
@@ -234,8 +235,8 @@ const GoogleAnalyticsDashboard = () => {
                     <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
                       <td className="py-2 px-4 text-white text-xs font-mono max-w-[300px] truncate" title={p.page}>{p.page}</td>
                       <td className="py-2 px-4 text-cyan-400 text-xs font-mono">{fmt(p.pageviews)}</td>
-                      <td className="py-2 px-4 text-purple-400 text-xs font-mono">{fmt(p.users)}</td>
-                      <td className="py-2 px-4 text-yellow-400 text-xs font-mono">{p.bounce_rate}%</td>
+                      <td className="py-2 px-4 text-purple-400 text-xs font-mono">{p.users ? fmt(p.users) : (p.avg_time || '-')}</td>
+                      <td className="py-2 px-4 text-yellow-400 text-xs font-mono">{p.bounce_rate ? `${p.bounce_rate}%` : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

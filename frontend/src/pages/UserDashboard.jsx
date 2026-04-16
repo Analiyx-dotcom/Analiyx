@@ -6,6 +6,10 @@ import { Sparkles, LogOut, Database, CreditCard, TrendingUp, X, ArrowUp, ArrowDo
 import NangoConnect from '../components/NangoConnect';
 import GoogleAdsDashboard from '../components/GoogleAdsDashboard';
 import GoogleAnalyticsDashboard from '../components/GoogleAnalyticsDashboard';
+import MetaAdsDashboard from '../components/MetaAdsDashboard';
+import GoogleSheetsDashboard from '../components/GoogleSheetsDashboard';
+import ShopifyDashboard from '../components/ShopifyDashboard';
+import ZohoDashboard from '../components/ZohoDashboard';
 import ChartThemeSelector from '../components/ChartThemeSelector';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
@@ -990,27 +994,51 @@ const UserDashboard = () => {
 
         {/* ===== DATA SOURCES TAB ===== */}
         {activeTab === 'sources' && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white">Data Sources</h2>
-              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setIsDataSourceModalOpen(true)}><Plus className="w-4 h-4 mr-1" /> Connect Source</Button>
+              <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600" onClick={() => setIsDataSourceModalOpen(true)}><Plus className="w-4 h-4 mr-1" /> Upload Data</Button>
             </div>
 
-            {/* Nango OAuth Integrations */}
+            {/* Google Analytics Dashboard */}
+            <Card className="bg-gray-900/50 border-gray-800 p-5">
+              <GoogleAnalyticsDashboard />
+            </Card>
+
+            {/* Google Ads Performance Dashboard */}
+            <Card className="bg-gray-900/50 border-gray-800 p-5">
+              <GoogleAdsDashboard />
+            </Card>
+
+            {/* Meta/Facebook Ads Dashboard */}
+            <Card className="bg-gray-900/50 border-gray-800 p-5">
+              <MetaAdsDashboard />
+            </Card>
+
+            {/* Google Sheets Dashboard */}
+            <Card className="bg-gray-900/50 border-gray-800 p-5">
+              <GoogleSheetsDashboard />
+            </Card>
+
+            {/* Shopify Store Dashboard */}
+            <Card className="bg-gray-900/50 border-gray-800 p-5">
+              <ShopifyDashboard />
+            </Card>
+
+            {/* Zoho Books & CRM Dashboard */}
+            <Card className="bg-gray-900/50 border-gray-800 p-5">
+              <ZohoDashboard />
+            </Card>
+
+            {/* Nango OAuth Connection Manager */}
             <div>
-              <h3 className="text-base font-semibold text-gray-300 mb-3">OAuth Integrations (via Nango)</h3>
+              <h3 className="text-base font-semibold text-gray-300 mb-3">Connection Manager</h3>
               <NangoConnect />
             </div>
 
-            {/* Google Ads Performance Dashboard */}
-            <GoogleAdsDashboard />
-
-            {/* Google Analytics Dashboard */}
-            <GoogleAnalyticsDashboard />
-
             {/* Uploaded Files / Manual Integrations */}
             <div>
-              <h3 className="text-base font-semibold text-gray-300 mb-3">Uploaded Data Files</h3>
+              <h3 className="text-base font-semibold text-gray-300 mb-3">Upload Data Files</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {integrations.map((intg, i) => (
                   <Card key={i} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-all cursor-pointer" onClick={() => handleIntegrationClick(intg)}>

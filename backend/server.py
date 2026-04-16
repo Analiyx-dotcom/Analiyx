@@ -29,6 +29,10 @@ from routes.nango_routes import router as nango_router
 from routes.google_ads_routes import router as google_ads_router
 from routes.google_analytics_routes import router as ga_router
 from routes.onboarding_routes import router as onboarding_router
+from routes.meta_ads_routes import router as meta_ads_router
+from routes.google_sheets_routes import router as sheets_router
+from routes.shopify_routes import router as shopify_router
+from routes.zoho_routes import router as zoho_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -117,9 +121,13 @@ app.include_router(nango_router)
 app.include_router(google_ads_router)
 app.include_router(ga_router)
 app.include_router(onboarding_router)
+app.include_router(meta_ads_router)
+app.include_router(sheets_router)
+app.include_router(shopify_router)
+app.include_router(zoho_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes, google_ads_routes, google_analytics_routes, onboarding_routes
+from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes, google_ads_routes, google_analytics_routes, onboarding_routes, meta_ads_routes, google_sheets_routes, shopify_routes, zoho_routes
 from auth import set_auth_database
 set_auth_database(db)
 auth_routes.set_database(db)
@@ -140,6 +148,10 @@ nango_routes.set_database(db)
 google_ads_routes.set_database(db)
 google_analytics_routes.set_database(db)
 onboarding_routes.set_database(db)
+meta_ads_routes.set_database(db)
+google_sheets_routes.set_database(db)
+shopify_routes.set_database(db)
+zoho_routes.set_database(db)
 
 # Configure logging
 logging.basicConfig(

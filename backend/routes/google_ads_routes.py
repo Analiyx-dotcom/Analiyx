@@ -20,11 +20,42 @@ nango: NangoService = None
 def set_database(database):
     global db, nango
     db = database
+
+
+def _get_sample_campaigns():
+    """Sample Google Ads data shown when not connected. Developer: replace with real API."""
+    campaigns = [
+        {"name": "Brand Search - Exact Match", "status": "ENABLED", "channel": "SEARCH", "impressions": 42500, "clicks": 3820, "ctr": 8.99, "avg_cpc": 12.40, "cost": 47368, "conversions": 285, "conv_value": 712500},
+        {"name": "Display Remarketing", "status": "ENABLED", "channel": "DISPLAY", "impressions": 185200, "clicks": 2960, "ctr": 1.60, "avg_cpc": 5.80, "cost": 17168, "conversions": 98, "conv_value": 196000},
+        {"name": "Shopping - Top Products", "status": "ENABLED", "channel": "SHOPPING", "impressions": 67800, "clicks": 4750, "ctr": 7.00, "avg_cpc": 8.50, "cost": 40375, "conversions": 412, "conv_value": 1236000},
+        {"name": "YouTube Video Ads", "status": "PAUSED", "channel": "VIDEO", "impressions": 320000, "clicks": 9600, "ctr": 3.00, "avg_cpc": 3.20, "cost": 30720, "conversions": 145, "conv_value": 362500},
+        {"name": "Performance Max - All", "status": "ENABLED", "channel": "PERFORMANCE_MAX", "impressions": 128400, "clicks": 5136, "ctr": 4.00, "avg_cpc": 9.10, "cost": 46738, "conversions": 320, "conv_value": 960000},
+    ]
+    total_imp = sum(c["impressions"] for c in campaigns)
+    total_clicks = sum(c["clicks"] for c in campaigns)
+    total_cost = sum(c["cost"] for c in campaigns)
+    total_conv = sum(c["conversions"] for c in campaigns)
+    return {
+        "is_sample_data": True,
+        "customer_id": "SAMPLE",
+        "campaigns": campaigns,
+        "summary": {
+            "total_impressions": total_imp,
+            "total_clicks": total_clicks,
+            "total_cost": total_cost,
+            "total_conversions": total_conv,
+            "avg_ctr": round(total_clicks / total_imp * 100, 2),
+            "avg_cpc": round(total_cost / total_clicks, 2),
+        },
+    }
+
     nango = NangoService(database)
 
 
 async def _get_connection(user_id: str):
     """Get the user's google-ads Nango connection"""
+    if not nango:
+        raise HTTPException(status_code=400, detail="Google Ads not connected. Please connect via Data Sources.")
     conn = await nango.get_connection(user_id, "google-ads")
     if not conn or not conn.get("connection_id"):
         raise HTTPException(status_code=400, detail="Google Ads not connected. Please connect via Data Sources.")
@@ -103,7 +134,12 @@ async def get_customers(user_id: str = Depends(get_current_user_id)):
 @router.get("/campaigns")
 async def get_campaigns(customer_id: Optional[str] = None, user_id: str = Depends(get_current_user_id)):
     """Fetch campaigns with performance metrics for the last 30 days"""
-    conn = await _get_connection(user_id)
+    try:
+        conn = await _get_connection(user_id)
+    except HTTPException:
+        # Not connected — return sample data so UI is always populated
+        return _get_sample_campaigns()
+
     connection_id = conn["connection_id"]
 
     # If no customer_id provided, fetch the first accessible one
