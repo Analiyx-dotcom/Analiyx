@@ -206,4 +206,12 @@ credentials.json
 # Allow .env.example files (safe to commit — contains only placeholders)
 !.env.example
 !backend/.env.example
-!frontend/.env.example
+!frontend/.env.example-e 
+# Environment and credential files
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
