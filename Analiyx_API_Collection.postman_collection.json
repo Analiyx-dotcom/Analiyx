@@ -1,0 +1,1077 @@
+{
+  "info": {
+    "name": "Analiyx API Collection",
+    "description": "Complete API collection for Analiyx Analytics Platform.\n\nSetup:\n1. Set `base_url` variable to your backend URL (e.g., http://localhost:8001 or https://yourdomain.com)\n2. Run 'Login' request first — it auto-sets the `token` variable\n3. All authenticated endpoints use {{token}} automatically",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "analiyx-2026"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8001",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"newuser@test.com\",\n  \"password\": \"password123\",\n  \"phone\": \"+919876543210\",\n  \"client_id\": \"CLI-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"Admin@analiyx.com\",\n  \"password\": \"1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Test User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "    pm.collectionVariables.set('token', jsonData.token);",
+                  "    console.log('Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"testuser@test.com\",\n  \"password\": \"test1234\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "me"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"+919876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"test1234\",\n  \"new_password\": \"newpass123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "change-password"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboards (Sample Data)",
+      "description": "All dashboard endpoints return sample data when no real integration is connected. Set is_sample_data=false when returning real data.",
+      "item": [
+        {
+          "name": "Google Analytics Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/google-analytics/report?days=30",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-analytics", "report"],
+              "query": [
+                { "key": "days", "value": "30", "description": "Number of days (default: 30)" },
+                { "key": "property_id", "value": "", "description": "GA4 Property ID (optional, auto-discovered)", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Google Ads Campaigns",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/google-ads/campaigns",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-ads", "campaigns"],
+              "query": [
+                { "key": "customer_id", "value": "", "description": "Google Ads Customer ID (optional)", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Meta Ads Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/meta-ads/report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "meta-ads", "report"]
+            }
+          }
+        },
+        {
+          "name": "Google Sheets Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/google-sheets/report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "google-sheets", "report"]
+            }
+          }
+        },
+        {
+          "name": "Shopify Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/shopify/report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "shopify", "report"]
+            }
+          }
+        },
+        {
+          "name": "Zoho Books Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/zoho/books/report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "zoho", "books", "report"]
+            }
+          }
+        },
+        {
+          "name": "Zoho CRM Report",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/zoho/crm/report",
+              "host": ["{{base_url}}"],
+              "path": ["api", "zoho", "crm", "report"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Data Sources (File Upload)",
+      "item": [
+        {
+          "name": "Get Upload Limits",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/data-sources/limits",
+              "host": ["{{base_url}}"],
+              "path": ["api", "data-sources", "limits"]
+            }
+          }
+        },
+        {
+          "name": "Upload File (CSV/Excel)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "", "description": "CSV or Excel file" },
+                { "key": "workspace_id", "value": "", "description": "Optional workspace ID", "type": "text", "disabled": true }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/data-sources/upload-file",
+              "host": ["{{base_url}}"],
+              "path": ["api", "data-sources", "upload-file"]
+            }
+          }
+        },
+        {
+          "name": "List Uploaded Files",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/data-sources/uploaded-files",
+              "host": ["{{base_url}}"],
+              "path": ["api", "data-sources", "uploaded-files"],
+              "query": [
+                { "key": "workspace_id", "value": "", "description": "Filter by workspace", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get File Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/data-sources/file-details/{{file_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "data-sources", "file-details", "{{file_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/data-sources/file/{{file_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "data-sources", "file", "{{file_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Visibility",
+      "item": [
+        {
+          "name": "Analyze URL",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai-visibility/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-visibility", "analyze"]
+            }
+          }
+        },
+        {
+          "name": "Get Analysis History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/ai-visibility/history",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai-visibility", "history"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Chat",
+      "item": [
+        {
+          "name": "Send Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"What are my top traffic sources this month?\",\n  \"workspace_id\": \"general\",\n  \"session_id\": \"session-001\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/chat",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "chat"]
+            }
+          }
+        },
+        {
+          "name": "AI Search",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"analytics trends\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/ai/search",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "search"]
+            }
+          }
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/ai/chat/history/general",
+              "host": ["{{base_url}}"],
+              "path": ["api", "ai", "chat", "history", "general"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nango (OAuth)",
+      "item": [
+        {
+          "name": "Create Connect Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allowed_integrations\": [\"google-analytics\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/nango/connect-session",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nango", "connect-session"]
+            }
+          }
+        },
+        {
+          "name": "Save Connection",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"integration_id\": \"google-analytics\",\n  \"connection_id\": \"conn_abc123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/nango/save-connection",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nango", "save-connection"]
+            }
+          }
+        },
+        {
+          "name": "List Connections",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/nango/connections",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nango", "connections"]
+            }
+          }
+        },
+        {
+          "name": "Delete Connection",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/nango/connections/google-analytics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nango", "connections", "google-analytics"]
+            }
+          }
+        },
+        {
+          "name": "Proxy Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"integration_id\": \"google-analytics\",\n  \"method\": \"GET\",\n  \"path\": \"/v1beta/accountSummaries\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/nango/proxy",
+              "host": ["{{base_url}}"],
+              "path": ["api", "nango", "proxy"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Integrations (Legacy OAuth)",
+      "item": [
+        {
+          "name": "Connect Google Ads (OAuth URL)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/integrations/connect/google_ads",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrations", "connect", "google_ads"]
+            }
+          }
+        },
+        {
+          "name": "Connect Google Analytics (OAuth URL)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/integrations/connect/google_analytics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrations", "connect", "google_analytics"]
+            }
+          }
+        },
+        {
+          "name": "Connect Meta Ads (OAuth URL)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/integrations/connect/meta_ads",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrations", "connect", "meta_ads"]
+            }
+          }
+        },
+        {
+          "name": "Connect Google Sheets (OAuth URL)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/integrations/connect/google_sheets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrations", "connect", "google_sheets"]
+            }
+          }
+        },
+        {
+          "name": "Integration Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/integrations/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrations", "status"]
+            }
+          }
+        },
+        {
+          "name": "Disconnect Integration",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/integrations/disconnect/google_ads",
+              "host": ["{{base_url}}"],
+              "path": ["api", "integrations", "disconnect", "google_ads"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments (Razorpay)",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plan\": \"Starter\",\n  \"coupon_code\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/create-order",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "create-order"]
+            }
+          }
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_xxx\",\n  \"razorpay_payment_id\": \"pay_xxx\",\n  \"razorpay_signature\": \"sig_xxx\",\n  \"plan\": \"Starter\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/verify-payment",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "verify-payment"]
+            }
+          }
+        },
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"LAUNCH50\",\n  \"plan\": \"Starter\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/payments/validate-coupon",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "validate-coupon"]
+            }
+          }
+        },
+        {
+          "name": "Order Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/payments/order-status/order_xxx",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "order-status", "order_xxx"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workspaces",
+      "item": [
+        {
+          "name": "Create Workspace",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Marketing Analytics\",\n  \"data_sources\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/workspaces/create",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workspaces", "create"]
+            }
+          }
+        },
+        {
+          "name": "List Workspaces",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/workspaces/list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workspaces", "list"]
+            }
+          }
+        },
+        {
+          "name": "Delete Workspace",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/workspaces/{{workspace_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "workspaces", "{{workspace_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notes & Reports",
+      "item": [
+        {
+          "name": "Create Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Q1 Analysis\",\n  \"content\": \"Key findings from Q1 data...\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/charts/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "notes"]
+            }
+          }
+        },
+        {
+          "name": "List Notes",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/charts/notes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "notes"]
+            }
+          }
+        },
+        {
+          "name": "Update Note",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"content\": \"Updated content...\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/charts/notes/{{note_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "notes", "{{note_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Note",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{base_url}}/api/charts/notes/{{note_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "notes", "{{note_id}}"]
+            }
+          }
+        },
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/charts/reports",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "reports"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "item": [
+        {
+          "name": "Get Onboarding Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "onboarding", "status"]
+            }
+          }
+        },
+        {
+          "name": "Save Onboarding Data",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usage_type\": \"business\",\n  \"company_name\": \"Acme Corp\",\n  \"location\": \"Mumbai\",\n  \"description\": \"E-commerce platform\",\n  \"industry\": \"Retail\",\n  \"monthly_mrr\": \"5-10 Lakhs\",\n  \"data_analyst\": \"No\",\n  \"digital_marketing\": \"Yes\",\n  \"data_preference\": \"connect\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/save",
+              "host": ["{{base_url}}"],
+              "path": ["api", "onboarding", "save"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Get All Onboarding Data",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/onboarding/admin/all",
+              "host": ["{{base_url}}"],
+              "path": ["api", "onboarding", "admin", "all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Support",
+      "item": [
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Cannot connect Google Ads\",\n  \"message\": \"Getting an error when trying to connect...\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/support/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "support", "tickets"]
+            }
+          }
+        },
+        {
+          "name": "List My Tickets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/support/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "support", "tickets"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard Summary",
+      "item": [
+        {
+          "name": "Get Dashboard Summary",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/dashboard/summary",
+              "host": ["{{base_url}}"],
+              "path": ["api", "dashboard", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get/Set Chart Theme",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/charts/theme",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "theme"]
+            }
+          }
+        },
+        {
+          "name": "Update Chart Theme",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"theme\": \"forest\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/charts/theme",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charts", "theme"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Admin Stats",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/stats",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "stats"]
+            }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?page=1&limit=20&search=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "", "description": "Search by name/email" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "User Growth Chart",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/charts/user-growth",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "charts", "user-growth"]
+            }
+          }
+        },
+        {
+          "name": "Revenue Chart",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/charts/revenue",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "charts", "revenue"]
+            }
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"active\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{user_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{user_id}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Extend User Trial",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"days\": 7\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{user_id}}/extend-trial",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{user_id}}", "extend-trial"]
+            }
+          }
+        },
+        {
+          "name": "Update User Credits",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"credits\": 500\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/{{user_id}}/credits",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "{{user_id}}", "credits"]
+            }
+          }
+        },
+        {
+          "name": "Admin - List Tickets",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/tickets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tickets"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Reply to Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"We're looking into this issue.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/tickets/{{ticket_id}}/reply",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "tickets", "{{ticket_id}}", "reply"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Create Coupon",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"LAUNCH50\",\n  \"discount_percent\": 50,\n  \"max_uses\": 100,\n  \"valid_plans\": [\"Starter\", \"Business Pro\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/coupons",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "coupons"]
+            }
+          }
+        },
+        {
+          "name": "Admin - List Coupons",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/coupons",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "coupons"]
+            }
+          }
+        },
+        {
+          "name": "Admin - Export Users",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/admin/users/export/csv",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "users", "export", "csv"],
+              "query": [
+                { "key": "format", "value": "csv", "description": "csv or json", "disabled": true }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/health",
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
