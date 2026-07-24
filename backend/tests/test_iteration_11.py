@@ -20,7 +20,7 @@ import os
 import time
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://deep-report-beta.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://ai-analytics-engine-4.preview.emergentagent.com')
 
 class TestNewUserRegistration:
     """Test new user registration creates Trial plan with 7-day trial"""
