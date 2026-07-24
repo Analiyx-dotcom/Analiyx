@@ -140,3 +140,6 @@ frontend/node_modules/.cache/default-development/10.pack
 *.env
 *.env.*
 frontend/node_modules/.cache/default-development/12.pack
+.env.*
+credentials.json
+.credentials

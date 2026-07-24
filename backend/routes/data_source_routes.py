@@ -130,6 +130,31 @@ async def upload_file(
         sample_df = df.head(5).fillna("")
         sample_data = json.loads(sample_df.to_json(orient='records', default_handler=str))
         
+        # Semantic type detection + data quality (metadata engine)
+        try:
+            from services.metadata.semantic_types import detect_semantic_type
+            from services.semantic.business_metrics import match_business_terms, BusinessMetricsService
+            column_semantics = {}
+            for col in df.columns:
+                samples = df[col].dropna().astype(str).head(20).tolist()
+                column_semantics[str(col)] = detect_semantic_type(str(col), str(df[col].dtype), samples)
+            analytics["column_semantics"] = column_semantics
+            duplicate_rows = int(df.duplicated().sum())
+            analytics["duplicate_rows"] = duplicate_rows
+            total_cells = max(len(df) * max(len(df.columns), 1), 1)
+            missing_pct = sum(analytics["missing_values"].values()) / total_cells * 100
+            dup_pct = duplicate_rows / max(len(df), 1) * 100
+            analytics["quality_score"] = max(0, round(100 - min(missing_pct * 0.6, 40) - min(dup_pct * 0.5, 20), 1))
+            business_terms = match_business_terms([str(c) for c in df.columns])
+            analytics["business_terms"] = business_terms
+            if business_terms:
+                inferred = [{"metric": m, "schema": "", "table": file.filename, "columns": cols}
+                            for m, cols in business_terms.items()]
+                await BusinessMetricsService(db).seed_glossary(str(user_id), inferred)
+        except Exception as meta_err:
+            import logging
+            logging.getLogger(__name__).warning("File metadata enrichment failed: %s", meta_err)
+        
         # Store file metadata in database
         file_doc = {
             "user_id": ObjectId(user_id),

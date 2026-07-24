@@ -70,6 +70,49 @@ class QueryPlanner:
                 results.append(term)
         return results[:5]
 
+    async def repair_sql(self, question: str, sql: str, issues: list, db_type: str, tables_meta: list) -> str:
+        """Attempt to auto-repair invalid SQL using validation feedback and real schema."""
+        dialect = "PostgreSQL" if db_type == "postgresql" else "MySQL"
+        schema_lines = []
+        for t in tables_meta[:15]:
+            cols = ", ".join(
+                (c["name"] if isinstance(c, dict) else c) for c in t.get("columns", [])[:30]
+            )
+            schema_lines.append(f"{t.get('schema', 'public')}.{t['table']}: {cols}")
+        chat = LlmChat(
+            api_key=EMERGENT_KEY,
+            session_id="sql-repair",
+            system_message=(
+                f"You are a {dialect} SQL repair expert. Fix the broken SQL using ONLY tables and columns "
+                "from the provided schema. Respond with ONLY the corrected SQL, no explanation, no code fences."
+            ),
+        )
+        chat.with_model("openai", "gpt-5.2")
+        prompt = (
+            f"Question: {question}\n\nBroken SQL:\n{sql}\n\nValidation issues:\n"
+            + "\n".join(f"- {i}" for i in issues)
+            + "\n\nActual schema:\n" + "\n".join(schema_lines)
+        )
+        resp = await chat.send_message(UserMessage(text=prompt))
+        fixed = str(resp).strip().strip("`").strip()
+        if fixed.lower().startswith("sql\n"):
+            fixed = fixed[4:]
+        return fixed
+
+    async def explain_sql(self, sql: str, db_type: str = "postgresql") -> str:
+        dialect = "PostgreSQL" if db_type == "postgresql" else "MySQL"
+        chat = LlmChat(
+            api_key=EMERGENT_KEY,
+            session_id="sql-explain",
+            system_message=(
+                f"You are a {dialect} expert. Explain the given SQL query in plain business language "
+                "in 2-4 sentences: what data it fetches, filters, groupings, and what the result represents."
+            ),
+        )
+        chat.with_model("openai", "gpt-5.2")
+        resp = await chat.send_message(UserMessage(text=sql))
+        return str(resp).strip()
+
     async def _generate_sql(self, question: str, context: str, db_type: str):
         try:
             dialect = "PostgreSQL" if db_type == "postgresql" else "MySQL"
@@ -92,7 +135,7 @@ class QueryPlanner:
 
             prompt = f"Schema context:\n{context}\n\nQuestion: {question}"
             response = await chat.send_message(UserMessage(text=prompt))
-            text = response.text.strip()
+            text = str(response).strip()
 
             if "---" in text:
                 parts = text.split("---", 1)

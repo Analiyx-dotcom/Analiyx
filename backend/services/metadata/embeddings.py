@@ -75,7 +75,7 @@ class EmbeddingService:
             )
             chat.with_model("openai", "gpt-5.2")
             response = await chat.send_message(UserMessage(text=table_text))
-            return response.text.strip()
+            return str(response).strip()
         except Exception as e:
             logger.warning("Failed to generate description: %s", e)
             return ""

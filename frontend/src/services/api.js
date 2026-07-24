@@ -250,6 +250,30 @@ export const metadataAPI = {
     const response = await api.get('/metadata/jobs');
     return response.data;
   },
+  search: async (datasourceId, query, limit = 10) => {
+    const response = await api.post('/metadata/search', { datasource_id: datasourceId, query, limit });
+    return response.data;
+  },
+  refresh: async (datasourceId) => {
+    const response = await api.post(`/metadata/refresh/${datasourceId}`);
+    return response.data;
+  },
+  detectRelationships: async (datasourceId) => {
+    const response = await api.post(`/metadata/relationships/${datasourceId}`);
+    return response.data;
+  },
+  getRelationships: async (datasourceId) => {
+    const response = await api.get(`/metadata/relationships/${datasourceId}`);
+    return response.data;
+  },
+  inferMetrics: async (datasourceId) => {
+    const response = await api.post(`/metadata/metrics/${datasourceId}`);
+    return response.data;
+  },
+  getMetrics: async (datasourceId) => {
+    const response = await api.get(`/metadata/metrics/${datasourceId}`);
+    return response.data;
+  },
 };
 
 export const semanticAPI = {

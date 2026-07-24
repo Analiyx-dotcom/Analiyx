@@ -558,6 +558,8 @@ function QueryTab() {
   const [mode, setMode] = useState('hybrid');
   const [planning, setPlanning] = useState(false);
   const [executing, setExecuting] = useState(false);
+  const [asking, setAsking] = useState(false);
+  const [pipeline, setPipeline] = useState(null);
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
@@ -567,6 +569,28 @@ function QueryTab() {
     }).catch(() => {});
     queryAPI.history().then(r => setHistory(r.history || [])).catch(() => {});
   }, []);
+
+  const handleAskAI = async () => {
+    if (!selectedDs || !question.trim()) return;
+    setAsking(true);
+    setPipeline(null);
+    setQueryResult(null);
+    setValidation(null);
+    try {
+      const r = await queryAPI.ask(selectedDs, question.trim(), mode === 'live' ? 'live' : 'hybrid');
+      setPipeline(r);
+      setSql(r.sql || '');
+      setExplanation(r.explanation || '');
+      if (r.execution) {
+        setQueryResult({ ...r.execution, source: r.execution.source });
+      }
+      if (!r.success) {
+        toast({ title: 'Pipeline issue', description: r.error || 'Query could not be completed', variant: 'destructive' });
+      }
+      queryAPI.history().then(r2 => setHistory(r2.history || [])).catch(() => {});
+    } catch (e) { toast({ title: 'Ask AI failed', description: e.response?.data?.detail || e.message, variant: 'destructive' }); }
+    setAsking(false);
+  };
 
   const handlePlan = async () => {
     if (!selectedDs || !question.trim()) return;
@@ -641,6 +665,9 @@ function QueryTab() {
               onKeyDown={e => e.key === 'Enter' && handlePlan()}
               placeholder='e.g. "Show me top 10 customers by revenue this month"'
               className="bg-gray-800 border-gray-700 text-white flex-1" data-testid="query-nl-input" />
+            <Button onClick={handleAskAI} disabled={asking || !selectedDs || !question.trim()} className="bg-emerald-600 hover:bg-emerald-700" data-testid="query-ask-ai-btn">
+              {asking ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Sparkles className="w-4 h-4 mr-1.5" />}Ask AI
+            </Button>
             <Button onClick={handlePlan} disabled={planning || !selectedDs || !question.trim()} className="bg-purple-600 hover:bg-purple-700" data-testid="query-plan-btn">
               {planning ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : <Zap className="w-4 h-4 mr-1.5" />}Plan
             </Button>
@@ -891,15 +918,18 @@ function GlossaryTab() {
 function JobsTab() {
   const [jobs, setJobs] = useState([]);
   const [cacheStats, setCacheStats] = useState(null);
+  const [liveStatus, setLiveStatus] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(null);
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        const [j, c] = await Promise.all([metadataAPI.listJobs(), queryAPI.cacheStats()]);
+        const [j, c, ls] = await Promise.all([metadataAPI.listJobs(), queryAPI.cacheStats(), liveAPI.status()]);
         setJobs(j.jobs || []);
         setCacheStats(c);
+        setLiveStatus(ls.datasources || []);
       } catch {}
       setLoading(false);
     };
@@ -907,6 +937,23 @@ function JobsTab() {
     const interval = setInterval(load, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const handleSetSchedule = async (dsId, interval) => {
+    try {
+      await liveAPI.setSchedule(dsId, interval);
+      setLiveStatus(prev => prev.map(d => d.id === dsId ? { ...d, schedule: { ...d.schedule, interval } } : d));
+      toast({ title: 'Schedule updated', description: interval === 'manual' ? 'Auto-refresh disabled' : `Refreshing every ${interval}` });
+    } catch (e) { toast({ title: 'Failed', description: e.response?.data?.detail || e.message, variant: 'destructive' }); }
+  };
+
+  const handleRefreshNow = async (dsId) => {
+    setRefreshing(dsId);
+    try {
+      await liveAPI.refresh(dsId);
+      toast({ title: 'Refresh triggered', description: 'Metadata scan and enrichment running in background' });
+    } catch (e) { toast({ title: 'Failed', description: e.response?.data?.detail || e.message, variant: 'destructive' }); }
+    setRefreshing(null);
+  };
 
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-purple-400" /></div>;
 
@@ -953,6 +1000,47 @@ function JobsTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Status & Refresh Schedules */}
+      {liveStatus.length > 0 && (
+        <Card className="bg-gray-900 border-gray-800" data-testid="live-status-card">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm text-gray-300 font-medium">Live Datasources & Refresh Schedules</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {liveStatus.map(ds => (
+                <div key={ds.id} className="flex items-center justify-between py-2 border-b border-gray-800 last:border-0" data-testid={`live-ds-${ds.id}`}>
+                  <div>
+                    <p className="text-sm text-white font-medium">{ds.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {ds.db_type} • Last scanned: {ds.last_scanned ? new Date(ds.last_scanned).toLocaleString() : 'never'}
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Select value={ds.schedule?.interval || 'manual'} onValueChange={v => handleSetSchedule(ds.id, v)}>
+                      <SelectTrigger className="bg-gray-800 border-gray-700 text-white w-32 h-8 text-xs" data-testid={`schedule-select-${ds.id}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-gray-800 border-gray-700 text-white">
+                        <SelectItem value="manual">Manual</SelectItem>
+                        <SelectItem value="5m">Every 5 min</SelectItem>
+                        <SelectItem value="15m">Every 15 min</SelectItem>
+                        <SelectItem value="1h">Every hour</SelectItem>
+                        <SelectItem value="1d">Every day</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button size="sm" variant="outline" onClick={() => handleRefreshNow(ds.id)} disabled={refreshing === ds.id}
+                      className="border-gray-700 text-gray-300 hover:text-white h-8" data-testid={`refresh-now-${ds.id}`}>
+                      {refreshing === ds.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Background Jobs */}
       <Card className="bg-gray-900 border-gray-800">

@@ -2,6 +2,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Dict, Any, List
 from services.connectors.factory import ConnectorFactory
+from services.metadata.semantic_types import detect_semantic_type, compute_quality_score
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +22,20 @@ class MetadataProfiler:
         row_count = await connector.get_row_count(schema, table)
         columns = await connector.get_columns(schema, table)
 
+        try:
+            sample = await connector.get_sample_data(schema, table, limit=50)
+            sample_rows = sample.get("rows", [])
+        except Exception:
+            sample_rows = []
+
         column_profiles = []
         for col in columns:
             try:
                 stats = await connector.get_column_stats(schema, table, col["name"])
                 stats["column_name"] = col["name"]
                 stats["data_type"] = col["data_type"]
+                samples = [r.get(col["name"]) for r in sample_rows]
+                stats.update(detect_semantic_type(col["name"], col["data_type"], samples))
                 column_profiles.append(stats)
             except Exception as e:
                 logger.warning("Failed to profile column %s.%s.%s: %s", schema, table, col["name"], e)
@@ -43,6 +52,7 @@ class MetadataProfiler:
             "row_count": row_count,
             "column_count": len(columns),
             "columns": column_profiles,
+            "quality": compute_quality_score(row_count, column_profiles),
             "profiled_at": datetime.now(timezone.utc).isoformat(),
         }
 

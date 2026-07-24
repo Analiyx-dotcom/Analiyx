@@ -61,7 +61,7 @@ class SemanticSearch:
             )
             chat.with_model("openai", "gpt-5.2")
             resp = await chat.send_message(UserMessage(text=f"Query: {query}\n\nMatching tables:\n{context}"))
-            return resp.text.strip()
+            return str(resp).strip()
         except Exception as e:
             logger.warning("AI interpretation failed: %s", e)
             return f"Found {len(tables)} matching tables for your query."

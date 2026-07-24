@@ -1,10 +1,14 @@
 from fastapi import FastAPI, APIRouter
 from dotenv import load_dotenv
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
+
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
-from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List
 import uuid
@@ -32,10 +36,8 @@ from routes.datasource_connect_routes import router as ds_connect_router
 from routes.metadata_routes import router as metadata_router
 from routes.semantic_routes import router as semantic_router
 from routes.query_routes import router as query_router
+from routes.live_routes import router as live_router
 
-
-ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
@@ -114,9 +116,10 @@ app.include_router(ds_connect_router)
 app.include_router(metadata_router)
 app.include_router(semantic_router)
 app.include_router(query_router)
+app.include_router(live_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes, google_ads_routes, google_analytics_routes, datasource_connect_routes, metadata_routes, semantic_routes, query_routes
+from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes, google_ads_routes, google_analytics_routes, datasource_connect_routes, metadata_routes, semantic_routes, query_routes, live_routes
 from auth import set_auth_database
 set_auth_database(db)
 auth_routes.set_database(db)
@@ -140,6 +143,7 @@ datasource_connect_routes.set_database(db)
 metadata_routes.set_database(db)
 semantic_routes.set_database(db)
 query_routes.set_database(db)
+live_routes.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,
@@ -155,6 +159,11 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+@app.on_event("startup")
+async def start_background_services():
+    from services.refresh_scheduler import start_scheduler
+    start_scheduler(db)
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
