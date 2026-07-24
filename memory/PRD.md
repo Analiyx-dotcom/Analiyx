@@ -1,7 +1,7 @@
 # Analiyx - Product Requirements Document
 
 ## Original Problem Statement
-Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with user/admin dashboards, trial system, plan-based restrictions, and AI-powered data analysis.
+Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with user/admin dashboards, trial system, plan-based restrictions, and AI-powered data analysis. Enhanced to become an enterprise-grade AI Analytics Platform with Metadata Engine, Semantic Search, Query Planner, and Live Query Engine.
 
 ## Tech Stack
 - **Frontend**: React, Tailwind CSS, Shadcn/ui, Recharts, @nangohq/frontend
@@ -9,7 +9,8 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 - **AI**: GPT-5.2 via emergentintegrations (Emergent LLM Key)
 - **Payments**: Razorpay (Live keys)
 - **OAuth**: Nango (managed OAuth)
-- **Database**: MongoDB
+- **Database**: MongoDB (primary), Redis (cache), PostgreSQL/MySQL (external connectors)
+- **Cache**: Redis (localhost:6379)
 
 ## Pricing Plans
 - **Trial**: Free 7 days, 100 credits (one-time)
@@ -18,13 +19,29 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 
 ## Implemented Features
 
+### Enterprise Data Engine (NEW - July 2026)
+- [x] Modular service architecture: `/backend/services/` (connectors, metadata, semantic, query, cache)
+- [x] Database Connectors: PostgreSQL and MySQL via asyncpg/aiomysql
+- [x] Datasource Management: Connect, test, list, update, delete external databases
+- [x] Metadata Scanner: Scan schemas, tables, columns from external databases
+- [x] Metadata Profiler: Profile columns (nulls, distinct values, min/max, distributions)
+- [x] AI Enrichment: Generate business descriptions for tables using GPT-5.2
+- [x] Semantic Search: NL search over metadata with AI interpretation
+- [x] Business Glossary: CRUD for business terms mapped to technical metadata
+- [x] Query Planner: Natural language to SQL via GPT-5.2 with schema context
+- [x] SQL Validator: Safety validation (blocks DROP/DELETE/INSERT/etc)
+- [x] Query Executor: Live/Cached/Hybrid execution modes
+- [x] Redis Cache: Query result caching with TTL
+- [x] Background Jobs: Async metadata scanning, profiling, enrichment
+- [x] Frontend: Full Data Engine page at /data-engine with 6 tabs
+- [x] 21 backend tests passing (test_enterprise_data_engine.py)
+
 ### Google Ads Integration (via Nango)
 - [x] Connect Google Ads button via Nango OAuth
 - [x] Backend: GET /api/google-ads/customers (list accessible customer IDs)
 - [x] Backend: GET /api/google-ads/campaigns (GAQL query for campaigns with metrics)
-- [x] Frontend: GoogleAdsDashboard component with 4 summary cards (Spend, Clicks, Impressions, Conversions)
-- [x] Frontend: CampaignsTable showing name, status, type, budget, impressions, clicks, CTR, CPC, cost, conversions
-- [x] Not-connected state with clear message and Retry button
+- [x] Frontend: GoogleAdsDashboard component with 4 summary cards
+- [x] Frontend: CampaignsTable showing name, status, type, budget, metrics
 
 ### Nango OAuth Integrations
 - [x] NangoService utility (connect sessions, save/get/delete connections, proxy)
@@ -49,6 +66,38 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 - [x] AI Visibility Deep Report with citations
 - [x] AI Chat (GPT-5.2, token-optimized)
 
+## Architecture
+
+```
+/app/backend/
+├── services/
+│   ├── connectors/     # PostgreSQL, MySQL connectors
+│   │   ├── base.py     # Abstract connector interface
+│   │   ├── postgresql.py
+│   │   ├── mysql.py
+│   │   └── factory.py  # Connector factory
+│   ├── metadata/       # Scanner, Profiler, Embeddings
+│   ├── semantic/       # Search, Glossary
+│   ├── query/          # Planner, Validator, Executor
+│   ├── cache/          # Redis cache service
+│   └── background_tasks.py
+├── routes/
+│   ├── datasource_connect_routes.py  # /api/datasources/*
+│   ├── metadata_routes.py            # /api/metadata/*
+│   ├── semantic_routes.py            # /api/semantic/*
+│   ├── query_routes.py               # /api/query/*
+│   └── ... (existing routes)
+└── tests/
+    └── test_enterprise_data_engine.py
+
+/app/frontend/src/
+├── pages/
+│   ├── DataEngine.jsx   # Enterprise Data Engine UI (6 tabs)
+│   └── ... (existing pages)
+└── services/
+    └── api.js           # Added datasourceAPI, metadataAPI, semanticAPI, queryAPI
+```
+
 ## Credentials
 - Admin: Admin@analiyx.com / 1234
 - Test: testuser@test.com / test1234
@@ -56,6 +105,7 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 
 ## Known Issues
 - Gmail SMTP BLOCKED (Google rejecting app passwords)
+- Google Analytics 403 Scopes via Nango (needs Nango dashboard config)
 
 ## Backlog
 ### P1
@@ -65,6 +115,9 @@ Build a dark-themed analytics platform "Analiyx" (clone of papermap.ai) with use
 
 ### P2
 - [ ] Social Logins, Editable Dashboard
+- [ ] Rate limiting on public endpoints
 
 ### P3
-- [ ] Email Verification, Forgot Password backend, Refactor UserDashboard.jsx
+- [ ] Email Verification, Forgot Password backend
+- [ ] Refactor UserDashboard.jsx into smaller components
+- [ ] Add aria-describedby to Dialog components for accessibility
