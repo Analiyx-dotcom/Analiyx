@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import Settings from './pages/Settings';
+import DataEngine from './pages/DataEngine';
 import ContactPage from './pages/ContactPage';
 import LegalPage from './pages/LegalPage';
 import { Toaster } from './components/ui/toaster';
@@ -24,6 +25,7 @@ function App() {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/dashboard" element={<UserDashboard />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/data-engine" element={<DataEngine />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/legal" element={<LegalPage />} />
         </Routes>

@@ -1,0 +1,49 @@
+{
+  "summary": "Iteration 15 - Enterprise Data Engine testing. Created /app/backend/tests/test_enterprise_data_engine.py with 21 backend tests (all passing). Fixed 2 route-ordering bugs discovered during testing (GET /api/datasources/supported-types and GET /api/metadata/jobs were being shadowed by dynamic path routes and returned 404). Frontend Data Engine page verified end-to-end: 6 tabs, add-datasource dialog with all 8 fields, query engine controls, glossary dialog, Jobs & Cache showing Redis connected + memory + keys, back-to-dashboard nav, and data-engine-button in UserDashboard navbar.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "N/A", "issue": "DialogContent aria-describedby warning in console (accessibility warning only, not functional)"}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_enterprise_data_engine.py",
+    "/app/test_reports/pytest/pytest_results_iter15.xml"
+  ],
+  "action_items": [
+    "None - all fixes applied. Optional: add Description/aria-describedby to DialogContent components (add-datasource-dialog, glossary-dialog) to silence Radix accessibility warnings."
+  ],
+  "critical_code_review_comments": [
+    "FIXED: Route ordering bug in /app/backend/routes/datasource_connect_routes.py — GET /supported-types was declared AFTER GET /{ds_id}, causing supported-types requests to be captured by the dynamic path handler and return 404 'Datasource not found'. Moved /supported-types (and /) before /{ds_id} and removed duplicate.",
+    "FIXED: Route ordering bug in /app/backend/routes/metadata_routes.py — GET /jobs and GET /jobs/{job_id} were declared AFTER GET /{datasource_id}, so /jobs was being matched by the dynamic route (datasource_id='jobs') returning 404 'No metadata found. Run a scan first.'. Moved job routes above /{datasource_id}.",
+    "SQL validator correctly rejects DROP/DELETE/INSERT/UPDATE/TRUNCATE/ALTER/CREATE/GRANT/REVOKE/EXEC/MERGE via regex word-boundary matching and only allows SELECT / WITH prefixes.",
+    "Redis cache stats endpoint public (no auth) as documented; returns connected:true, keys_count, used_memory_human.",
+    "Glossary CRUD correctly excludes MongoDB _id, uses UUID id, and properly scopes queries by user_id.",
+    "Datasource connect endpoint properly validates db_type (returns 400 with 'Unsupported' message) and returns 400 'Connection failed:' when host is unreachable.",
+    "Datasource list endpoint strips password from connection dict before returning.",
+    "Consider adding rate limiting on /api/query/validate since it is public/unauthenticated."
+  ],
+  "updated_files": [
+    "/app/backend/routes/datasource_connect_routes.py",
+    "/app/backend/routes/metadata_routes.py",
+    "/app/backend/tests/test_enterprise_data_engine.py"
+  ],
+  "success_rate": {
+    "backend": "100% (21/21 tests after route-ordering fix)",
+    "frontend": "100% (all 6 tabs, dialogs, controls, and navigation verified)"
+  },
+  "test_credentials": {
+    "test_user": "testuser@test.com / test1234",
+    "admin_user": "Admin@analiyx.com / 1234"
+  },
+  "seed_data_creation": "Glossary CRUD tests create TEST_MRR and TEST_to_delete terms and clean them up via fixture teardown / delete flow.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Enterprise Data Engine feature is fully wired end-to-end. All 21 backend tests in /app/backend/tests/test_enterprise_data_engine.py pass. Two route ordering bugs were fixed in the backend (datasource_connect_routes.py and metadata_routes.py). Frontend DataEngine.jsx is 1002 lines with 48 data-testid attributes covering all tabs, dialogs, form fields, and controls. Redis is running on localhost:6379 (verified via /api/query/cache/stats returning connected:true with keys/memory). The frontend was tested at https://ai-analytics-engine-4.preview.emergentagent.com/data-engine. Only benign warnings: Radix DialogContent missing aria-describedby (accessibility only, not functional).",
+  "rca_of_the_issue": "Two /404 bugs on /api/datasources/supported-types and /api/metadata/jobs were caused by FastAPI route ordering — dynamic path routes /{ds_id} and /{datasource_id} were registered before the static routes, so FastAPI's first-match router captured 'supported-types' and 'jobs' as path params. Fix: move static routes above dynamic path-param routes. Reproduction: GET /api/datasources/supported-types with Bearer token → 404 'Datasource not found'. After fix: 200 with {'types':['postgresql','mysql']}."
+}

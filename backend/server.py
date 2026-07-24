@@ -28,6 +28,10 @@ from routes.chart_routes import router as chart_router
 from routes.nango_routes import router as nango_router
 from routes.google_ads_routes import router as google_ads_router
 from routes.google_analytics_routes import router as ga_router
+from routes.datasource_connect_routes import router as ds_connect_router
+from routes.metadata_routes import router as metadata_router
+from routes.semantic_routes import router as semantic_router
+from routes.query_routes import router as query_router
 
 
 ROOT_DIR = Path(__file__).parent
@@ -106,9 +110,13 @@ app.include_router(chart_router)
 app.include_router(nango_router)
 app.include_router(google_ads_router)
 app.include_router(ga_router)
+app.include_router(ds_connect_router)
+app.include_router(metadata_router)
+app.include_router(semantic_router)
+app.include_router(query_router)
 
 # Set database for route modules
-from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes, google_ads_routes, google_analytics_routes
+from routes import auth_routes, admin_routes, data_source_routes, integration_routes, admin_management_routes, contact_routes, support_routes, workspace_routes, ai_visibility_routes, payment_routes, slack_routes, ai_search_routes, dashboard_routes, chart_routes, nango_routes, google_ads_routes, google_analytics_routes, datasource_connect_routes, metadata_routes, semantic_routes, query_routes
 from auth import set_auth_database
 set_auth_database(db)
 auth_routes.set_database(db)
@@ -128,6 +136,10 @@ chart_routes.set_database(db)
 nango_routes.set_database(db)
 google_ads_routes.set_database(db)
 google_analytics_routes.set_database(db)
+datasource_connect_routes.set_database(db)
+metadata_routes.set_database(db)
+semantic_routes.set_database(db)
+query_routes.set_database(db)
 
 app.add_middleware(
     CORSMiddleware,

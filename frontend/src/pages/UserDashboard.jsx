@@ -722,6 +722,9 @@ const UserDashboard = () => {
               <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white" onClick={() => navigate('/settings')} data-testid="settings-button">
                 <Settings className="w-4 h-4 mr-1" /> Settings
               </Button>
+              <Button size="sm" className="bg-purple-600/20 text-purple-300 hover:bg-purple-600/30 border border-purple-500/30" onClick={() => navigate('/data-engine')} data-testid="data-engine-button">
+                <Zap className="w-4 h-4 mr-1" /> Data Engine
+              </Button>
               <Button variant="ghost" className="text-gray-400 hover:text-white" onClick={handleLogout} data-testid="logout-button">
                 <LogOut className="w-5 h-5 mr-2" /> Logout
               </Button>

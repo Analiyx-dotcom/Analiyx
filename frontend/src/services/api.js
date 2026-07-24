@@ -185,4 +185,125 @@ export const supportAPI = {
   },
 };
 
+// Enterprise Data Engine API
+export const datasourceAPI = {
+  connect: async (data) => {
+    const response = await api.post('/datasources/connect', data);
+    return response.data;
+  },
+  list: async () => {
+    const response = await api.get('/datasources/');
+    return response.data;
+  },
+  get: async (id) => {
+    const response = await api.get(`/datasources/${id}`);
+    return response.data;
+  },
+  test: async (id) => {
+    const response = await api.post(`/datasources/${id}/test`);
+    return response.data;
+  },
+  update: async (id, data) => {
+    const response = await api.put(`/datasources/${id}`, data);
+    return response.data;
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/datasources/${id}`);
+    return response.data;
+  },
+};
+
+export const metadataAPI = {
+  scan: async (datasourceId, background = false) => {
+    const response = await api.post(`/metadata/scan/${datasourceId}?background=${background}`);
+    return response.data;
+  },
+  get: async (datasourceId) => {
+    const response = await api.get(`/metadata/${datasourceId}`);
+    return response.data;
+  },
+  getTables: async (datasourceId) => {
+    const response = await api.get(`/metadata/${datasourceId}/tables`);
+    return response.data;
+  },
+  profile: async (datasourceId, background = false) => {
+    const response = await api.post(`/metadata/profile/${datasourceId}?background=${background}`);
+    return response.data;
+  },
+  getProfiles: async (datasourceId) => {
+    const response = await api.get(`/metadata/profile/${datasourceId}`);
+    return response.data;
+  },
+  getTableProfile: async (datasourceId, schema, table) => {
+    const response = await api.get(`/metadata/profile/${datasourceId}/${schema}/${table}`);
+    return response.data;
+  },
+  enrich: async (datasourceId, background = true) => {
+    const response = await api.post(`/metadata/enrich/${datasourceId}?background=${background}`);
+    return response.data;
+  },
+  getJobStatus: async (jobId) => {
+    const response = await api.get(`/metadata/jobs/${jobId}`);
+    return response.data;
+  },
+  listJobs: async () => {
+    const response = await api.get('/metadata/jobs');
+    return response.data;
+  },
+};
+
+export const semanticAPI = {
+  search: async (datasourceId, query, limit = 10) => {
+    const response = await api.post('/semantic/search', { datasource_id: datasourceId, query, limit });
+    return response.data;
+  },
+  createGlossaryTerm: async (data) => {
+    const response = await api.post('/semantic/glossary', data);
+    return response.data;
+  },
+  listGlossary: async (search = '') => {
+    const response = await api.get(`/semantic/glossary?search=${search}`);
+    return response.data;
+  },
+  updateGlossaryTerm: async (id, data) => {
+    const response = await api.put(`/semantic/glossary/${id}`, data);
+    return response.data;
+  },
+  deleteGlossaryTerm: async (id) => {
+    const response = await api.delete(`/semantic/glossary/${id}`);
+    return response.data;
+  },
+};
+
+export const queryAPI = {
+  plan: async (datasourceId, question) => {
+    const response = await api.post('/query/plan', { datasource_id: datasourceId, question });
+    return response.data;
+  },
+  validate: async (sql, dbType = 'postgresql') => {
+    const response = await api.post('/query/validate', { sql, db_type: dbType });
+    return response.data;
+  },
+  execute: async (datasourceId, sql, mode = 'hybrid', cacheTtl = 300) => {
+    const response = await api.post('/query/execute', {
+      datasource_id: datasourceId, sql, mode, cache_ttl: cacheTtl,
+    });
+    return response.data;
+  },
+  history: async (datasourceId = null, limit = 50) => {
+    const params = new URLSearchParams({ limit });
+    if (datasourceId) params.set('datasource_id', datasourceId);
+    const response = await api.get(`/query/history?${params}`);
+    return response.data;
+  },
+  clearCache: async (datasourceId) => {
+    const response = await api.post(`/query/cache/clear/${datasourceId}`);
+    return response.data;
+  },
+  cacheStats: async () => {
+    const response = await api.get('/query/cache/stats');
+    return response.data;
+  },
+};
+
 export default api;
